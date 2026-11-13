@@ -1,0 +1,82 @@
+name: Tenders
+
+# Times are in UTC. Yerevan is UTC+4 all year, so 05:07 UTC is 09:07 in Yerevan.
+on:
+  schedule:
+    - cron: "7 5 * * 1-6"    # 09:07 Mon-Sat: morning message
+    - cron: "7 14 * * 1-5"   # 18:07 Mon-Fri: evening message (only if something new was published)
+    - cron: "7 9 * * 1-5"    # 13:07 Mon-Fri: refresh the app quietly
+    - cron: "37 * * * *"     # every hour: answer people who pressed Start or Stop
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "digest = update and send a message, refresh = update only, inbox = only answer Start/Stop"
+        type: choice
+        options: [digest, refresh, inbox]
+        default: digest
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tenders
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Decide what to do
+        id: pick
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+          MANUAL: ${{ inputs.mode }}
+        run: |
+          case "$SCHEDULE" in
+            "37 * * * *")  mode=inbox ;;
+            "7 9 * * 1-5") mode=refresh ;;
+            "")            mode="${MANUAL:-digest}" ;;
+            *)             mode=digest ;;
+          esac
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "Mode: $mode"
+
+      - name: Read ARMEPS and talk to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          APP_URL: ${{ vars.APP_URL }}
+          MODE: ${{ steps.pick.outputs.mode }}
+        run: python -m bot.main --mode "$MODE"
+
+      - name: Save the data
+        if: always()
+        run: |
+          mkdir -p docs/data bot/state
+          git config user.name "tender-bot"
+          git config user.email "tender-bot@users.noreply.github.com"
+          git add -A docs/data bot/state
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -q -m "Update tenders $(date -u +'%Y-%m-%d %H:%M') UTC"
+            for attempt in 1 2 3; do
+              git pull -q --rebase && git push -q && break
+              sleep 5
+            done
+          fi
+
+      - name: Keep the page that could not be read
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug
+          path: debug/
+          if-no-files-found: ignore

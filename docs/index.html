@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Հայաստանի մրցույթներ</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F3A93'/%3E%3Cpath d='M9 10h14M9 16h14M9 22h9' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/nsa-armenian.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Noto Sans Armenian";src:url("fonts/nsa-armenian.woff2") format("woff2");font-weight:100 900;font-stretch:62.5% 100%;font-display:swap;unicode-range:U+0308,U+0530-058F,U+2010,U+2024,U+25CC,U+FB13-FB17}
+@font-face{font-family:"Noto Sans Armenian";src:url("fonts/nsa-latin.woff2") format("woff2");font-weight:100 900;font-stretch:62.5% 100%;font-display:swap;unicode-range:U+0020-007E,U+00A0,U+00AB,U+00B0,U+00B7,U+00BB,U+00D7,U+2013-2014,U+2018-2019,U+201C-201D,U+2022,U+2026}
+
+:root{
+  /* Layout idea: one column of dated notices. Deadline column, column rule, text. Rules, not boxes. */
+  --paper:#F1F2EE;        /* newsprint */
+  --paper-2:#E5E7E1;      /* pressed rows, quiet panels */
+  --field:#FFFFFF;
+  --ink:#14161A;
+  --ink-2:#474C55;
+  --ink-3:#626872;
+  --rule:#C6C8C1;
+  --shell:#1F3A93;        /* press blue: the shell and selection */
+  --on-shell:#FFFFFF;
+  --on-shell-2:#CBD5F6;
+  --accent:#1F3A93;
+  --on-accent:#FFFFFF;
+  --critical:#B4231A;     /* last day */
+  --critical-bg:#F6DEDA;
+  --warning:#855600;      /* three days or less */
+  --warning-bg:#F3E6C8;
+  --focus:#1F3A93;
+  --font:"Noto Sans Armenian","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --display:66%;          /* width axis for dates and headings */
+  --ease:cubic-bezier(.16,1,.3,1);
+  --tabs-h:3rem;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111317;--paper-2:#1C1F25;--field:#0C0E12;--ink:#ECEBE5;--ink-2:#B9BBB6;--ink-3:#8E9299;
+    --rule:#2D3139;--shell:#1A2F6E;--on-shell:#FFFFFF;--on-shell-2:#C3CEF3;--accent:#9DB4FF;
+    --on-accent:#0C1433;--critical:#FF8B7B;--critical-bg:#3A1A17;--warning:#EDB65C;--warning-bg:#33280F;
+    --focus:#9DB4FF;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111317;--paper-2:#1C1F25;--field:#0C0E12;--ink:#ECEBE5;--ink-2:#B9BBB6;--ink-3:#8E9299;
+  --rule:#2D3139;--shell:#1A2F6E;--on-shell:#FFFFFF;--on-shell-2:#C3CEF3;--accent:#9DB4FF;
+  --on-accent:#0C1433;--critical:#FF8B7B;--critical-bg:#3A1A17;--warning:#EDB65C;--warning-bg:#33280F;
+  --focus:#9DB4FF;color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{font-size:100%;-webkit-text-size-adjust:100%;height:100%;scrollbar-color:var(--rule) transparent;scrollbar-width:thin}
+body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font:400 1rem/1.45 var(--font);font-stretch:100%;
+  -webkit-font-smoothing:antialiased;accent-color:var(--accent);caret-color:var(--accent);overflow-wrap:break-word}
+::selection{background:var(--accent);color:var(--on-accent)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}
+h1,h2,h3,p,ul,ol,dl,dd,dt{margin:0;padding:0}
+ul,ol{list-style:none}
+button{font:inherit;font-stretch:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:inherit;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+a{color:var(--accent);text-underline-offset:.18em;text-decoration-thickness:1px}
+svg{display:block;flex:none}
+.ic{width:1.5rem;height:1.5rem;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.wrap{max-width:40rem;margin-inline:auto;padding-inline:1rem}
+.num{font-variant-numeric:tabular-nums lining-nums}
+[hidden]{display:none !important}
+
+/* ---------- shell ---------- */
+.shell{background:var(--shell);color:var(--on-shell);padding-block:.75rem 1rem}
+.shell-top{display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.name{font-size:2rem;line-height:1.1;font-weight:800;font-stretch:var(--display)}
+.size{width:2.75rem;height:2.75rem;display:grid;place-items:center;border-radius:.625rem;border:1px solid rgba(255,255,255,.38);
+  font-weight:700;line-height:1;transition:background-color .15s var(--ease)}
+.size .aa{display:flex;align-items:baseline;gap:1px}
+.size .aa span:first-child{font-size:.8125rem}
+.size .aa span:last-child{font-size:1.1875rem}
+.size:active{background:rgba(255,255,255,.16)}
+.shell :focus-visible,.search:focus-within{outline-color:var(--on-shell)}
+.date{margin-top:.125rem;color:var(--on-shell-2);font-size:.9375rem;line-height:1.4}
+.status{color:var(--on-shell-2);font-size:.9375rem;line-height:1.4}
+.status b{color:var(--on-shell);font-weight:650}
+.search{margin-top:.875rem;display:flex;align-items:center;gap:.5rem;height:2.875rem;padding-inline:.75rem .25rem;border-radius:.625rem;
+  background:var(--field);color:var(--ink)}
+.search:focus-within{outline:3px solid var(--on-shell);outline-offset:2px}
+.search .ic{color:var(--ink-3)}
+.search input{flex:1;min-width:0;height:100%;border:0;background:none;font:inherit;color:inherit;outline:0;padding:0;appearance:none;text-overflow:ellipsis}
+.search input::placeholder{color:var(--ink-3);opacity:1}
+.search input::-webkit-search-cancel-button{display:none}
+.clear{width:2.5rem;height:2.5rem;display:grid;place-items:center;color:var(--ink-3);border-radius:.5rem}
+
+/* ---------- tabs ---------- */
+.tabs{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--rule)}
+.tabs-in{display:flex;max-width:40rem;margin-inline:auto;overflow-x:auto;scrollbar-width:none}
+.tabs-in::-webkit-scrollbar{display:none}
+.tab{flex:1 0 auto;height:var(--tabs-h);display:flex;align-items:center;justify-content:center;gap:.375rem;position:relative;
+  padding-inline:.375rem;white-space:nowrap;font-size:min(1rem,4.4vw);font-weight:600;font-stretch:88%;color:var(--ink-3);
+  transition:color .18s var(--ease)}
+.tab::after{content:"";position:absolute;inset:auto .75rem -1px;height:3px;background:var(--ink);transform:scaleX(0);
+  transition:transform .22s var(--ease)}
+.tab[aria-selected="true"]{color:var(--ink)}
+.tab[aria-selected="true"]::after{transform:scaleX(1)}
+.tab .n{min-width:1.5em;padding:.05rem .4em;border-radius:1rem;background:var(--paper-2);color:var(--ink-2);
+  font-size:min(.8125rem,3.6vw);font-weight:650;font-stretch:100%;text-align:center}
+.tab[aria-selected="true"] .n{background:var(--ink);color:var(--paper)}
+
+/* ---------- sector chips ---------- */
+.chips{display:flex;gap:.5rem;overflow-x:auto;max-width:40rem;margin-inline:auto;padding:.75rem 1rem .25rem;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:2.5rem;padding-inline:.875rem;display:flex;align-items:center;gap:.4rem;white-space:nowrap;
+  border:1px solid var(--rule);border-radius:1.25rem;font-size:.9375rem;font-weight:500;color:var(--ink-2);
+  transition:background-color .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease)}
+.chip .n{font-size:.8125rem;color:var(--ink-3)}
+.chip:active{background:var(--paper-2)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.chip[aria-pressed="true"] .n{color:inherit;opacity:.85}
+
+.strip{margin-top:.75rem;padding:.5rem .75rem;border-radius:.5rem;font-size:.8125rem;line-height:1.4;color:var(--ink-2);background:var(--paper-2)}
+.strip--warn{background:var(--warning-bg);color:var(--ink)}
+
+/* ---------- day rules and notice rows ---------- */
+.day-h{position:sticky;top:calc(var(--tabs-h) + 1px);z-index:3;display:flex;align-items:baseline;justify-content:space-between;gap:1rem;
+  margin-top:1.5rem;padding:.5rem 0 .4375rem;border-top:2px solid var(--ink);background:var(--paper);
+  font-size:1rem;line-height:1.3;font-weight:750;font-stretch:80%}
+.day:first-child .day-h{margin-top:.75rem}
+.day-n{flex:none;font-size:.875rem;font-weight:500;font-stretch:100%;color:var(--ink-3)}
+.day-n.is-warn{color:var(--warning);font-weight:650}
+.day-n.is-crit{color:var(--critical);font-weight:700}
+.rows{border-top:1px solid var(--rule)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 2.75rem;border-bottom:1px solid var(--rule)}
+.row-main{display:grid;grid-template-columns:3.5rem minmax(0,1fr);column-gap:.875rem;align-items:start;padding:.75rem 0;
+  transition:background-color .15s var(--ease)}
+.row-main:active{background:var(--paper-2)}
+@media (hover:hover){.row-main:hover{background:var(--paper-2)}}
+.dl{align-self:stretch;display:flex;flex-direction:column;align-items:center;padding-right:.75rem;border-right:1px solid var(--rule);
+  font-stretch:var(--display);line-height:1;text-align:center}
+.dl-wd,.dl-mo{font-size:.75rem;font-weight:700;letter-spacing:.04em;color:var(--ink-3)}
+.dl-day{margin-block:.1875rem .125rem;font-size:1.875rem;font-weight:800}
+.dl--time .dl-day{margin-block:.125rem 0;font-size:1.3125rem;font-weight:750;font-stretch:72%}
+.dl.is-warn .dl-day{color:var(--warning)}
+.dl.is-crit .dl-day{color:var(--critical)}
+.row-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+  font-size:1.0625rem;line-height:1.28;font-weight:650;font-stretch:88%}
+.row-buyer{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-top:.1875rem;
+  font-size:.9375rem;line-height:1.35;color:var(--ink-2)}
+.row-meta{display:block;overflow:hidden;margin-top:.3125rem;font-size:.875rem;line-height:1.4;color:var(--ink-3)}
+.row-meta .mi{display:flex;flex-wrap:wrap;margin-left:-1rem}
+.row-meta .mi>span{position:relative;padding-left:1rem;white-space:nowrap}
+.row-meta .mi>span::before{content:"";position:absolute;left:.375rem;top:.6em;width:.1875rem;height:.1875rem;border-radius:50%;background:var(--ink-3);opacity:.6}
+.left.is-warn{color:var(--warning);font-weight:650}
+.left.is-crit{color:var(--critical);font-weight:700}
+.left.is-closed{color:var(--ink-3);font-weight:600}
+.tag{color:var(--accent);font-weight:650}
+.row.is-off .row-title,.row.is-off .dl-day{color:var(--ink-3)}
+.star{display:grid;place-items:center;color:var(--ink-3);border-radius:.5rem}
+.star[aria-pressed="true"]{color:var(--accent)}
+.star[aria-pressed="true"] .ic{fill:currentColor}
+.star.pop .ic{animation:pop .28s var(--ease)}
+@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+
+.empty{padding:2.5rem 0 1rem;color:var(--ink-2)}
+.empty h2{font-size:1.1875rem;line-height:1.3;font-weight:750;font-stretch:80%;color:var(--ink)}
+.empty p{margin-top:.5rem;max-width:32ch}
+.empty .btn{margin-top:1rem;display:inline-flex}
+.skel .row-main{pointer-events:none}
+.skel i{display:block;border-radius:.25rem;background:var(--paper-2);animation:pulse 1.2s ease-in-out infinite alternate}
+@keyframes pulse{from{opacity:.55}to{opacity:1}}
+
+.foot{margin-top:2rem;padding:1rem 0 2.5rem;border-top:1px solid var(--rule);font-size:.875rem;color:var(--ink-3)}
+
+/* ---------- notice view ---------- */
+.dbar{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--rule)}
+.dbar-in{display:flex;align-items:center;justify-content:space-between;height:var(--tabs-h);max-width:40rem;margin-inline:auto;padding-inline:.25rem .5rem}
+.dbar button{height:2.75rem;display:flex;align-items:center;gap:.25rem;padding-inline:.5rem;border-radius:.5rem;font-weight:600;font-stretch:88%}
+.dbar button:active{background:var(--paper-2)}
+.dbar-r{display:flex;gap:.25rem}
+.dbar .star{display:flex}
+#detail .wrap{animation:enter .26s var(--ease)}
+@keyframes enter{from{opacity:.4;transform:translateY(.5rem)}}
+.d-title:focus{outline:0}
+.d-title{margin-top:1.25rem;font-size:1.5rem;line-height:1.22;font-weight:750;font-stretch:80%;text-wrap:balance}
+.d-buyer{margin-top:.5rem;color:var(--ink-2)}
+.due{margin-top:1.25rem;padding:.875rem 1rem 1rem;border-radius:.75rem;background:var(--paper-2)}
+.due.is-warn{background:var(--warning-bg)}
+.due.is-crit{background:var(--critical-bg)}
+.due-l{font-size:.875rem;color:var(--ink-2)}
+.due-d{display:block;margin-top:.125rem;font-size:1.3125rem;line-height:1.25;font-weight:750;font-stretch:80%}
+.due-r{display:block;margin-top:.25rem;font-weight:650}
+.due.is-warn .due-r{color:var(--warning)}
+.due.is-crit .due-r{color:var(--critical)}
+.acts{display:grid;gap:.625rem;margin-top:1rem}
+@media (min-width:30rem){.acts{grid-template-columns:1fr 1fr}}
+.btn{display:flex;align-items:center;justify-content:center;gap:.5rem;min-height:3rem;padding:.5rem 1rem;border-radius:.75rem;
+  border:1.5px solid var(--ink);color:var(--ink);font-weight:650;font-stretch:88%;text-decoration:none;text-align:center;
+  transition:background-color .15s var(--ease),transform .15s var(--ease)}
+.btn:active{transform:scale(.985);background:var(--paper-2)}
+.btn--primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn--primary:active{background:var(--accent);filter:brightness(.92)}
+.sec{margin-top:2rem}
+.sec h2{padding-top:.5rem;border-top:2px solid var(--ink);font-size:1.0625rem;line-height:1.3;font-weight:750;font-stretch:80%}
+.facts{margin-top:.25rem}
+.facts div{padding:.75rem 0;border-bottom:1px solid var(--rule)}
+.facts dt{font-size:.875rem;color:var(--ink-3)}
+.facts dd{margin-top:.125rem}
+.facts small,.tl small{display:block;margin-top:.25rem;font-size:.875rem;line-height:1.4;color:var(--ink-3)}
+@media (min-width:34rem){.facts div{display:grid;grid-template-columns:11rem 1fr;gap:1rem}.facts dd{margin-top:0}}
+.tl{margin-top:1rem}
+.tl li{position:relative;padding:0 0 1.125rem 1.875rem}
+.tl li::before{content:"";position:absolute;left:.1875rem;top:.375rem;width:.75rem;height:.75rem;border-radius:50%;
+  border:2px solid var(--ink-3);background:var(--paper)}
+.tl li::after{content:"";position:absolute;left:.5rem;top:1.375rem;bottom:-.125rem;width:1px;background:var(--rule)}
+.tl li:last-child{padding-bottom:0}
+.tl li:last-child::after{display:none}
+.tl .is-past{color:var(--ink-3)}
+.tl .is-past::before{background:var(--ink-3)}
+.tl .is-key::before{border-color:var(--accent);background:var(--accent)}
+.tl .is-key.is-past::before{border-color:var(--ink-3);background:var(--ink-3)}
+.tl b{display:block;font-weight:650}
+.tl .is-key b{font-weight:750}
+.official{margin-top:.75rem;color:var(--ink-2)}
+.code{margin-top:.5rem;font-size:.875rem;color:var(--ink-3)}
+.steps{margin-top:.75rem;counter-reset:s}
+.steps li{position:relative;padding:0 0 .75rem 2rem;counter-increment:s}
+.steps li::before{content:counter(s);position:absolute;left:0;top:.0625rem;width:1.375rem;height:1.375rem;border-radius:50%;
+  display:grid;place-items:center;background:var(--ink);color:var(--paper);font-size:.8125rem;font-weight:700}
+.fine{margin-top:.25rem;font-size:.875rem;color:var(--ink-3)}
+
+.toast{position:fixed;left:50%;bottom:1.25rem;z-index:20;max-width:calc(100% - 2rem);padding:.625rem 1rem;border-radius:.625rem;
+  background:var(--ink);color:var(--paper);font-size:.9375rem;font-weight:500;box-shadow:0 6px 20px rgba(0,0,0,.22);
+  transform:translate(-50%,1rem);opacity:0;pointer-events:none;transition:transform .22s var(--ease),opacity .22s var(--ease)}
+.toast.on{transform:translate(-50%,0);opacity:1}
+
+body[data-view="detail"] #home{display:none}
+body[data-view="list"] #detail{display:none}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body data-view="list">
+
+<div id="home">
+  <header class="shell">
+    <div class="wrap">
+      <div class="shell-top">
+        <h1 class="name">Մրցույթներ</h1>
+        <button class="size" id="sizeBtn" type="button" aria-label="Փոխել տառերի չափը"><span class="aa" aria-hidden="true"><span>Ա</span><span>Ա</span></span></button>
+      </div>
+      <p class="date" id="date">&nbsp;</p>
+      <p class="status" id="status">Բեռնվում է…</p>
+      <div class="search" role="search">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+        <input id="q" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false"
+               placeholder="Որոնել՝ դեղեր, վառելիք, կահույք…" aria-label="Որոնել մրցույթ">
+        <button class="clear" id="qClear" type="button" aria-label="Մաքրել որոնումը" hidden>
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Բաժիններ">
+    <div class="tabs-in" role="tablist">
+      <button class="tab" role="tab" type="button" id="tab-new" data-tab="new" aria-controls="list" aria-selected="true">Նոր <span class="n num" id="n-new">–</span></button>
+      <button class="tab" role="tab" type="button" id="tab-due" data-tab="due" aria-controls="list" aria-selected="false" tabindex="-1">Ժամկետներ <span class="n num" id="n-due">–</span></button>
+      <button class="tab" role="tab" type="button" id="tab-saved" data-tab="saved" aria-controls="list" aria-selected="false" tabindex="-1">Պահված <span class="n num" id="n-saved">0</span></button>
+    </div>
+  </nav>
+
+  <div class="chips" id="chips" role="group" aria-label="Ոլորտներ"></div>
+
+  <main class="wrap" id="list" role="tabpanel" aria-labelledby="tab-new">
+    <ul class="rows skel" aria-hidden="true">
+      <li class="row"><div class="row-main"><span class="dl"><i style="width:2rem;height:2.6rem"></i></span><span><i style="height:1.1rem;width:82%"></i><i style="height:.9rem;width:60%;margin-top:.5rem"></i><i style="height:.8rem;width:44%;margin-top:.5rem"></i></span></div></li>
+      <li class="row"><div class="row-main"><span class="dl"><i style="width:2rem;height:2.6rem"></i></span><span><i style="height:1.1rem;width:66%"></i><i style="height:.9rem;width:74%;margin-top:.5rem"></i><i style="height:.8rem;width:40%;margin-top:.5rem"></i></span></div></li>
+      <li class="row"><div class="row-main"><span class="dl"><i style="width:2rem;height:2.6rem"></i></span><span><i style="height:1.1rem;width:90%"></i><i style="height:.9rem;width:52%;margin-top:.5rem"></i><i style="height:.8rem;width:48%;margin-top:.5rem"></i></span></div></li>
+      <li class="row"><div class="row-main"><span class="dl"><i style="width:2rem;height:2.6rem"></i></span><span><i style="height:1.1rem;width:58%"></i><i style="height:.9rem;width:70%;margin-top:.5rem"></i><i style="height:.8rem;width:36%;margin-top:.5rem"></i></span></div></li>
+    </ul>
+  </main>
+
+  <footer class="wrap"><p class="foot" id="foot">Աղբյուրը՝ eauction.armeps.am</p></footer>
+</div>
+
+<article id="detail"></article>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- small helpers ---------- */
+const $ = (sel, root = document) => root.querySelector(sel);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const HOUR = 36e5, DAY = 864e5, TZ = 4 * HOUR;            // Yerevan is UTC+4 all year
+const toDate = s => (s ? new Date(s.slice(0, 16) + ':00+04:00') : null);
+const dayNo = d => Math.floor((d.getTime() + TZ) / DAY);   // calendar day in Yerevan
+const parts = d => { const x = new Date(d.getTime() + TZ); return {m: x.getUTCMonth(), d: x.getUTCDate(), wd: x.getUTCDay(), hh: x.getUTCHours(), mm: x.getUTCMinutes()}; };
+const p2 = n => String(n).padStart(2, '0');
+
+const WD = ['կիրակի', 'երկուշաբթի', 'երեքշաբթի', 'չորեքշաբթի', 'հինգշաբթի', 'ուրբաթ', 'շաբաթ'];
+const WD3 = ['ԿԻՐ', 'ԵՐԿ', 'ԵՐՔ', 'ՉՐՔ', 'ՀՆԳ', 'ՈՒՐԲ', 'ՇԲԹ'];
+const MON = ['հունվարի', 'փետրվարի', 'մարտի', 'ապրիլի', 'մայիսի', 'հունիսի', 'հուլիսի', 'օգոստոսի', 'սեպտեմբերի', 'հոկտեմբերի', 'նոյեմբերի', 'դեկտեմբերի'];
+const MON3 = ['ՀՆՎ', 'ՓՏՐ', 'ՄՐՏ', 'ԱՊՐ', 'ՄՅՍ', 'ՀՆՍ', 'ՀԼՍ', 'ՕԳՍ', 'ՍԵՊ', 'ՀՈԿ', 'ՆՈՅ', 'ԴԵԿ'];
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const fTime = d => { const p = parts(d); return `${p2(p.hh)}:${p2(p.mm)}`; };
+const fDay = d => { const p = parts(d); return `${p.d} ${MON[p.m]}`; };
+const fDayW = d => `${cap(WD[parts(d).wd])}, ${fDay(d)}`;
+const fFull = d => `${fDay(d)}, ${WD[parts(d).wd]}, ժ. ${fTime(d)}`;
+const fStamp = d => `${fDay(d)}, ${fTime(d)}`;
+
+const SECTORS = {med: 'Բժշկական', food: 'Սնունդ', fuel: 'Վառելիք', build: 'Շինարարություն', it: 'ՏՏ և կապ', auto: 'Տրանսպորտ',
+  elec: 'Էլեկտրական', furn: 'Կահույք', home: 'Տնտեսական', cloth: 'Հագուստ', office: 'Գրասենյակ',
+  equip: 'Սարքեր', serv: 'Ծառայություններ', other: 'Այլ'};
+const KINDS = {
+  goods: ['Ապրանք', 'Պետք է մատակարարել ապրանք։'],
+  services: ['Ծառայություն', 'Պետք է մատուցել ծառայություն։'],
+  works: ['Աշխատանք', 'Պետք է կատարել աշխատանք, օրինակ՝ շինարարություն կամ վերանորոգում։']
+};
+const NO_SUBJECT = 'Գնման առարկան վերնագրում նշված չէ';
+const safe = u => (/^https:\/\//.test(u || '') ? u : '#');
+const ICON = {
+  star: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.55 5.3 5.75.8-4.2 4.05 1.02 5.75L12 16.75 6.88 19.5l1.02-5.75L3.7 9.7l5.75-.8z"/></svg>',
+  back: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>',
+  share: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4.5M8 8l4-4 4 4M5.5 13v5a1.5 1.5 0 001.5 1.5h10a1.5 1.5 0 001.5-1.5v-5"/></svg>',
+  down: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5V15M8 11.5l4 4 4-4M5.5 19.5h13"/></svg>',
+  out: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5M19 5l-8 8M10.5 6.5H7A1.5 1.5 0 005.5 8v9A1.5 1.5 0 007 18.5h9a1.5 1.5 0 001.5-1.5v-3.5"/></svg>'
+};
+
+/* ---------- state ---------- */
+const S = {all: [], meta: {}, tab: 'new', sector: 'all', q: '', saved: new Set(), frozen: null, scroll: 0, openId: null, loaded: false};
+const now = () => S.frozen ?? Date.now();
+const store = {
+  get(k) { try { return localStorage.getItem('tb.' + k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem('tb.' + k, v); } catch { /* private mode: keep it in memory */ } }
+};
+const IN_TG = /tgWebApp/.test(location.hash) || !!window.TelegramWebviewProxy;   // known before the Telegram script loads
+let tg = null;
+
+/* ---------- time left ---------- */
+function left(end) {
+  const ms = end - now(), days = dayNo(end) - dayNo(new Date(now()));
+  if (ms <= 0) return {text: 'ժամկետն անցել է', lvl: 'closed'};
+  if (days === 0) return {text: `այսօր, մինչև ${fTime(end)}`, lvl: 'crit'};
+  if (days === 1) return {text: `վաղը, մինչև ${fTime(end)}`, lvl: 'crit'};
+  return {text: `մնաց ${days} օր`, lvl: days <= 3 ? 'warn' : 'ok'};
+}
+const isOpen = t => t.status === 'open' && t.endD && t.endD > now();
+const norm = s => String(s || '').toLowerCase().replace(/և/g, 'եվ').replace(/[«»"“”().,՝։]/g, ' ').replace(/\s+/g, ' ').trim();
+
+/* ---------- lists ---------- */
+function base(tab) {
+  if (tab === 'saved') return S.all.filter(t => S.saved.has(t.id));
+  const open = S.all.filter(isOpen);
+  if (tab === 'due') return open;
+  const today = dayNo(new Date(now()));
+  let fresh = open.filter(t => t.pubD && today - dayNo(t.pubD) <= 2);
+  if (!fresh.length) {                       // quiet days: show the most recent day that has any
+    const last = Math.max(...open.map(t => (t.pubD ? dayNo(t.pubD) : -1)));
+    fresh = open.filter(t => t.pubD && dayNo(t.pubD) === last);
+  }
+  return fresh;
+}
+function visible() {
+  const q = norm(S.q);
+  let items = base(S.tab);
+  if (q) items = items.filter(t => q.split(' ').every(w => t.hay.includes(w)));
+  const bySector = {};
+  items.forEach(t => { bySector[t.sector] = (bySector[t.sector] || 0) + 1; });
+  if (S.sector !== 'all' && !bySector[S.sector]) S.sector = 'all';
+  const total = items.length;
+  if (S.sector !== 'all') items = items.filter(t => t.sector === S.sector);
+  return {items, bySector, total};
+}
+
+function rowHTML(t, mode) {
+  const l = left(t.endD), p = parts(t.endD), off = !isOpen(t);
+  const cls = l.lvl === 'crit' || l.lvl === 'warn' ? ` is-${l.lvl}` : '';
+  const dl = mode === 'due'
+    ? `<span class="dl dl--time${cls} num"><span class="dl-day">${fTime(t.endD)}</span></span>`
+    : `<span class="dl${cls} num"><span class="dl-wd">${WD3[p.wd]}</span><span class="dl-day">${p.d}</span><span class="dl-mo">${MON3[p.m]}</span></span>`;
+  const meta = [];
+  if (t.status === 'cancelled') meta.push('<span class="left is-closed">չեղարկված է</span>');
+  else if (off || (mode !== 'due' && l.lvl !== 'ok')) meta.push(`<span class="left is-${l.lvl}">${l.text}</span>`);
+  if (mode === 'due' && t.pubD && dayNo(t.pubD) === dayNo(new Date(now()))) meta.push('<span class="tag">նոր</span>');
+  meta.push(`<span>${esc(SECTORS[t.sector] || SECTORS.other)}</span>`);
+  if (t.lots) meta.push(`<span class="num">${t.lots} չափաբաժին</span>`);
+  const on = S.saved.has(t.id);
+  return `<li class="row${off ? ' is-off' : ''}" data-id="${t.id}">
+    <button class="row-main" type="button" data-open="${t.id}">${dl}
+      <span class="row-text"><span class="row-title">${esc(t.subject || NO_SUBJECT)}</span>
+      ${t.buyer ? `<span class="row-buyer">${esc(t.buyer)}</span>` : ''}
+      <span class="row-meta"><span class="mi">${meta.join('')}</span></span></span>
+    </button>
+    <button class="star" type="button" data-star="${t.id}" aria-pressed="${on}" aria-label="${on ? 'Հանել պահվածներից' : 'Պահել'}">${ICON.star}</button>
+  </li>`;
+}
+
+function emptyHTML(total) {
+  if (S.q) return `<div class="empty"><h2>Ոչինչ չի գտնվել</h2><p>«${esc(S.q)}» բառով բաց մրցույթ չկա։ Փորձեք ավելի կարճ բառ, օրինակ՝ «դեղ» կամ «վառելիք»։</p></div>`;
+  if (S.tab === 'saved') return `<div class="empty"><h2>Դեռ ոչինչ պահված չէ</h2><p>Հետաքրքիր մրցույթը պահելու համար սեղմեք աստղանիշը։ Այն կհայտնվի այստեղ՝ իր վերջնաժամկետով։</p></div>`;
+  if (S.tab === 'new') return `<div class="empty"><h2>Նոր մրցույթ չկա</h2><p>Վերջին օրերին նոր մրցույթ չի հրապարակվել։ Բոլոր բաց մրցույթները «Ժամկետներ» բաժնում են։</p></div>`;
+  return `<div class="empty"><h2>Բաց մրցույթ չկա</h2><p>Այս պահին հայտեր ընդունող մրցույթ չկա։</p></div>`;
+}
+
+function render() {
+  if (!S.loaded) return;
+  const open = S.all.filter(isOpen);
+  $('#n-new').textContent = base('new').length;
+  $('#n-due').textContent = open.length;
+  $('#n-saved').textContent = S.saved.size ? S.all.filter(t => S.saved.has(t.id)).length : 0;
+
+  const {items, bySector, total} = visible();
+  const keys = Object.keys(bySector).sort((a, b) => bySector[b] - bySector[a] || a.localeCompare(b));
+  $('#chips').innerHTML = total ? [['all', 'Բոլորը', total], ...keys.map(k => [k, SECTORS[k] || SECTORS.other, bySector[k]])]
+    .map(([k, label, n]) => `<button class="chip" type="button" data-sector="${k}" aria-pressed="${S.sector === k}">${esc(label)} <span class="n num">${n}</span></button>`).join('') : '';
+  $('#chips').hidden = !total;
+
+  const today = dayNo(new Date(now()));
+  let html = '';
+  if (S.meta.note) html += `<p class="strip">${esc(S.meta.note)}</p>`;
+  const upd = toDate(S.meta.updated);
+  if (upd && !S.frozen && now() - upd > 36 * HOUR) html += `<p class="strip strip--warn">Տվյալները վերջին անգամ թարմացվել են ${fStamp(upd)}-ին։ Հնարավոր է՝ նոր մրցույթներ կան, որոնք այստեղ դեռ չեն երևում։</p>`;
+
+  if (!items.length) html += emptyHTML(total);
+  else if (S.tab === 'saved') {
+    const sorted = [...items].sort((a, b) => (isOpen(b) - isOpen(a)) || (a.endD - b.endD));
+    html += `<section class="day"><ul class="rows" style="margin-top:.75rem">${sorted.map(t => rowHTML(t, 'saved')).join('')}</ul></section>`;
+  } else {
+    const due = S.tab === 'due', groups = new Map();
+    const sorted = [...items].sort((a, b) => due ? (a.endD - b.endD) || (a.id - b.id) : (b.pubD - a.pubD) || (b.id - a.id));
+    sorted.forEach(t => { const k = dayNo(due ? t.endD : t.pubD); (groups.get(k) || groups.set(k, []).get(k)).push(t); });
+    groups.forEach((list, k) => {
+      const d = due ? list[0].endD : list[0].pubD, diff = k - today;
+      let label = fDayW(d), side = `${list.length} մրցույթ`, sideCls = '';
+      if (diff === 0) label = `Այսօր, ${fDay(d)}`;
+      else if (!due && diff === -1) label = `Երեկ, ${fDay(d)}`;
+      else if (due && diff === 1) label = `Վաղը, ${fDay(d)}`;
+      if (due) {
+        side = diff <= 0 ? 'վերջին օրն է' : diff === 1 ? 'մնաց 1 օր' : `մնաց ${diff} օր`;
+        sideCls = diff <= 1 ? ' is-crit' : diff <= 3 ? ' is-warn' : '';
+      }
+      html += `<section class="day"><h2 class="day-h"><span>${label}</span><span class="day-n num${sideCls}">${side}</span></h2><ul class="rows">${list.map(t => rowHTML(t, S.tab)).join('')}</ul></section>`;
+    });
+  }
+  const list = $('#list');
+  list.innerHTML = html;
+  list.setAttribute('aria-labelledby', 'tab-' + S.tab);
+
+  const freshToday = open.filter(t => t.pubD && dayNo(t.pubD) === today).length;
+  $('#date').textContent = fDayW(new Date(now()));
+  $('#status').innerHTML = `Այսօր հրապարակվել է <b class="num">${freshToday}</b> մրցույթ, բաց է <b class="num">${open.length}</b>-ը։`;
+  $('#foot').textContent = `Աղբյուրը՝ eauction.armeps.am։ ${upd ? `Թարմացվել է ${fStamp(upd)}-ին։ ` : ''}Տվյալները թարմացվում են աշխատանքային օրերին՝ օրը երեք անգամ։`;
+}
+
+/* ---------- notice view ---------- */
+function detailHTML(t) {
+  const l = left(t.endD), on = S.saved.has(t.id), kind = KINDS[t.kind];
+  const cls = l.lvl === 'crit' || l.lvl === 'warn' ? ` is-${l.lvl}` : '';
+  const past = d => (d && d <= now() ? ' is-past' : '');
+  const facts = [];
+  facts.push(['Ինչ են գնում', esc(t.subject || NO_SUBJECT) + (t.subject ? '' : '<small>Նայեք հրավերը՝ այնտեղ գրված է, թե ինչ է գնվում։</small>')]);
+  if (t.buyer) facts.push(['Գնորդը', esc(t.buyer)]);
+  if (t.for) facts.push(['Ում կարիքների համար', esc(t.for)]);
+  if (kind) facts.push(['Տեսակը', `${kind[0]}<small>${kind[1]}</small>`]);
+  if (t.lots) facts.push(['Չափաբաժիններ', `<span class="num">${t.lots}</span><small>${t.lots > 1
+    ? 'Չափաբաժինը մրցույթի առանձին մասն է։ Կարող եք հայտ ներկայացնել մեկ կամ մի քանի չափաբաժնի համար։'
+    : 'Մրցույթը մասերի բաժանված չէ։'}</small>`]);
+
+  const tl = [];
+  if (t.pubD) tl.push(`<li class="is-past"><b>Հրապարակվել է</b><span class="num">${fStamp(t.pubD)}</span></li>`);
+  if (t.askD) tl.push(`<li class="${past(t.askD).trim()}"><b>Հարցեր գնորդին</b><span class="num">մինչև ${fStamp(t.askD)}</span><small>Պարզաբանման հարցերն ուղարկվում են ARMEPS համակարգով։</small></li>`);
+  tl.push(`<li class="is-key${past(t.endD)}"><b>Հայտի ներկայացում</b><span class="num">մինչև ${fStamp(t.endD)}</span></li>`);
+  if (t.aucD) tl.push(`<li class="${past(t.aucD).trim()}"><b>Հակադարձ աճուրդ</b><span class="num">${fStamp(t.aucD)}</span><small>Մասնակիցներն առցանց իջեցնում են իրենց առաջարկած գինը։</small></li>`);
+
+  const state = t.status === 'cancelled' ? 'մրցույթը չեղարկված է' : l.lvl === 'crit' ? l.text.split(',')[0] : l.text;
+  return `<div class="dbar"><div class="dbar-in">
+      <button type="button" data-back>${ICON.back}Հետ</button>
+      <span class="dbar-r">
+        <button class="star" type="button" data-star="${t.id}" aria-pressed="${on}">${ICON.star}<span data-star-label>${on ? 'Պահված է' : 'Պահել'}</span></button>
+        <button type="button" data-share="${t.id}" aria-label="Ուղարկել">${ICON.share}</button>
+      </span></div></div>
+    <div class="wrap">
+      <h1 class="d-title" tabindex="-1">${esc(t.subject || NO_SUBJECT)}</h1>
+      ${t.buyer ? `<p class="d-buyer">${esc(t.buyer)}</p>` : ''}
+      <p class="due${t.status === 'cancelled' ? '' : cls}"><span class="due-l">Հայտերն ընդունվում են մինչև</span>
+        <b class="due-d num">${fDay(t.endD)}, ժամը ${fTime(t.endD)}</b><span class="due-r">${cap(WD[parts(t.endD).wd])} · ${state}</span></p>
+      <div class="acts">
+        ${t.inv ? `<a class="btn btn--primary" href="${esc(safe(t.inv))}" target="_blank" rel="noopener" data-ext>${ICON.down}Ներբեռնել հրավերը</a>` : ''}
+        <a class="btn" href="${esc(safe(t.url))}" target="_blank" rel="noopener" data-ext>${ICON.out}Բացել ARMEPS-ում</a>
+      </div>
+      <section class="sec"><h2>Պարզ բառերով</h2>
+        <dl class="facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></section>
+      <section class="sec"><h2>Կարևոր օրերը</h2><ol class="tl">${tl.join('')}</ol></section>
+      <section class="sec"><h2>Ինչպես մասնակցել</h2>
+        <ol class="steps">
+          <li>Ներբեռնեք հրավերը և ուշադիր կարդացեք պայմանները։</li>
+          <li>Եթե հարց ունեք, ուղարկեք այն գնորդին մինչև նշված օրը։</li>
+          <li>Հայտը ներկայացրեք ARMEPS էլեկտրոնային աճուրդի համակարգում՝ մինչև վերջնաժամկետը։</li>
+          <li>Աճուրդի օրը մասնակցեք առցանց։ Սովորաբար հաղթում է պայմաններին համապատասխանող ամենացածր գինը։</li>
+        </ol>
+        <p class="fine">Մասնակցելու համար պետք է գրանցված լինել ARMEPS համակարգում։ Ճշգրիտ պայմանները միշտ հրավերում են։</p></section>
+      <section class="sec"><h2>Պաշտոնական անվանումը</h2>
+        <p class="official">${esc(t.title)}</p>
+        <p class="code">Ծածկագիր՝ ${esc(t.code)}</p></section>
+      <p class="foot">Աղբյուրը՝ eauction.armeps.am։ Այս էջը պաշտոնական հայտարարության պարզեցված շարադրանքն է. վճռորոշը հրավերի տեքստն է։</p>
+    </div>`;
+}
+
+function show(id, fromRoute) {
+  const t = S.all.find(x => x.id === id);
+  if (!t) return showList(true);
+  if (document.body.dataset.view === 'list') S.scroll = window.scrollY;
+  S.openId = id;
+  $('#detail').innerHTML = detailHTML(t);
+  document.body.dataset.view = 'detail';
+  window.scrollTo(0, 0);
+  $('.d-title').focus({preventScroll: true});
+  if (tg) tg.BackButton.show();
+  if (!IN_TG && !fromRoute && location.hash !== '#t' + id) { S.pushed = true; location.hash = 't' + id; }
+}
+function showList(fromRoute) {
+  const id = S.openId;
+  S.openId = null;
+  document.body.dataset.view = 'list';
+  $('#detail').innerHTML = '';
+  if (tg) tg.BackButton.hide();
+  if (!IN_TG && !fromRoute && /^#t\d+$/.test(location.hash)) {
+    if (S.pushed) { S.pushed = false; history.back(); } else location.hash = '';
+  }
+  render();
+  window.scrollTo(0, S.scroll);
+  const row = id && $(`[data-open="${id}"]`);
+  if (row) row.focus({preventScroll: true});
+}
+function route() {
+  const m = /^#t(\d+)$/.exec(location.hash);
+  if (m && S.loaded) { if (S.openId !== +m[1]) show(+m[1], true); }
+  else if (document.body.dataset.view === 'detail') showList(true);
+}
+
+/* ---------- saved tenders ---------- */
+function persist() {
+  const v = [...S.saved].join(',');
+  store.set('saved', v);
+  try { if (tg && tg.CloudStorage && tg.isVersionAtLeast('6.9')) tg.CloudStorage.setItem('saved', v); } catch { /* optional */ }
+}
+function toggleSaved(id, btn) {
+  const on = !S.saved.has(id);
+  on ? S.saved.add(id) : S.saved.delete(id);
+  persist();
+  try { tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred('light'); } catch { /* optional */ }
+  toast(on ? 'Պահվեց «Պահված» բաժնում' : 'Հանվեց պահվածներից');
+  if (document.body.dataset.view === 'detail') {
+    btn.setAttribute('aria-pressed', on);
+    $('[data-star-label]', btn).textContent = on ? 'Պահված է' : 'Պահել';
+    btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
+    return;
+  }
+  if (S.tab === 'saved') return render();
+  btn.setAttribute('aria-pressed', on);
+  btn.setAttribute('aria-label', on ? 'Հանել պահվածներից' : 'Պահել');
+  btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
+  $('#n-saved').textContent = S.all.filter(t => S.saved.has(t.id)).length;
+}
+let toastTimer;
+function toast(text) {
+  const el = $('#toast');
+  el.textContent = text;
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 2200);
+}
+
+function share(id) {
+  const t = S.all.find(x => x.id === id);
+  if (!t) return;
+  const text = `${t.subject || NO_SUBJECT}\nՀայտերը՝ մինչև ${fFull(t.endD)}`;
+  if (tg) return tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(t.url)}&text=${encodeURIComponent(text)}`);
+  const copy = () => navigator.clipboard.writeText(`${text}\n${t.url}`).then(() => toast('Հղումը պատճենվեց'), () => toast('Չհաջողվեց պատճենել հղումը'));
+  if (navigator.share) navigator.share({text, url: t.url}).catch(e => { if (e && e.name !== 'AbortError') copy(); });
+  else copy();
+}
+
+/* ---------- events ---------- */
+function setTab(tab, focus) {
+  S.tab = tab;
+  document.querySelectorAll('.tab').forEach(b => {
+    const on = b.dataset.tab === tab;
+    b.setAttribute('aria-selected', on);
+    b.tabIndex = on ? 0 : -1;
+    if (on && focus) b.focus();
+  });
+  store.set('tab', tab);
+  render();
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-tab],[data-sector],[data-open],[data-star],[data-back],[data-share],[data-ext],[data-retry]');
+  if (!el) return;
+  if (el.dataset.tab) { setTab(el.dataset.tab); const top = $('.shell').offsetHeight; if (window.scrollY > top) window.scrollTo(0, top); }
+  else if (el.dataset.sector) { S.sector = el.dataset.sector; render(); }
+  else if (el.dataset.open) show(+el.dataset.open);
+  else if (el.dataset.star) toggleSaved(+el.dataset.star, el);
+  else if ('back' in el.dataset) showList();
+  else if (el.dataset.share) share(+el.dataset.share);
+  else if ('retry' in el.dataset) load();
+  else if ('ext' in el.dataset && tg) { e.preventDefault(); tg.openLink(el.href); }
+  try { if (tg && (el.dataset.tab || el.dataset.sector)) tg.HapticFeedback.selectionChanged(); } catch { /* optional */ }
+});
+$('.tabs-in').addEventListener('keydown', e => {
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  const order = ['new', 'due', 'saved'], i = order.indexOf(S.tab) + (e.key === 'ArrowRight' ? 1 : -1);
+  setTab(order[(i + 3) % 3], true);
+});
+const q = $('#q');
+q.addEventListener('input', () => {
+  S.q = q.value.trim();
+  $('#qClear').hidden = !q.value;
+  if (S.q && S.tab !== 'due') setTab('due'); else render();   // a search looks through every open tender
+});
+q.addEventListener('keydown', e => { if (e.key === 'Enter') q.blur(); });
+$('#qClear').addEventListener('click', () => { q.value = ''; S.q = ''; $('#qClear').hidden = true; render(); q.focus(); });
+$('#sizeBtn').addEventListener('click', () => {
+  const next = ((+store.get('size') || 0) + 1) % 3;
+  store.set('size', next); applySize(next);
+  toast(['Տառերը՝ սովորական', 'Տառերը՝ մեծ', 'Տառերը՝ շատ մեծ'][next]);
+});
+function applySize(n) { document.documentElement.style.fontSize = ['100%', '112.5%', '125%'][n] || '100%'; }
+window.addEventListener('hashchange', () => { if (!IN_TG) route(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.loaded && Date.now() - S.fetchedAt > 10 * 60e3) load(true); });
+
+/* ---------- data ---------- */
+function ingest(data) {
+  S.meta = data.meta || {};
+  S.frozen = S.meta.preview && S.meta.updated ? toDate(S.meta.updated).getTime() : null;   // a preview keeps its own clock
+  S.all = (data.tenders || []).filter(t => t && t.id && t.end).map(t => ({...t,
+    endD: toDate(t.end), pubD: toDate(t.pub || t.seen), askD: toDate(t.ask), aucD: toDate(t.auc),
+    sector: SECTORS[t.sector] ? t.sector : 'other',
+    hay: norm([t.subject, t.title, t.buyer, t.for, t.code, SECTORS[t.sector]].join(' '))}));
+  S.loaded = true; S.fetchedAt = Date.now();
+}
+async function load(quiet) {
+  try {
+    let res = await fetch('data/tenders.json?v=' + Math.floor(Date.now() / 3e5), {cache: 'no-cache'}).catch(() => null);
+    if (!res || !res.ok) res = await fetch('data/tenders.json');
+    if (!res.ok) throw new Error(res.status);
+    ingest(await res.json());
+    if (document.body.dataset.view === 'list') render();
+    if (!quiet && !IN_TG) route();
+  } catch (err) {
+    if (quiet || S.loaded) return;
+    $('#status').textContent = 'Տվյալները չեն բեռնվել։';
+    $('#chips').hidden = true;
+    $('#list').innerHTML = `<div class="empty"><h2>Մրցույթները չհաջողվեց բեռնել</h2><p>Ստուգեք ինտերնետ կապը և փորձեք նորից։</p><button class="btn btn--primary" type="button" data-retry>Փորձել նորից</button></div>`;
+  }
+}
+
+/* ---------- Telegram ---------- */
+function initTelegram() {
+  if (!IN_TG) return Promise.resolve();
+  return new Promise(done => {
+    const s = document.createElement('script');
+    s.src = 'https://telegram.org/js/telegram-web-app.js';
+    const finish = () => {
+      const app = window.Telegram && window.Telegram.WebApp;
+      if (app && app.initData !== undefined && !tg) {
+        tg = app;
+        const theme = () => {
+          document.documentElement.dataset.theme = tg.colorScheme === 'dark' ? 'dark' : 'light';
+          const css = getComputedStyle(document.documentElement);
+          try { tg.setHeaderColor(css.getPropertyValue('--shell').trim()); tg.setBackgroundColor(css.getPropertyValue('--paper').trim()); } catch { /* old clients */ }
+        };
+        try { tg.ready(); tg.expand(); theme(); tg.onEvent('themeChanged', theme); tg.BackButton.onClick(() => showList()); } catch { /* old clients */ }
+        try {
+          if (tg.CloudStorage && tg.isVersionAtLeast('6.9')) tg.CloudStorage.getItem('saved', (err, val) => {
+            if (err || !val) return;
+            val.split(',').map(Number).filter(Boolean).forEach(id => S.saved.add(id));
+            persist(); render();
+          });
+        } catch { /* optional */ }
+      }
+      done();
+    };
+    s.onload = finish; s.onerror = finish;
+    setTimeout(finish, 2500);
+    document.head.appendChild(s);
+  });
+}
+
+/* ---------- start ---------- */
+(store.get('saved') || '').split(',').map(Number).filter(Boolean).forEach(id => S.saved.add(id));
+applySize(+store.get('size') || 0);
+initTelegram();
+load();
+})();
+</script>
+</body>
+</html>
