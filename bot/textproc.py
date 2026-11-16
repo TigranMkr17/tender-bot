@@ -261,7 +261,7 @@ _ORG_HEAD = re.compile(
     r"\s+(?:համար[`՝,:]?\s+)?(?P<what>\S.*)$")
 _SPACED_WORD = re.compile(r"^(?:[^\W\d_]\s){3,}[^\W\d_]\s+")       # "Հ Ր Ա Վ Ե Ր ..."
 _SERIAL_TAIL = re.compile(r"\s+\d{2,4}\s*/\s*\d{1,4}\s*$")          # "... ձեռքբերում 27/01"
-_QUOTED_WHOLE = re.compile(r"^«([^«»]+)»(-?ի)?(?:\s+ձեռք?\s?բեր(?:ում|ման))?$")
+_QUOTED_WHOLE = re.compile(r"^«([^«»]+)»(-?[իԻ])?(?:\s+ձեռք?\s?բեր(?:ում|ման))?$")
 _DOUBLE_CAP = re.compile(r"\b([^\W\d_])([^\W\d_])([^\W\d_]{3,})\b")
 
 
