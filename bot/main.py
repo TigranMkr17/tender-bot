@@ -24,6 +24,8 @@ DETAIL_TRIES = 3
 BUDGET = 9 * 60     # seconds one run may spend reading ARMEPS; what is left waits for the next run
 WORKERS = 2         # notice pages read side by side; the site resets a third connection
 GIVE_UP_AFTER = 8   # notice pages failing in a row before the run stops asking for more
+MAX_ID_PAGES = 12   # how deep the list ordered by number is followed
+ID_ORDERINGS = ("by_id", "by_tender_id", "by_number")
 
 
 def say(text: str) -> None:
@@ -69,6 +71,30 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
     floor = at - timedelta(days=1)
     seen: set[int] = set()
     stats = {"pages": 0, "rows": 0, "new": 0, "details": 0, "detail_failed": 0, "postponed": 0}
+
+    def take(r) -> datetime | None:
+        """Remember one list row if its deadline is current. Returns its deadline."""
+        seen.add(r.id)
+        end = store.parse(r.deadline)
+        if end is None or end < floor:
+            return end
+        stats["rows"] += 1
+        t = tenders.get(r.id)
+        if t is None:
+            t = tenders[r.id] = {"id": r.id}
+            if not first_run:
+                t["seen"] = store.stamp(at)
+            stats["new"] += 1
+        if t.get("end") and t["end"] != r.deadline:
+            t["stale"] = True  # the deadline moved: re-read the other dates too
+        t.update(code=r.code, lots=r.lots, end=r.deadline,
+                 status=store.status_key(r.status), status_text=r.status)
+        if not t.get("pub") or not t.get("title"):
+            t["title"] = r.title
+        return end
+
+    orderings: list[str] = []
+    links: list[str] = []
     for page in range(1, MAX_PAGES + 1):
         try:
             html = fetch(armeps.list_url(page))
@@ -83,39 +109,51 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
             raise armeps.ScrapeError(
                 "The tender list opened but no tender rows were found. The page layout may "
                 "have changed; the page was saved to debug/list_1.html.")
+        if page == 1:
+            orderings, links = armeps.sort_keys(html), armeps.list_links(html)
         fresh_rows = [r for r in rows if r.id not in seen]
         if not fresh_rows:
             break
         stats["pages"] += 1
-        latest = None
-        for r in fresh_rows:
-            seen.add(r.id)
-            end = store.parse(r.deadline)
-            if end is None:
-                continue
-            latest = end if latest is None or end > latest else latest
-            if end < floor:
-                continue
-            stats["rows"] += 1
-            t = tenders.get(r.id)
-            if t is None:
-                t = tenders[r.id] = {"id": r.id}
-                if not first_run:
-                    t["seen"] = store.stamp(at)
-                stats["new"] += 1
-            if t.get("end") and t["end"] != r.deadline:
-                t["stale"] = True  # the deadline moved: re-read the other dates too
-            t.update(code=r.code, lots=r.lots, end=r.deadline,
-                     status=store.status_key(r.status), status_text=r.status)
-            if not t.get("pub") or not t.get("title"):
-                t["title"] = r.title
-        if latest is not None and latest < floor:
+        ends = [e for e in (take(r) for r in fresh_rows) if e is not None]
+        if ends and max(ends) < floor:
             break
         if clock() - started > budget:
             say(f"! The list is answering slowly: stopped after page {page}.")
             break
         time.sleep(pause)
     say(f"List: {stats['pages']} page(s), {stats['rows']} current tenders, {stats['new']} new")
+
+    # Tenders with the same deadline come in no fixed order, so a page can skip one. Numbers
+    # have no ties: walk the list ordered by number from the newest until it brings nothing more.
+    by_number = next((k for k in ID_ORDERINGS if k in orderings), None)
+    if not by_number and links:
+        say("  (no ordering by number among the list's links: " + ", ".join(links) + ")")
+    if by_number:
+        before, quiet = stats["rows"], 0
+        for page in range(1, MAX_ID_PAGES + 1):
+            if clock() - started > budget:
+                break
+            try:
+                rows = armeps.parse_list(fetch(armeps.list_url(page, by_number)))
+            except armeps.ScrapeError as exc:
+                say(f"! list by number, page {page}: {exc}")
+                break
+            ids = [r.id for r in rows]
+            if not ids:
+                break
+            if ids != sorted(ids, reverse=True):
+                say("! The list by number did not come newest first: left out.")
+                break
+            got = stats["rows"]
+            for r in rows:
+                if r.id not in seen:
+                    take(r)
+            quiet = quiet + 1 if stats["rows"] == got else 0
+            if quiet >= 2 and page >= 3:
+                break
+            time.sleep(pause)
+        say(f"List by number: {stats['rows'] - before} tender(s) the first list had skipped")
 
     # notice pages: full title, buyer, publication time, other dates, invitation
     todo = [t for t in tenders.values()

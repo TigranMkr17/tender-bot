@@ -164,8 +164,24 @@ def parse_list(html: str) -> list[Row]:
     return rows
 
 
-def list_url(page: int) -> str:
-    return LIST_FIRST if page <= 1 else LIST_PAGE.format(page=page)
+def list_url(page: int, sort: str = "by_end_bid_time") -> str:
+    """A page of the register. sort is one of the orderings its column headers link to."""
+    first = f"{BASE}/hy/public/tender/{sort}/2/"
+    return first if page <= 1 else f"{first}start/{page}"
+
+
+_SORT = re.compile(r"/public/tender/(by_[a-z_]+)/")
+
+
+def sort_keys(html: str) -> list[str]:
+    """The orderings a list page offers: by_end_bid_time, by_code, ..."""
+    return sorted(set(_SORT.findall(html or "")))
+
+
+def list_links(html: str, limit: int = 8) -> list[str]:
+    """The distinct list addresses a page links to (for the log, when an ordering is missing)."""
+    found = re.findall(r"""href=["']([^"']*/public/tender/[^"']*)["']""", html or "")
+    return sorted({re.sub(r"/start/\d+/?$", "/start/N", link) for link in found})[:limit]
 
 
 # --------------------------------------------------------------------------

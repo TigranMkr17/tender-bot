@@ -421,6 +421,50 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(stats["rows"], 30)
         self.assertEqual(stats["details"], 29)
 
+    def test_a_tender_skipped_by_the_deadline_list_is_found_by_number(self):
+        """Rows with the same deadline have no fixed order, so a page can leave one out."""
+        everything = sorted(SEED["tenders"], key=lambda t: -t["id"])
+        skipped = next(t for t in everything if t["status"] == "Հրապարակված")
+        by_deadline = [t for t in SEED["tenders"] if t["id"] != skipped["id"]]
+        header = '<a href="/hy/public/tender/by_id/2/">Հ/հ</a><a href="/hy/public/tender/by_code/2/">Ծածկագիր</a>'
+        pages = {armeps.list_url(1): header + list_page(by_deadline),
+                 armeps.list_url(1, "by_id"): header + list_page(everything)}
+        asked = []
+
+        def fake(url):
+            asked.append(url)
+            if url in pages:
+                return pages[url]
+            if "/start/" in url:
+                return "<html><body><table></table></body></html>"
+            return detail_page(BY_ID[int(url.rstrip("/").rsplit("/", 1)[1])])
+
+        tenders: dict = {}
+        stats = main.scrape(tenders, AT, fetch=fake, pause=0)
+        self.assertIn(skipped["id"], tenders)
+        self.assertEqual(stats["rows"], 30)
+        self.assertTrue(tenders[skipped["id"]].get("pub"))            # and its notice was read
+        self.assertIn(armeps.list_url(1, "by_id"), asked)
+        self.assertEqual(armeps.sort_keys(pages[armeps.list_url(1)]),
+                         ["by_code", "by_end_bid_time", "by_id"])
+
+    def test_a_list_by_number_out_of_order_is_not_trusted(self):
+        header = '<a href="/hy/public/tender/by_id/2/">Հ/հ</a><a href="/hy/public/tender/by_code/2/">Ծածկագիր</a>'
+        shuffled = sorted(SEED["tenders"], key=lambda t: t["id"] % 7)
+        pages = {armeps.list_url(1): header + list_page(SEED["tenders"][:20]),
+                 armeps.list_url(1, "by_id"): list_page(shuffled)}
+
+        def fake(url):
+            if url in pages:
+                return pages[url]
+            if "/start/" in url:
+                return "<html><body><table></table></body></html>"
+            return detail_page(BY_ID[int(url.rstrip("/").rsplit("/", 1)[1])])
+
+        tenders: dict = {}
+        main.scrape(tenders, AT, fetch=fake, pause=0)
+        self.assertEqual(len(tenders), 20)
+
     def test_layout_change_is_reported(self):
         cwd = os.getcwd()
         with tempfile.TemporaryDirectory() as tmp:
