@@ -45,6 +45,7 @@ RECENT = 400
 CHUNK = 50                 # finished tenders per docs/data/h/r/<n>.json
 PERSON_LABEL = "անհատ ձեռնարկատեր"
 READER = 2                 # raise it when invite.py learns something: every open invitation is read again
+RULES = 2                  # raise it when "is this page a result yet?" changes: waiting pages are read again
 CLOSED = (("չեղարկ", "c"), ("cancel", "c"), ("չկայաց", "f"), ("failed", "f"), ("ավարտ", ""), ("finish", ""))
 AWARDING = ("շնորհ", "award")
 REPLACED = ("փոփոխ", "modified", "changed")     # the notice was amended: it lives on under a new number
@@ -313,6 +314,9 @@ def read_results(tenders: list[dict], hist: dict, records: dict[int, dict], at: 
     recheck = {int(k): v for k, v in hist.get("recheck", {}).items()}
     kept_lots = (lots_state or {}).get("t", {})
     early: dict[str, int] = {}
+    if hist.get("rules") != RULES:                         # what counts as a result has changed:
+        retry.clear()                                      # pages set aside under the old rules are looked at now
+        hist["rules"] = RULES
     companies = hist.setdefault("companies", {})
     state_ids = {t["id"]: t for t in tenders}
     open_ids = {t["id"] for t in tenders if store.is_open(t, at)}

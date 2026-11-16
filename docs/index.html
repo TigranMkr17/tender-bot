@@ -573,10 +573,10 @@ const NB = ' ';
 const group = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, NB);
 function short(n) {
   const a = Math.abs(n), f = (v, unit) => String(+v.toFixed(Math.abs(v) < 10 ? 2 : Math.abs(v) < 100 ? 1 : 0)).replace('.', ',') + NB + unit;
-  return a >= 1e9 ? f(n / 1e9, 'մլրդ') : a >= 1e6 ? f(n / 1e6, 'մլն') : a >= 1e4 ? f(n / 1e3, 'հազ.') : group(n);
+  return a >= 999.5e6 ? f(n / 1e9, 'մլրդ') : a >= 999.5e3 ? f(n / 1e6, 'մլն') : a >= 1e4 ? f(n / 1e3, 'հազ.') : group(n);
 }
 const money = n => (n == null ? '—' : short(n) + NB + 'դրամ');
-const qty = n => (Number.isInteger(n) ? group(n) : String(+n.toFixed(3)).replace('.', ','));
+const qty = n => { const [whole, part] = String(+(+n).toFixed(3)).split('.'); return group(+whole) + (part ? ',' + part : ''); };
 const off = (low, est) => (low && est ? Math.round((1 - low / est) * 100) : null);   // how far below the estimate, in percent
 const median = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 const plural = (n, word) => `${group(n)}${NB}${word}`;
