@@ -1040,7 +1040,8 @@ function pastOf(t) {
   const offer = (x, cpv) => (byCode.get(cpv) || []).forEach(l => {
     if (!alike(l.name, x.title)) return;
     const was = best.get(l.n);
-    if (!was || x.own > was.own || (x.own === was.own && x.date > was.date)) best.set(l.n, {...x, lot: l.n});
+    const rank = v => (v.low ? 2 : 0) + v.own;            // a purchase that ended with a price tells more than one that failed
+    if (!was || rank(x) > rank(was) || (rank(x) === rank(was) && x.date > was.date)) best.set(l.n, {...x, lot: l.n});
   });
   if (own) (own.lots || []).forEach(r => {
     if (codes.has(r[0]) && r[2] !== t.id) offer({own: 1, title: r[1], id: r[2], date: r[3] || '', est: r[4], low: r[5], n: r[6], lead: r[7], q: r[9], u: r[10]}, r[0]);
@@ -1078,7 +1079,7 @@ function cmpHTML(x, many) {
   return `<button class="cmp" type="button" data-go="r${x.id}"><span class="cmp-h">${many ? `<span class="lot-n num">${x.lot}</span>` : ''}<span class="cmp-t">${esc(x.title || 'Չափաբաժին')}</span></span>` +
     `<span class="cmp-m num">${[d && fDayY(d), x.own ? 'նույն գնորդը' : x.buyer && esc(x.buyer)].filter(Boolean).join(' · ')}</span>` +
     (cut != null ? `${priceBar(x.low, x.est)}<span class="cmp-n num"><span>${money(x.est)} → <b>${money(x.low)}</b></span><b class="pct">${signed(cut)}</b></span>`
-      : `<span class="cmp-n"><span>${x.n ? 'գինը նշված չէ' : 'հայտ չի եղել'}</span></span>`) +
+      : `<span class="cmp-n"><span>${x.n ? 'գինը նշված չէ' : 'ընդունված հայտ չի եղել'}</span></span>`) +
     (tail.length ? `<span class="cmp-m num">${tail.join(' · ')}</span>` : '') + '</button>';
 }
 function beforeHTML(t, p) {
