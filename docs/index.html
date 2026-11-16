@@ -116,8 +116,8 @@ svg{display:block;flex:none}
 
 /* ---------- tabs: a segmented control ---------- */
 .tabs{position:sticky;top:0;z-index:5;padding:.625rem 0 .375rem;background:var(--ground)}
-.seg{position:relative;display:grid;grid-template-columns:1fr 1.42fr 1.16fr;padding:.25rem;border-radius:.875rem;background:var(--seg)}
-.thumb{position:absolute;top:.25rem;bottom:.25rem;left:0;width:var(--w,calc((100% - .5rem)*.2793));border-radius:.625rem;background:var(--sheet);
+.seg{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:.25rem;border-radius:.875rem;background:var(--seg)}
+.thumb{position:absolute;top:.25rem;bottom:.25rem;left:0;width:var(--w,calc((100% - .5rem)/2));border-radius:.625rem;background:var(--sheet);
   box-shadow:0 1px 3px rgba(20,22,26,.16);transform:translateX(var(--x,.25rem))}
 .seg.live .thumb{transition:transform .28s var(--ease),width .28s var(--ease)}
 .tab{position:relative;z-index:1;height:2.5rem;display:flex;align-items:center;justify-content:center;gap:.375rem;padding-inline:.25rem;
@@ -151,9 +151,9 @@ svg{display:block;flex:none}
 .day-n.is-crit{color:var(--crit);font-weight:700}
 .rows{overflow:hidden;border-radius:1rem;background:var(--sheet);box-shadow:var(--lift)}
 .day--bare{padding-top:.75rem}
-.row{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 2.75rem}
+.row{position:relative}
 .row+.row::before{content:"";position:absolute;top:0;left:4.875rem;right:0;height:1px;background:var(--rule)}
-.row-main{display:grid;grid-template-columns:3.375rem minmax(0,1fr);column-gap:.75rem;align-items:center;padding:.75rem 0 .75rem .75rem;
+.row-main{display:grid;grid-template-columns:3.375rem minmax(0,1fr) 1rem;column-gap:.75rem;align-items:center;width:100%;padding:.75rem .625rem .75rem .75rem;text-align:left;
   transition:background-color .15s var(--ease)}
 .row-main:active{background:var(--sheet-2)}
 @media (hover:hover){.row-main:hover{background:var(--sheet-2)}}
@@ -178,11 +178,7 @@ svg{display:block;flex:none}
 .left.is-closed{font-weight:600}
 .tag{color:var(--accent);font-weight:650}
 .row.is-off .row-title{color:var(--ink-3)}
-.star{display:grid;place-items:center;color:var(--ink-3);border-radius:.625rem;transition:color .15s var(--ease)}
-.star[aria-pressed="true"]{color:var(--accent)}
-.star[aria-pressed="true"] .ic{fill:currentColor}
-.star.pop .ic{animation:pop .32s var(--ease)}
-@keyframes pop{0%{transform:scale(.6)}55%{transform:scale(1.22)}100%{transform:scale(1)}}
+.go{width:1rem;height:1rem;color:var(--ink-3);opacity:.7;transform:scaleX(-1)}
 .anim .day{animation:rise .36s var(--ease) both}
 .anim .day:nth-child(2){animation-delay:.04s}
 .anim .day:nth-child(n+3){animation-delay:.08s}
@@ -206,9 +202,7 @@ svg{display:block;flex:none}
 .dbar button{height:2.75rem;display:flex;align-items:center;gap:.25rem;padding-inline:.5rem .75rem;border-radius:.75rem;font-weight:600;font-stretch:88%;
   transition:background-color .15s var(--ease)}
 .dbar button:active{background:var(--seg)}
-.dbar-r{display:flex;gap:.25rem}
-.dbar .star{display:flex}
-.dbar [data-share]{padding-inline:.625rem}
+.dbar [data-share]{padding-inline:.75rem .5rem;flex-direction:row-reverse}
 #detail .wrap{padding-bottom:2.5rem;animation:enter .3s var(--ease)}
 html[data-nav] #detail .wrap{animation:none}
 @keyframes enter{from{opacity:.3;transform:translateY(.625rem)}}
@@ -287,6 +281,41 @@ html[data-nav] #detail .wrap{animation:none}
 body[data-view="detail"] #home{display:none}
 body[data-view="list"] #detail{display:none}
 
+/* ---------- wide screens: the list on the left, the chosen notice beside it ---------- */
+@media (min-width:64rem){
+  body{display:grid;grid-template-columns:minmax(24rem,30rem) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr) auto;
+    height:100vh;height:100dvh;min-height:0;overflow:hidden;column-gap:.5rem;max-width:92rem;margin-inline:auto}
+  body[data-view] #home{display:contents}
+  body[data-view] #detail{display:block}
+  .shell{grid-column:1/-1}
+  .shell .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(20rem,30rem) auto;column-gap:1rem;align-items:center;
+    max-width:none;padding-inline:1.5rem}
+  .shell-top{display:contents}
+  .name{grid-area:1/1}
+  .search{grid-area:1/2;margin-top:0}
+  .size{grid-area:1/3}
+  .date{grid-area:2/1}
+  .stats{grid-area:2/2/3/4;justify-content:flex-end;margin-top:.625rem}
+  .tabs{grid-area:2/1;position:static}
+  .chips{grid-area:3/1;width:100%;max-width:none;margin:0;padding-bottom:.5rem}
+  #list{grid-area:4/1;width:100%;max-width:none;margin:0;padding-bottom:1rem;overflow-y:auto;scrollbar-width:thin}
+  #home>footer{grid-area:5/1;width:100%;max-width:none;margin:0}
+  .foot{margin-top:.5rem;padding-bottom:.75rem}
+  .day-h{top:0}
+  .day:first-child .day-h{padding-top:.25rem}
+  #pane{grid-area:2/2/6/3;display:flex;flex-direction:column;min-height:0}
+  #pane .chips{flex:none;flex-wrap:wrap;gap:.375rem;overflow:visible;max-width:none;margin:0;padding:.625rem 1.5rem .25rem .5rem}
+  #pane .chip{height:2.125rem;padding-inline:.625rem .75rem;font-size:.875rem}
+  #detail{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
+  #detail .wrap,.dbar-in{max-width:44rem}
+  .dbar-in{justify-content:flex-end}
+  .dbar [data-back]{display:none}
+  .row[aria-current="true"] .row-main{background:var(--sheet-2);background:color-mix(in srgb,var(--accent) 10%,var(--sheet))}
+  .row[aria-current="true"] .tile:not(.is-crit):not(.is-warn):not(.is-off){background:var(--accent);color:var(--on-accent)}
+  .row[aria-current="true"] .go{color:var(--accent);opacity:1}
+  #detail:empty::after{content:"Ընտրեք մրցույթը ցանկից";display:grid;place-items:center;height:60%;color:var(--ink-3)}
+}
+
 /* moving between the list and a notice */
 html[data-nav="push"]::view-transition-old(root){animation:vt-out .18s var(--ease) both}
 html[data-nav="push"]::view-transition-new(root){animation:vt-in-side .32s var(--ease) both}
@@ -301,7 +330,7 @@ html[data-nav="pop"]::view-transition-new(root){animation:vt-in .26s var(--ease)
 </style>
 </head>
 <body data-view="list">
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-med" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" /><path d="m8.5 8.5 7 7" /></symbol><symbol id="i-food" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></symbol><symbol id="i-fuel" viewBox="0 0 24 24"><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5" /><path d="M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16" /><path d="M2 21h13" /><path d="M3 9h11" /></symbol><symbol id="i-build" viewBox="0 0 24 24"><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5" /><path d="M14 6a6 6 0 0 1 6 6v3" /><path d="M4 15v-3a6 6 0 0 1 6-6" /><rect x="2" y="15" width="20" height="4" rx="1" /></symbol><symbol id="i-it" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></symbol><symbol id="i-auto" viewBox="0 0 24 24"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" /><path d="M15 18H9" /><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" /><circle cx="17" cy="18" r="2" /><circle cx="7" cy="18" r="2" /></symbol><symbol id="i-elec" viewBox="0 0 24 24"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol><symbol id="i-furn" viewBox="0 0 24 24"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" /><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z" /><path d="M5 18v2" /><path d="M19 18v2" /></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 3h.01" /><path d="M7 5h.01" /><path d="M11 7h.01" /><path d="M3 7h.01" /><path d="M7 9h.01" /><path d="M3 11h.01" /><rect width="4" height="4" x="15" y="5" /><path d="m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2" /><path d="m13 14 8-2" /><path d="m13 19 8-2" /></symbol><symbol id="i-cloth" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></symbol><symbol id="i-office" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" /><rect x="6" y="14" width="12" height="8" rx="1" /></symbol><symbol id="i-equip" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z" /></symbol><symbol id="i-serv" viewBox="0 0 24 24"><path d="m11 17 2 2a1 1 0 1 0 3-3" /><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" /><path d="m21 3 1 11h-2" /><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" /><path d="M3 4h8" /></symbol><symbol id="i-other" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /><path d="M12 22V12" /><polyline points="3.29 7 12 12 20.71 7" /><path d="m7.5 4.27 9 5.15" /></symbol><symbol id="i-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34" /><circle cx="11" cy="11" r="8" /></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol><symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2v13" /><path d="m16 6-4-4-4 4" /><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /></symbol><symbol id="i-down" viewBox="0 0 24 24"><path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /></symbol><symbol id="i-out" viewBox="0 0 24 24"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></symbol><symbol id="i-buyer" viewBox="0 0 24 24"><path d="M10 12h4" /><path d="M10 8h4" /><path d="M14 21v-3a2 2 0 0 0-4 0v3" /><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" /></symbol><symbol id="i-lots" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" /><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12" /><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17" /></symbol><symbol id="i-kind" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /><circle cx="7.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-for" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path d="M16 3.128a4 4 0 0 1 0 7.744" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><circle cx="9" cy="7" r="4" /></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></symbol></defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-med" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" /><path d="m8.5 8.5 7 7" /></symbol><symbol id="i-food" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></symbol><symbol id="i-fuel" viewBox="0 0 24 24"><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5" /><path d="M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16" /><path d="M2 21h13" /><path d="M3 9h11" /></symbol><symbol id="i-build" viewBox="0 0 24 24"><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5" /><path d="M14 6a6 6 0 0 1 6 6v3" /><path d="M4 15v-3a6 6 0 0 1 6-6" /><rect x="2" y="15" width="20" height="4" rx="1" /></symbol><symbol id="i-it" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></symbol><symbol id="i-auto" viewBox="0 0 24 24"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" /><path d="M15 18H9" /><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" /><circle cx="17" cy="18" r="2" /><circle cx="7" cy="18" r="2" /></symbol><symbol id="i-elec" viewBox="0 0 24 24"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol><symbol id="i-furn" viewBox="0 0 24 24"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" /><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z" /><path d="M5 18v2" /><path d="M19 18v2" /></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 3h.01" /><path d="M7 5h.01" /><path d="M11 7h.01" /><path d="M3 7h.01" /><path d="M7 9h.01" /><path d="M3 11h.01" /><rect width="4" height="4" x="15" y="5" /><path d="m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2" /><path d="m13 14 8-2" /><path d="m13 19 8-2" /></symbol><symbol id="i-cloth" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></symbol><symbol id="i-office" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" /><rect x="6" y="14" width="12" height="8" rx="1" /></symbol><symbol id="i-equip" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z" /></symbol><symbol id="i-serv" viewBox="0 0 24 24"><path d="m11 17 2 2a1 1 0 1 0 3-3" /><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" /><path d="m21 3 1 11h-2" /><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" /><path d="M3 4h8" /></symbol><symbol id="i-other" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /><path d="M12 22V12" /><polyline points="3.29 7 12 12 20.71 7" /><path d="m7.5 4.27 9 5.15" /></symbol><symbol id="i-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34" /><circle cx="11" cy="11" r="8" /></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol><symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2v13" /><path d="m16 6-4-4-4 4" /><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /></symbol><symbol id="i-down" viewBox="0 0 24 24"><path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /></symbol><symbol id="i-out" viewBox="0 0 24 24"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></symbol><symbol id="i-buyer" viewBox="0 0 24 24"><path d="M10 12h4" /><path d="M10 8h4" /><path d="M14 21v-3a2 2 0 0 0-4 0v3" /><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" /></symbol><symbol id="i-lots" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" /><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12" /><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17" /></symbol><symbol id="i-kind" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /><circle cx="7.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-for" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path d="M16 3.128a4 4 0 0 1 0 7.744" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><circle cx="9" cy="7" r="4" /></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></symbol></defs></svg>
 
 <div id="home">
   <header class="shell">
@@ -326,8 +355,7 @@ html[data-nav="pop"]::view-transition-new(root){animation:vt-in .26s var(--ease)
       <div class="seg" id="seg" role="tablist">
         <span class="thumb" aria-hidden="true"></span>
         <button class="tab" role="tab" type="button" id="tab-new" data-tab="new" aria-controls="list" aria-selected="true">Նոր <span class="n num" id="n-new">–</span></button>
-        <button class="tab" role="tab" type="button" id="tab-due" data-tab="due" aria-controls="list" aria-selected="false" tabindex="-1">Ժամկետներ <span class="n num" id="n-due">–</span></button>
-        <button class="tab" role="tab" type="button" id="tab-saved" data-tab="saved" aria-controls="list" aria-selected="false" tabindex="-1">Պահված <span class="n num" id="n-saved">0</span></button>
+        <button class="tab" role="tab" type="button" id="tab-due" data-tab="due" aria-controls="list" aria-selected="false" tabindex="-1">Բոլորը <span class="n num" id="n-due">–</span></button>
       </div>
     </div>
   </nav>
@@ -346,7 +374,7 @@ html[data-nav="pop"]::view-transition-new(root){animation:vt-in .26s var(--ease)
   <footer class="wrap"><p class="foot" id="foot">Աղբյուրը՝ eauction.armeps.am</p></footer>
 </div>
 
-<article id="detail"></article>
+<div id="pane"><article id="detail"></article></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -387,9 +415,10 @@ const ARMEPS = 'https://eauction.armeps.am';
 const safe = u => (/^https:\/\//.test(u || '') ? u : '#');
 const ic = (name, cls = '') => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const CALM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const WIDE = matchMedia('(min-width:64rem)');               // room for the list and a notice side by side
 
 /* ---------- state ---------- */
-const S = {all: [], meta: {}, rev: 0, tab: 'new', sector: 'all', q: '', saved: new Set(), frozen: null, scroll: 0, openId: null,
+const S = {all: [], meta: {}, rev: 0, tab: 'new', sector: 'all', q: '', frozen: null, scroll: 0, openId: null,
   loaded: false, dirty: false, queue: [], stamp: ''};
 const now = () => S.frozen ?? Date.now();
 const store = {
@@ -419,7 +448,6 @@ function openNow() {                      // the open tenders, worked out once a
   return memo.open;
 }
 function base(tab) {
-  if (tab === 'saved') return S.all.filter(t => S.saved.has(t.id));
   const open = openNow();
   if (tab === 'due') return open;
   const today = dayNo(new Date(now()));
@@ -456,24 +484,22 @@ function tileHTML(t, mode) {
     : `<span class="tile${cls} num"><small>${WD3[p.wd]}</small><b>${p.d}</b><small>${MON3[p.m]}</small></span>`;
 }
 function rowHTML(t, mode) {
-  const l = left(t.endD), off = !isOpen(t), on = S.saved.has(t.id), meta = [];
+  const l = left(t.endD), off = !isOpen(t), meta = [];
   if (t.status === 'cancelled') meta.push('<span class="left is-closed">չեղարկված է</span>');
   else if (off || (mode !== 'due' && l.lvl !== 'ok')) meta.push(`<span class="left is-${l.lvl}">${l.text}</span>`);
   if (mode === 'due' && t.newD && dayNo(t.newD) === dayNo(new Date(now()))) meta.push('<span class="tag">նոր</span>');
   meta.push(`<span>${ic(t.sector, 'ic--s')}${esc(SECTORS[t.sector])}</span>`);
   if (t.lots) meta.push(`<span class="num">${t.lots} չափաբաժին</span>`);
-  return `<li class="row${off ? ' is-off' : ''}" data-id="${t.id}">` +
+  return `<li class="row${off ? ' is-off' : ''}" data-id="${t.id}"${t.id === S.openId ? ' aria-current="true"' : ''}>` +
     `<button class="row-main" type="button" data-open="${t.id}">${tileHTML(t, mode)}` +
     `<span class="row-text"><span class="row-title">${esc(t.subject || NO_SUBJECT)}</span>` +
     (t.buyer ? `<span class="row-buyer">${esc(t.buyer)}</span>` : '') +
-    `<span class="row-meta"><span class="mi">${meta.join('')}</span></span></span></button>` +
-    `<button class="star" type="button" data-star="${t.id}" aria-pressed="${on}" aria-label="${on ? 'Հանել պահվածներից' : 'Պահել'}">${ic('star')}</button></li>`;
+    `<span class="row-meta"><span class="mi">${meta.join('')}</span></span></span>${ic('back', 'go')}</button></li>`;
 }
 
 function emptyHTML() {
   if (S.q) return `<div class="empty"><h2>Ոչինչ չի գտնվել</h2><p>«${esc(S.q)}» բառով բաց մրցույթ չկա։ Փորձեք ավելի կարճ բառ, օրինակ՝ «դեղ» կամ «վառելիք»։</p></div>`;
-  if (S.tab === 'saved') return `<div class="empty"><h2>Դեռ ոչինչ պահված չէ</h2><p>Հետաքրքիր մրցույթը պահելու համար սեղմեք աստղանիշը։ Այն կհայտնվի այստեղ՝ իր վերջնաժամկետով։</p></div>`;
-  if (S.tab === 'new') return `<div class="empty"><h2>Նոր մրցույթ չկա</h2><p>Վերջին օրերին նոր մրցույթ չի հրապարակվել։ Բոլոր բաց մրցույթները «Ժամկետներ» բաժնում են։</p></div>`;
+  if (S.tab === 'new') return `<div class="empty"><h2>Նոր մրցույթ չկա</h2><p>Վերջին օրերին նոր մրցույթ չի հրապարակվել։ Բոլոր բաց մրցույթները «Բոլորը» բաժնում են։</p></div>`;
   return `<div class="empty"><h2>Բաց մրցույթ չկա</h2><p>Այս պահին հայտեր ընդունող մրցույթ չկա։</p></div>`;
 }
 
@@ -484,11 +510,10 @@ function chrome() {
   const hot = open.filter(t => dayNo(t.endD) - today <= 3).length;
   $('#n-new').textContent = base('new').length;
   $('#n-due').textContent = open.length;
-  $('#n-saved').textContent = S.saved.size ? S.all.filter(t => S.saved.has(t.id)).length : 0;
   $('#date').textContent = fDayW(new Date(now()));
   $('#stats').innerHTML = `<span class="stat"><b class="num">${fresh}</b> նոր այսօր</span><span class="stat"><b class="num">${open.length}</b> բաց</span>` +
     (hot ? `<span class="stat stat--hot"><b class="num">${hot}</b> փակվում է 3 օրում</span>` : '');
-  $('#foot').textContent = `Աղբյուրը՝ eauction.armeps.am։ ${upd ? `Թարմացվել է ${fStamp(upd)}-ին։ ` : ''}Տվյալները թարմացվում են աշխատանքային օրերին՝ օրը երեք անգամ։`;
+  $('#foot').textContent = `Աղբյուրը՝ eauction.armeps.am։ ${upd ? `Թարմացվել է ${fStamp(upd)}-ին։ ` : ''}Տվյալները թարմացվում են աշխատանքային օրերին՝ ամեն ժամ։`;
 }
 
 /* Long lists are drawn a screenful at a time: the first rows at once, the rest as the reader scrolls. */
@@ -512,7 +537,7 @@ function flush(cap) {
 }
 function pump() {
   const more = $('#more');
-  if (!more || !S.queue.length || document.body.dataset.view !== 'list') return;
+  if (!more || !S.queue.length || (document.body.dataset.view !== 'list' && !WIDE.matches)) return;
   if (more.getBoundingClientRect().top < innerHeight + 1600) { flush(70); requestAnimationFrame(pump); }
 }
 const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) pump(); }, {rootMargin: '1600px 0px'}) : null;
@@ -522,7 +547,7 @@ function render(animate) {
   chrome();
   const {items, bySector, total} = visible();
   const keys = Object.keys(bySector).sort((a, b) => bySector[b] - bySector[a] || a.localeCompare(b));
-  $('#chips').innerHTML = total ? `<button class="chip" type="button" data-sector="all" aria-pressed="${S.sector === 'all'}">Բոլորը <span class="n num">${total}</span></button>` +
+  $('#chips').innerHTML = total ? `<button class="chip" type="button" data-sector="all" aria-pressed="${S.sector === 'all'}">Բոլոր ոլորտները <span class="n num">${total}</span></button>` +
     keys.map(k => `<button class="chip" type="button" data-sector="${k}" aria-pressed="${S.sector === k}">${ic(k, 'ic--s')}${esc(SECTORS[k])} <span class="n num">${bySector[k]}</span></button>`).join('') : '';
   $('#chips').hidden = !total;
 
@@ -533,9 +558,7 @@ function render(animate) {
 
   S.queue = [];
   if (!items.length) html += emptyHTML();
-  else if (S.tab === 'saved') {
-    S.queue.push({key: 's', head: '', rows: [...items].sort((a, b) => (isOpen(b) - isOpen(a)) || (a.endD - b.endD))});
-  } else {
+  else {
     const due = S.tab === 'due', groups = new Map();
     const sorted = [...items].sort((a, b) => due ? (a.endD - b.endD) || (a.id - b.id) : (b.newD - a.newD) || (b.id - a.id));
     sorted.forEach(t => { const k = dayNo(due ? t.endD : t.newD); (groups.get(k) || groups.set(k, []).get(k)).push(t); });
@@ -561,11 +584,15 @@ function render(animate) {
     else setTimeout(function rest() { flush(120); if (S.queue.length) setTimeout(rest, 30); }, 60);
   }
   if (animate && !CALM) { list.classList.add('anim'); setTimeout(() => list.classList.remove('anim'), 520); }
+  if (WIDE.matches && S.openId === null) {     // beside the list there is always a notice to read
+    const firstRow = $('#list .row[data-id]');
+    if (firstRow) show(+firstRow.dataset.id, true);
+  }
 }
 
 /* ---------- notice view ---------- */
 function detailHTML(t) {
-  const l = left(t.endD), on = S.saved.has(t.id), kind = KINDS[t.kind], p = parts(t.endD);
+  const l = left(t.endD), kind = KINDS[t.kind], p = parts(t.endD);
   const off = t.status === 'cancelled' || l.lvl === 'closed';
   const cls = off ? '' : l.lvl === 'crit' || l.lvl === 'warn' ? ` is-${l.lvl}` : '';
   const past = d => (d && d <= now() ? ' is-past' : '');
@@ -593,10 +620,7 @@ function detailHTML(t) {
   const state = t.status === 'cancelled' ? 'մրցույթը չեղարկված է' : l.lvl === 'crit' ? l.text.split(',')[0] : l.text;
   return `<div class="dbar"><div class="dbar-in">
       <button type="button" data-back>${ic('back')}Հետ</button>
-      <span class="dbar-r">
-        <button class="star" type="button" data-star="${t.id}" aria-pressed="${on}">${ic('star')}<span data-star-label>${on ? 'Պահված է' : 'Պահել'}</span></button>
-        <button type="button" data-share="${t.id}" aria-label="Ուղարկել">${ic('share')}</button>
-      </span></div></div>
+      <button type="button" data-share="${t.id}">${ic('share')}Ուղարկել</button></div></div>
     <div class="wrap">
       <header class="hero">
         <h1 class="d-title" tabindex="-1">${esc(t.subject || NO_SUBJECT)}</h1>
@@ -642,9 +666,24 @@ function carry(id) {                       // name the row's tile so it can trav
   const tile = id && $(`[data-open="${id}"] .tile`);
   if (tile && !CALM) { tile.style.viewTransitionName = 'tile'; moving = tile; }
 }
+function mark() {                           // show which row's notice is open beside the list
+  document.querySelectorAll('.row[aria-current]').forEach(r => r.removeAttribute('aria-current'));
+  const row = S.openId !== null && $(`.row[data-id="${S.openId}"]`);
+  if (row) row.setAttribute('aria-current', 'true');
+}
 function show(id, fromRoute) {
   const t = S.all.find(x => x.id === id);
   if (!t) return showList(true);
+  if (WIDE.matches) {                        // side by side: nothing to leave and nothing to come back to
+    S.openId = id;
+    const pane = $('#detail');
+    pane.innerHTML = detailHTML(t);
+    pane.scrollTop = 0;
+    document.body.dataset.view = 'detail';
+    mark();
+    if (!IN_TG && !fromRoute) history.replaceState(null, '', '#t' + id);
+    return;
+  }
   if (document.body.dataset.view === 'list') { S.scroll = window.scrollY; carry(id); }
   S.openId = id;
   nav('push', () => {
@@ -659,15 +698,17 @@ function show(id, fromRoute) {
 function showList(fromRoute) {
   const id = S.openId;
   S.openId = null;
+  if (WIDE.matches) {
+    $('#detail').innerHTML = '';
+    document.body.dataset.view = 'list';
+    S.dirty = false;
+    return render();                         // which opens the first notice again
+  }
   nav('pop', () => {
     document.body.dataset.view = 'list';
     $('#detail').innerHTML = '';
-    if (S.dirty || S.tab === 'saved') { S.dirty = false; render(); }
-    else {                                   // the list is still there: only the star and the counts can have changed
-      const star = id && $(`.row [data-star="${id}"]`);
-      if (star) { const on = S.saved.has(id); star.setAttribute('aria-pressed', on); star.setAttribute('aria-label', on ? 'Հանել պահվածներից' : 'Պահել'); }
-      chrome();
-    }
+    if (S.dirty) { S.dirty = false; render(); }
+    else chrome();                           // the list is still there: only the counts can have changed
     window.scrollTo(0, S.scroll);
     carry(id);
     const row = id && $(`[data-open="${id}"]`);
@@ -685,26 +726,7 @@ function route() {
   else if (S.openId !== null) showList(true);
 }
 
-/* ---------- saved tenders ---------- */
-function persist() {
-  const v = [...S.saved].join(',');
-  store.set('saved', v);
-  try { if (tg && tg.CloudStorage && tg.isVersionAtLeast('6.9')) tg.CloudStorage.setItem('saved', v); } catch { /* optional */ }
-}
-function toggleSaved(id, btn) {
-  const on = !S.saved.has(id);
-  on ? S.saved.add(id) : S.saved.delete(id);
-  persist();
-  try { tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred('light'); } catch { /* optional */ }
-  toast(on ? 'Պահվեց «Պահված» բաժնում' : 'Հանվեց պահվածներից');
-  if (document.body.dataset.view === 'list' && S.tab === 'saved') return render();
-  btn.setAttribute('aria-pressed', on);
-  const label = $('[data-star-label]', btn);
-  if (label) label.textContent = on ? 'Պահված է' : 'Պահել';
-  else btn.setAttribute('aria-label', on ? 'Հանել պահվածներից' : 'Պահել');
-  btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
-  $('#n-saved').textContent = S.all.filter(t => S.saved.has(t.id)).length;
-}
+/* ---------- small messages ---------- */
 let toastTimer;
 function toast(text) {
   const el = $('#toast');
@@ -725,7 +747,7 @@ function share(id) {
 }
 
 /* ---------- events ---------- */
-const TABS = ['new', 'due', 'saved'];
+const TABS = ['new', 'due'];
 function setTab(tab, focus) {
   S.tab = tab;
   document.querySelectorAll('.tab').forEach(b => {
@@ -749,12 +771,16 @@ else addEventListener('resize', thumb);
 thumb();
 requestAnimationFrame(() => requestAnimationFrame(() => $('#seg').classList.add('live')));
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-tab],[data-sector],[data-open],[data-star],[data-back],[data-share],[data-ext],[data-retry]');
+  const el = e.target.closest('[data-tab],[data-sector],[data-open],[data-back],[data-share],[data-ext],[data-retry]');
   if (!el) return;
-  if (el.dataset.tab) { if (el.dataset.tab !== S.tab) { setTab(el.dataset.tab); const top = $('.shell').offsetHeight; if (window.scrollY > top) window.scrollTo(0, top); } }
+  if (el.dataset.tab) {
+    if (el.dataset.tab === S.tab) return;
+    setTab(el.dataset.tab);
+    const top = $('.shell').offsetHeight;
+    if (WIDE.matches) $('#list').scrollTop = 0; else if (window.scrollY > top) window.scrollTo(0, top);
+  }
   else if (el.dataset.sector) { S.sector = el.dataset.sector; render(); }
   else if (el.dataset.open) show(+el.dataset.open);
-  else if (el.dataset.star) toggleSaved(+el.dataset.star, el);
   else if ('back' in el.dataset) showList();
   else if (el.dataset.share) share(+el.dataset.share);
   else if ('retry' in el.dataset) load();
@@ -763,7 +789,7 @@ document.addEventListener('click', e => {
 });
 $('#seg').addEventListener('keydown', e => {
   if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-  setTab(TABS[(TABS.indexOf(S.tab) + (e.key === 'ArrowRight' ? 1 : 2)) % 3], true);
+  setTab(TABS[(TABS.indexOf(S.tab) + (e.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length], true);
 });
 const q = $('#q');
 let typing;
@@ -784,6 +810,35 @@ $('#sizeBtn').addEventListener('click', () => {
 });
 function applySize(n) { document.documentElement.style.fontSize = ['100%', '112.5%', '125%'][n] || '100%'; }
 window.addEventListener('hashchange', () => { if (!IN_TG) route(); });
+const ROOMY = matchMedia('(min-width:80rem)');              // room for all the sector chips above the notice
+function seat() {
+  const chips = $('#chips');
+  if (ROOMY.matches) $('#pane').prepend(chips); else $('.tabs').after(chips);
+}
+seat();
+ROOMY.addEventListener('change', seat);
+$('#chips').addEventListener('wheel', e => {                // a mouse wheel moves the row of chips sideways
+  const el = e.currentTarget;
+  if (el.scrollWidth <= el.clientWidth + 1 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+  el.scrollLeft += e.deltaY;
+  e.preventDefault();
+}, {passive: false});
+WIDE.addEventListener('change', () => {     // the window was made wider or narrower
+  if (!S.loaded) return;
+  if (WIDE.matches) render();
+  else if (S.openId !== null) showList(true);
+});
+/* arrow keys walk the list; on a wide screen the notice follows */
+$('#list').addEventListener('keydown', e => {
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+  const cur = e.target.closest('.row-main');
+  if (!cur) return;
+  const all = [...document.querySelectorAll('#list .row-main')], next = all[all.indexOf(cur) + (e.key === 'ArrowDown' ? 1 : -1)];
+  if (!next) return;
+  e.preventDefault();
+  next.focus();
+  if (WIDE.matches) show(+next.dataset.open);
+});
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.loaded && Date.now() - S.fetchedAt > 10 * 60e3) load(true); });
 
 /* ---------- data ---------- */
@@ -801,10 +856,12 @@ function ingest(data) {
   S.loaded = true;
 }
 function paint(first) {
-  if (S.openId !== null) { S.dirty = true; return; }     // a notice is open: redraw the list when the reader returns
-  const y = window.scrollY;
+  if (S.openId !== null && !WIDE.matches) { S.dirty = true; return; }   // a notice is open: redraw the list when the reader returns
+  const list = $('#list'), y = WIDE.matches ? list.scrollTop : window.scrollY;
   render(first);
-  if (!first) window.scrollTo(0, y);
+  if (!first) { if (WIDE.matches) list.scrollTop = y; else window.scrollTo(0, y); }
+  const t = WIDE.matches && S.openId !== null && S.all.find(x => x.id === S.openId);
+  if (t && !first) { const pane = $('#detail'), at = pane.scrollTop; pane.innerHTML = detailHTML(t); pane.scrollTop = at; }
 }
 async function load(quiet) {
   try {
@@ -841,21 +898,12 @@ function initTelegram() {
     };
     try { tg.ready(); tg.expand(); theme(); tg.onEvent('themeChanged', theme); tg.BackButton.onClick(() => showList()); } catch { /* old clients */ }
     try { if (S.openId !== null) tg.BackButton.show(); } catch { /* old clients */ }
-    try {
-      if (tg.CloudStorage && tg.isVersionAtLeast('6.9')) tg.CloudStorage.getItem('saved', (err, val) => {
-        if (err || !val) return;
-        const before = S.saved.size;
-        val.split(',').map(Number).filter(Boolean).forEach(id => S.saved.add(id));
-        if (S.saved.size !== before) { persist(); if (S.loaded) paint(false); }
-      });
-    } catch { /* optional */ }
   };
   s.onload = start;
   document.head.appendChild(s);
 }
 
 /* ---------- start ---------- */
-(store.get('saved') || '').split(',').map(Number).filter(Boolean).forEach(id => S.saved.add(id));
 applySize(+store.get('size') || 0);
 initTelegram();
 try { const kept = store.get('data'); if (kept) { ingest(JSON.parse(kept)); render(true); if (!IN_TG) route(); } } catch { /* a damaged copy: wait for the network */ }

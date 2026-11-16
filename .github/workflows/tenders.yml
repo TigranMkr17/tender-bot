@@ -4,10 +4,9 @@ name: Tenders
 # Reading ARMEPS takes a few minutes, so a run that starts at 08:52 sends its message at about 09:00.
 on:
   schedule:
-    - cron: "52 4 * * 1-6"   # 08:52 Mon-Sat: morning message, sent at about 09:00
-    - cron: "52 13 * * 1-5"  # 17:52 Mon-Fri: evening message at about 18:00 (only if something new was published)
-    - cron: "7 9 * * 1-5"    # 13:07 Mon-Fri: refresh the app quietly
-    - cron: "37 * * * *"     # every hour: answer people who pressed Start or Stop
+    - cron: "52 4 * * 1-6"   # 08:52 Mon-Sat: read ARMEPS; with a Telegram bot, the morning message at about 09:00
+    - cron: "52 13 * * 1-5"  # 17:52 Mon-Fri: read ARMEPS; the evening message at about 18:00 if something new was published
+    - cron: "37 * * * *"     # every hour: on weekdays from 09:37 to 17:37 refresh the site; otherwise only answer Start or Stop
   workflow_dispatch:
     inputs:
       mode:
@@ -44,11 +43,13 @@ jobs:
           SCHEDULE: ${{ github.event.schedule }}
           MANUAL: ${{ inputs.mode }}
         run: |
+          hour=$((10#$(date -u +%H)))   # UTC; Yerevan is four hours ahead
+          weekday=$(date -u +%u)        # 1 is Monday
           case "$SCHEDULE" in
-            "37 * * * *")  mode=inbox ;;
-            "7 9 * * 1-5") mode=refresh ;;
-            "")            mode="${MANUAL:-digest}" ;;
-            *)             mode=digest ;;
+            "37 * * * *")
+              if [ "$weekday" -le 5 ] && [ "$hour" -ge 5 ] && [ "$hour" -le 13 ]; then mode=refresh; else mode=inbox; fi ;;
+            "")  mode="${MANUAL:-digest}" ;;
+            *)   mode=digest ;;
           esac
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
           echo "Mode: $mode"

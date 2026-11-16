@@ -1,6 +1,6 @@
 ---
 name: Մրցույթներ
-description: Armenian state tenders as dated notices on paper sheets
+description: Armenian state tenders as dated notices on paper sheets, a site for looking, finding and reading
 colors:
   ground: "#E8EAE4"
   sheet: "#FCFCFA"
@@ -195,7 +195,9 @@ Name 36/800 condensed; notice title 24/750; deadline numeral 34/800 with a 20/75
 
 ## Layout
 
-One column, at most 40rem wide, 16px gutters. The header scrolls away; the tab bar and day headings stick. A row is tile, text, save star. Titles clamp to two lines and buyers to one; the notice view shows everything in full. Long lists are drawn a screenful at a time.
+On a phone: one column, at most 40rem wide, 16px gutters. The header scrolls away; the tab bar and day headings stick. A row is tile, text, and a small chevron. Titles clamp to two lines and buyers to one; the notice view shows everything in full. Long lists are drawn a screenful at a time.
+
+From 64rem up the page is a fixed frame: the header across the top, the list in a 30rem column on the left, the chosen notice beside it. The list and the notice scroll separately, and a notice is always open. From 80rem the sector chips wrap above the notice; below that they stay one scrolling row over the list.
 
 ## Elevation & Depth
 
@@ -221,11 +223,11 @@ One search field in the header: white on blue, 48px, with a clear button once te
 
 ### Navigation
 
-A three-part segmented control with a sliding thumb; the active part's count turns press blue. The notice view is pushed; where the browser supports view transitions the row's date tile travels into the notice.
+A two-part segmented control, «Նոր» and «Բոլորը», with a sliding thumb; the active part's count turns press blue. On a phone the notice view is pushed; where the browser supports view transitions the row's date tile travels into the notice. On a wide screen the open row is tinted and its tile filled press blue.
 
 ### Date tile
 
-The signature component. In «Նոր» and «Պահված» it shows weekday, day numeral and month; in «Ժամկետներ», where the day is already the heading, it shows «ԺԱՄԸ» and the time. In the notice view it is larger and sits beside the deadline, above a bar that shows how much of the bidding period has passed.
+The signature component. In «Նոր» it shows weekday, day numeral and month; in «Բոլորը», where the day is already the heading, it shows «ԺԱՄԸ» and the time. In the notice view it is larger and sits beside the deadline, above a bar that shows how much of the bidding period has passed.
 
 ## Do's and Don'ts
 
@@ -234,11 +236,12 @@ The signature component. In «Նոր» and «Պահված» it shows weekday, da
 - Lead with the deadline, then what is bought, then who buys.
 - Keep official wording available, word for word, in the notice view.
 - Write every label as a plain Armenian sentence or noun.
-- Animate only state: the tab thumb, a row entering, the tile travelling, the star.
+- Animate only state: the tab thumb, a row entering, the tile travelling.
 
 ### Don't:
 
 - Give each row its own card, or nest sheets.
+- Add accounts, saved lists or settings: the site is for looking, finding and reading.
 - Add a metric hero, kicker labels or decorative illustrations.
 - Colour sectors; the sector is an icon and a word.
 - State anything the source does not say (prices, winners, eligibility).
