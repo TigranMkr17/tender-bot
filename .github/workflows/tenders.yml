@@ -54,6 +54,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           APP_URL: ${{ vars.APP_URL }}
           MODE: ${{ steps.pick.outputs.mode }}
+          PYTHONUNBUFFERED: "1"
         run: python -m bot.main --mode "$MODE"
 
       - name: Save the data

@@ -49,16 +49,21 @@ GitHub sometimes starts scheduled jobs 5 to 30 minutes late. To change the times
 ```
 bot/armeps.py      reads the list and notice pages (Python standard library only)
 bot/textproc.py    official wording -> short subject, readable buyer name, sector
-bot/store.py       the data file the app reads
+bot/store.py       bot/state/tenders.json (everything the bot knows) and the slim
+                   docs/data/tenders.json the app downloads
 bot/digest.py      the Telegram messages
 bot/telegram.py    Bot API calls; the list of chats, stored encrypted
 bot/main.py        entry point:  python -m bot.main --mode digest|refresh|inbox [--dry-run]
 docs/index.html    the app (one file, no build step)
-docs/data/         tenders.json, rewritten by every run
 docs/fonts/        Noto Sans Armenian (SIL Open Font License, see OFL.txt)
 tools/, tests/     sample notices and offline tests
+DESIGN.md          the app's colours, type and components
 ```
+
+The app opens from a copy of the last data kept on the device, then refreshes in the background. Long lists are drawn a screenful at a time, so several hundred tenders stay quick on an older phone.
 
 The repository is public, so the list of people who pressed Start is stored encrypted in `bot/state/subscribers.enc`. The key is derived from the bot token, which only GitHub's secret store holds. If you ever replace the token, everyone presses Start once more.
 
 Saved tenders stay on each person's own device (and in their Telegram cloud storage); the bot never sees them.
+
+Icons are from [Lucide](https://lucide.dev) (ISC License).

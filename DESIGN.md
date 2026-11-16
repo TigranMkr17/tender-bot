@@ -1,37 +1,43 @@
 ---
 name: Մրցույթներ
-description: Armenian state tenders as a dated column of notices
+description: Armenian state tenders as dated notices on paper sheets
 colors:
-  paper: "#F1F2EE"
-  paper-2: "#E5E7E1"
-  field: "#FFFFFF"
+  ground: "#E8EAE4"
+  sheet: "#FCFCFA"
+  sheet-2: "#F0F1ED"
+  seg: "#D8DBD3"
   ink: "#14161A"
-  ink-2: "#474C55"
-  ink-3: "#626872"
-  rule: "#C6C8C1"
-  press-blue: "#1F3A93"
+  ink-2: "#454A53"
+  ink-3: "#5F656F"
+  rule: "#E0E2DB"
+  press-blue: "#1B338A"
+  press-blue-deep: "#132669"
+  accent: "#1F3A93"
   on-press: "#FFFFFF"
-  on-press-2: "#CBD5F6"
+  on-press-2: "#C9D3F7"
+  tile: "#DFE5F8"
+  tile-ink: "#1B338A"
   critical: "#B4231A"
-  critical-bg: "#F6DEDA"
+  critical-tile: "#C22B21"
   warning: "#855600"
-  warning-bg: "#F3E6C8"
-  night-paper: "#111317"
-  night-paper-2: "#1C1F25"
+  warning-tile: "#F1BC4B"
+  on-warning-tile: "#2B1D00"
+  night-ground: "#0C0E12"
+  night-sheet: "#171A20"
   night-ink: "#ECEBE5"
-  night-rule: "#2D3139"
-  night-shell: "#1A2F6E"
+  night-shell: "#182B6E"
   night-accent: "#9DB4FF"
+  night-tile: "#1F2B55"
 typography:
   nameplate:
     fontFamily: "Noto Sans Armenian, Segoe UI, system-ui, sans-serif"
-    fontSize: "2rem"
+    fontSize: "2.25rem"
     fontWeight: 800
-    lineHeight: 1.1
+    lineHeight: 1.08
     letterSpacing: "normal"
-  dateline:
+  tile-numeral:
     fontFamily: "Noto Sans Armenian, Segoe UI, system-ui, sans-serif"
-    fontSize: "1.875rem"
+    fontSize: "1.625rem"
     fontWeight: 800
     lineHeight: 1
     letterSpacing: "normal"
@@ -59,56 +65,117 @@ typography:
     fontWeight: 400
     lineHeight: 1.4
     letterSpacing: "normal"
+  hero-title:
+    fontFamily: "Noto Sans Armenian, Segoe UI, system-ui, sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 750
+    lineHeight: 1.2
+    letterSpacing: "normal"
+  due-numeral:
+    fontFamily: "Noto Sans Armenian, Segoe UI, system-ui, sans-serif"
+    fontSize: "2.125rem"
+    fontWeight: 800
+    lineHeight: 1
+    letterSpacing: "normal"
+  due-line:
+    fontFamily: "Noto Sans Armenian, Segoe UI, system-ui, sans-serif"
+    fontSize: "1.25rem"
+    fontWeight: 750
+    lineHeight: 1.2
+    letterSpacing: "normal"
+  day-heading:
+    fontFamily: "Noto Sans Armenian, Segoe UI, system-ui, sans-serif"
+    fontSize: "1.1875rem"
+    fontWeight: 750
+    lineHeight: 1.25
+    letterSpacing: "normal"
+  tab:
+    fontFamily: "Noto Sans Armenian, Segoe UI, system-ui, sans-serif"
+    fontSize: "0.9375rem"
+    fontWeight: 650
+    lineHeight: 1.2
+    letterSpacing: "normal"
+  count:
+    fontFamily: "Noto Sans Armenian, Segoe UI, system-ui, sans-serif"
+    fontSize: "0.8125rem"
+    fontWeight: 700
+    lineHeight: 1.2
+    letterSpacing: "normal"
+  tile-label:
+    fontFamily: "Noto Sans Armenian, Segoe UI, system-ui, sans-serif"
+    fontSize: "0.75rem"
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: "normal"
 rounded:
-  field: "10px"
-  button: "12px"
+  hairline: "1px"
+  tick: "4px"
+  focus: "6px"
+  control: "10px"
+  tile: "12px"
+  field: "14px"
+  button: "14px"
+  sheet: "16px"
+  shell: "20px"
   pill: "20px"
 spacing:
   gutter: "16px"
   row: "12px"
-  section: "32px"
+  sheet-gap: "12px"
 components:
   button-primary:
-    backgroundColor: "{colors.press-blue}"
+    backgroundColor: "{colors.accent}"
     textColor: "{colors.on-press}"
     rounded: "{rounded.button}"
     padding: "8px 16px"
-    height: "48px"
+    height: "52px"
   button-secondary:
-    backgroundColor: "{colors.paper}"
+    backgroundColor: "{colors.sheet}"
     textColor: "{colors.ink}"
     rounded: "{rounded.button}"
     padding: "8px 16px"
-    height: "48px"
+    height: "52px"
   chip:
-    backgroundColor: "{colors.paper}"
+    backgroundColor: "{colors.sheet}"
     textColor: "{colors.ink-2}"
     rounded: "{rounded.pill}"
-    padding: "0 14px"
+    padding: "0 14px 0 12px"
     height: "40px"
   chip-selected:
-    backgroundColor: "{colors.press-blue}"
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.on-press}"
+  date-tile:
+    backgroundColor: "{colors.tile}"
+    textColor: "{colors.tile-ink}"
+    rounded: "{rounded.tile}"
+    width: "54px"
+    height: "60px"
+  date-tile-soon:
+    backgroundColor: "{colors.warning-tile}"
+    textColor: "{colors.on-warning-tile}"
+  date-tile-last-day:
+    backgroundColor: "{colors.critical-tile}"
     textColor: "{colors.on-press}"
   search-field:
-    backgroundColor: "{colors.field}"
+    backgroundColor: "#FFFFFF"
     textColor: "{colors.ink}"
     rounded: "{rounded.field}"
-    height: "46px"
+    height: "48px"
 ---
 
 # Design System: Մրցույթներ
 
 ## Overview
 
-The announcements page of an Armenian daily, rebuilt as a phone tool. A tender is a dated notice: the deadline stands in its own narrow column at the left, a column rule separates it from the text, and heavy rules open each day. Everything else is the standard furniture of a mobile app: a header with search, tabs, filter chips, a list, a pushed detail view.
+Dated notices on paper sheets. Every tender leads with a date tile, like the leaf of a wall calendar: weekday, a large day numeral, month. Days are gathered on white sheets that lie on a newsprint-grey board, under a press-blue header with a halftone dot screen, the texture of printed paper. The navigation is the standard furniture of a phone app: search, a segmented tab bar, filter chips, a list, a pushed notice view.
 
 The reader is a non-technical business owner on a phone, usually in daylight. Body text is 16px, tap targets are 44px or more, and nothing relies on colour alone.
 
 ## Colors
 
-- **Newsprint** (`paper`) is the ground, **ink** the text. Neutrals lean slightly cool and green, like newsprint, never cream.
-- **Press blue** is the single spot ink: the shell, selection, primary action. In the dark theme the shell stays blue and the accent on dark paper lightens to `night-accent`.
-- **Red** means the deadline is today or tomorrow; **amber** means three days or less. They are states, never decoration, and always come with words («վաղը, մինչև 10:00»).
+- **Board and sheets.** `ground` is the board, `sheet` the paper. Neutrals lean slightly cool and green, like newsprint, never cream.
+- **Press blue** is the one spot ink: the header, the notice hero, selection, the primary action, and (as a tint) the date tiles and icon tiles.
+- **States.** A red tile means the deadline is today or tomorrow, an amber tile three days or less. They always come with words («վաղը, մինչև 10:00»), and nothing else on the screen may be red or amber.
 
 ### Named Rules
 
@@ -116,49 +183,49 @@ The reader is a non-technical business owner on a phone, usually in daylight. Bo
 
 ## Typography
 
-One family, Noto Sans Armenian (variable weight and width, self-hosted). Two voices come from the width axis: condensed and heavy for dates and headings (width 66 to 80%), normal width for reading.
+One family, Noto Sans Armenian (variable weight and width, self-hosted). The width axis gives two voices: condensed and heavy for the name, dates and headings (66 to 80%), normal width for reading.
 
 ### Hierarchy
 
-Nameplate 32/800 condensed; dateline numeral 30/800 condensed; section and day headings 17/750 at 80% width; row titles 17/650 at 88%; body 16/400; meta 14/400. Sizes are fixed rem steps; the «ԱԱ» control scales the root to 112.5% and 125%.
+Name 36/800 condensed; notice title 24/750; deadline numeral 34/800 with a 20/750 line beside it; tile numeral 26/800 condensed; day headings 19/750 and section headings 17/750 at 80% width; row titles 17/650 at 88%; body 16/400; tabs 15/650; meta 14/400; counts 13/700; tile labels 12/700. Sizes are fixed rem steps; the «ԱԱ» control scales the root to 112.5% and 125%.
 
 ### Named Rules
 
-- **Never uppercase Armenian with CSS.** `text-transform: uppercase` turns «և» into «ԵՒ», which is wrong in modern spelling. Capitals are written out in the source (ԵՐՔ, ՆՈՅ).
+- **Never uppercase Armenian with CSS.** `text-transform: uppercase` turns «և» into «ԵՒ», which is wrong in modern spelling. Capitals are written out in the source (ԵՐՔ, ՆՈՅ, ԺԱՄԸ).
 
 ## Layout
 
-One column, at most 40rem wide, 16px gutters. The shell and tab bar are full-bleed; tabs and day rules are sticky. A row is a two-column grid: a 3.5rem dateline, then the text, with the save star in a 44px lane at the right. Titles clamp to two lines and buyers to one; the notice view shows everything in full.
+One column, at most 40rem wide, 16px gutters. The header scrolls away; the tab bar and day headings stick. A row is tile, text, save star. Titles clamp to two lines and buyers to one; the notice view shows everything in full. Long lists are drawn a screenful at a time.
 
 ## Elevation & Depth
 
-Print has no shadows. Structure comes from rules: a 2px ink rule opens a day or a section, hairlines separate rows. The only shadow is under the toast, which floats above the page.
+One elevation: a sheet. In the light theme a sheet carries a soft low shadow and no border; in the dark theme it is a lighter surface with no shadow. Rows inside a sheet are separated by hairlines that start after the tile. The toast is the only thing that floats above sheets.
 
 ## Shapes
 
-Fields 10px, buttons 12px, chips fully rounded. Rows and sections have no boxes at all.
+Tab segments 10px, tiles 12px, fields and buttons 14px, sheets 16px, the header's bottom corners and the notice hero 20px, chips and tab counts fully rounded. Small parts: the progress bar 4px, focus rings 6px.
 
 ## Components
 
 ### Buttons
 
-Primary: press-blue fill. Secondary: 1.5px ink outline on paper. Both 48px tall, 12px radius, label at 88% width, an icon before the label.
+Primary: press-blue fill. Secondary: a sheet. Both 52px tall with a Lucide icon before the label; they shrink slightly when pressed.
 
 ### Chips
 
-40px pills with a count; the selected one is filled press blue.
+40px pills on sheet white, each with its sector icon and a count; the selected one is filled press blue.
 
 ### Inputs / Fields
 
-One search field in the shell: white on blue, 46px, with a clear button once text is typed.
+One search field in the header: white on blue, 48px, with a clear button once text is typed. Typing waits for a short pause before the list redraws.
 
 ### Navigation
 
-Three tabs with counts and a 3px ink underline. The notice view is pushed, with a back button and Telegram's own back button when inside Telegram.
+A three-part segmented control with a sliding thumb; the active part's count turns press blue. The notice view is pushed; where the browser supports view transitions the row's date tile travels into the notice.
 
-### Dateline column
+### Date tile
 
-The signature component. In «Նոր» and «Պահված» it shows weekday, a large day numeral and month; in «Ժամկետներ», where the day is already the section heading, it shows the time. The numeral turns amber or red as the deadline approaches.
+The signature component. In «Նոր» and «Պահված» it shows weekday, day numeral and month; in «Ժամկետներ», where the day is already the heading, it shows «ԺԱՄԸ» and the time. In the notice view it is larger and sits beside the deadline, above a bar that shows how much of the bidding period has passed.
 
 ## Do's and Don'ts
 
@@ -167,9 +234,11 @@ The signature component. In «Նոր» and «Պահված» it shows weekday, a 
 - Lead with the deadline, then what is bought, then who buys.
 - Keep official wording available, word for word, in the notice view.
 - Write every label as a plain Armenian sentence or noun.
+- Animate only state: the tab thumb, a row entering, the tile travelling, the star.
 
 ### Don't:
 
-- Wrap rows in cards or add shadows.
-- Add a metric hero, kicker labels or decorative icons.
+- Give each row its own card, or nest sheets.
+- Add a metric hero, kicker labels or decorative illustrations.
+- Colour sectors; the sector is an icon and a word.
 - State anything the source does not say (prices, winners, eligibility).

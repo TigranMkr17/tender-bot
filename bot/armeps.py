@@ -7,6 +7,7 @@ than for specific CSS classes, so small changes to the site do not break it.
 """
 from __future__ import annotations
 
+import http.client
 import re
 import time
 import urllib.error
@@ -53,10 +54,16 @@ def fetch(url: str, retries: int = 3, timeout: int = 40) -> str:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 raw = resp.read()
             return raw.decode("utf-8", errors="replace")
-        except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
+        except (OSError, http.client.HTTPException) as exc:   # URLError and timeouts are OSErrors
             last = exc
-            time.sleep(2 + attempt * 4)
-    raise ScrapeError(f"Could not open {url}: {last}")
+            if attempt + 1 < retries:
+                time.sleep(2 + attempt * 4)
+    raise ScrapeError(f"Could not open {url}: {last}.")
+
+
+def fetch_notice(url: str) -> str:
+    """One notice page: give up sooner, there are hundreds of them and the next run retries."""
+    return fetch(url, retries=2, timeout=25)
 
 
 # --------------------------------------------------------------------------

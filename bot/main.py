@@ -10,15 +10,25 @@ import argparse
 import json
 import os
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 
 from . import armeps, digest, store, telegram
 from .textproc import kind_key
 
 MAX_PAGES = 60
-MAX_DETAILS = 450
+MAX_DETAILS = 600
 DETAIL_TRIES = 3
+BUDGET = 9 * 60     # seconds one run may spend reading ARMEPS; what is left waits for the next run
+WORKERS = 3         # notice pages read side by side
+GIVE_UP_AFTER = 8   # notice pages failing in a row before the run stops asking for more
+
+
+def say(text: str) -> None:
+    """Print a line at once, so a running job shows where it is."""
+    print(text, flush=True)
 
 
 def app_url() -> str | None:
@@ -47,13 +57,25 @@ def _debug_dump(name: str, html: str) -> None:
         fh.write(html)
 
 
-def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: float = 0.3) -> dict:
-    """Walk the list (latest deadline first) until the deadlines are in the past."""
+def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: float = 0.3,
+           budget: float = BUDGET, clock=time.monotonic) -> dict:
+    """Walk the list (latest deadline first) until the deadlines are in the past, then read
+    the notice page of every open tender that has not been read yet.
+
+    A run never spends more than `budget` seconds here: whatever is not read in time keeps
+    its title and deadline from the list and gets its notice read by the next run."""
+    started = clock()
     floor = at - timedelta(days=1)
     seen: set[int] = set()
-    stats = {"pages": 0, "rows": 0, "new": 0, "details": 0, "detail_failed": 0}
+    stats = {"pages": 0, "rows": 0, "new": 0, "details": 0, "detail_failed": 0, "postponed": 0}
     for page in range(1, MAX_PAGES + 1):
-        html = fetch(armeps.list_url(page))
+        try:
+            html = fetch(armeps.list_url(page))
+        except armeps.ScrapeError as exc:
+            if page == 1:
+                raise
+            say(f"! list page {page}: {exc} Keeping what the first {page - 1} page(s) gave.")
+            break
         rows = armeps.parse_list(html)
         if page == 1 and not rows:
             _debug_dump("list_1.html", html)
@@ -86,35 +108,66 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
                 t["title"] = r.title
         if latest is not None and latest < floor:
             break
+        if clock() - started > budget:
+            say(f"! The list is answering slowly: stopped after page {page}.")
+            break
         time.sleep(pause)
+    say(f"List: {stats['pages']} page(s), {stats['rows']} current tenders, {stats['new']} new")
 
     # notice pages: full title, buyer, publication time, other dates, invitation
     todo = [t for t in tenders.values()
             if t.get("status") == "open" and (not t.get("pub") or t.get("stale"))
             and t.get("dt", 0) < DETAIL_TRIES and (store.parse(t.get("end")) or at) > at]
-    todo.sort(key=lambda t: -t["id"])
-    for t in todo[:MAX_DETAILS]:
-        t["dt"] = t.get("dt", 0) + 1
+    todo.sort(key=lambda t: -t["id"])   # newest notices first
+    todo = todo[:MAX_DETAILS]
+    if not todo:
+        return stats
+    quick = armeps.fetch_notice if fetch is armeps.fetch else fetch
+    stop = threading.Event()
+    lock = threading.Lock()
+    failing = [0]                       # notice pages that failed one after another
+
+    def read(t: dict):
+        if stop.is_set() or clock() - started > budget:
+            return None, "later"
         try:
-            d = armeps.parse_detail(fetch(armeps.detail_url(t["id"])))
+            d, err = armeps.parse_detail(quick(armeps.detail_url(t["id"]))), ""
         except armeps.ScrapeError as exc:
-            stats["detail_failed"] += 1
-            print(f"! notice {t['id']}: {exc}")
-            continue
-        if not d.get("published") and not d.get("buyer"):
-            stats["detail_failed"] += 1
-            continue
-        stats["details"] += 1
-        if d.get("title") and len(d.get("title")) >= len(t.get("title") or ""):
-            t["title"] = d.get("title")
-        t["buyer_official"] = d.get("buyer") or t.get("buyer_official")
-        t["kind"] = kind_key(d.get("kind")) or t.get("kind")
-        t["pub"] = d.get("published") or t.get("pub")
-        t["ask"] = d.get("questions_until") or t.get("ask")
-        t["auc"] = d.get("auction") or t.get("auc")
-        t["inv"] = d.get("invitation") or t.get("inv")
-        t.pop("stale", None)
-        time.sleep(pause * 0.7)
+            d, err = None, str(exc)
+        if d is not None and not d.get("published") and not d.get("buyer"):
+            d, err = None, "the page opened but had no notice on it."
+        with lock:
+            failing[0] = failing[0] + 1 if d is None else 0
+            if failing[0] >= GIVE_UP_AFTER:
+                stop.set()
+        if d is not None and pause:
+            time.sleep(pause)
+        return d, err
+
+    with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        for n, (t, (d, err)) in enumerate(zip(todo, pool.map(read, todo)), 1):
+            if err == "later":
+                stats["postponed"] += 1
+                continue
+            t["dt"] = t.get("dt", 0) + 1
+            if d is None:
+                stats["detail_failed"] += 1
+                say(f"! notice {t['id']}: {err}")
+                continue
+            stats["details"] += 1
+            if d.get("title") and len(d.get("title")) >= len(t.get("title") or ""):
+                t["title"] = d.get("title")
+            t["buyer_official"] = d.get("buyer") or t.get("buyer_official")
+            t["kind"] = kind_key(d.get("kind")) or t.get("kind")
+            t["pub"] = d.get("published") or t.get("pub")
+            t["ask"] = d.get("questions_until") or t.get("ask")
+            t["auc"] = d.get("auction") or t.get("auc")
+            t["inv"] = d.get("invitation") or t.get("inv")
+            t.pop("stale", None)
+            if n % 50 == 0:
+                say(f"  notices: {n} of {len(todo)}")
+    if stop.is_set():
+        say("! Notice pages stopped answering: the rest are left for the next run.")
     return stats
 
 
@@ -129,12 +182,13 @@ def update_data(at: datetime, fetch=armeps.fetch, pause: float = 0.3) -> dict:
                     "open": sum(store.is_open(t, at) for t in items)}
     store.save(data)       # what the bot remembers
     store.publish(data)    # what the app shows
-    print(f"ARMEPS: {stats['pages']} pages, {stats['rows']} current tenders, "
-          f"{stats['new']} new, {stats['details']} notices read"
-          + (f", {stats['detail_failed']} notices unreadable" if stats["detail_failed"] else ""))
+    say(f"ARMEPS: {stats['pages']} pages, {stats['rows']} current tenders, "
+        f"{stats['new']} new, {stats['details']} notices read"
+        + (f", {stats['detail_failed']} notices unreadable" if stats["detail_failed"] else "")
+        + (f", {stats['postponed']} left for the next run" if stats["postponed"] else ""))
     if stats["rows"] and stats["details"] == 0 and stats["detail_failed"] > 3:
-        print("! No notice page could be read. Titles and deadlines are still correct, but "
-              "buyer names and publication times are missing.")
+        say("! No notice page could be read. Titles and deadlines are still correct, but "
+            "buyer names and publication times are missing.")
     return data
 
 

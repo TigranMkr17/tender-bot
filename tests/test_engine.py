@@ -266,6 +266,67 @@ class EndToEnd(unittest.TestCase):
             finally:
                 os.chdir(cwd)
 
+    def test_slow_site_is_cut_short_and_finished_next_run(self):
+        pages = {armeps.list_url(1): list_page(SEED["tenders"])}
+        calls = []
+
+        def fake(url):
+            calls.append(url)
+            if url in pages:
+                return pages[url]
+            if "/start/" in url:
+                return "<html><body><table></table></body></html>"
+            return detail_page(BY_ID[int(url.rstrip("/").rsplit("/", 1)[1])])
+
+        ticks = iter(range(0, 100000, 10))            # every look at the clock costs 10 "seconds"
+        tenders: dict = {}
+        stats = main.scrape(tenders, AT, fetch=fake, pause=0, budget=200, clock=lambda: next(ticks))
+        self.assertEqual(stats["rows"], 30)           # every tender is known from the list
+        self.assertGreater(stats["details"], 0)
+        self.assertGreater(stats["postponed"], 0)     # but some notices had to wait
+        self.assertEqual(stats["details"] + stats["postponed"], 29)
+        waiting = [t for t in tenders.values() if t["status"] == "open" and not t.get("pub")]
+        self.assertEqual(len(waiting), stats["postponed"])
+        self.assertTrue(all("dt" not in t for t in waiting))   # not counted as a failed try
+
+        stats = main.scrape(tenders, AT, fetch=fake, pause=0)  # next run, no hurry
+        self.assertEqual(stats["details"], len(waiting))
+        self.assertEqual(stats["postponed"], 0)
+        self.assertTrue(all(t.get("pub") for t in tenders.values() if t["status"] == "open"))
+
+    def test_dead_notice_pages_do_not_hold_the_run(self):
+        pages = {armeps.list_url(1): list_page(SEED["tenders"])}
+        asked = []
+
+        def fake(url):
+            if url in pages:
+                return pages[url]
+            if "/start/" in url:
+                return "<html><body><table></table></body></html>"
+            asked.append(url)
+            raise armeps.ScrapeError("Could not open the notice.")
+
+        tenders: dict = {}
+        stats = main.scrape(tenders, AT, fetch=fake, pause=0)
+        self.assertEqual(stats["rows"], 30)
+        self.assertEqual(stats["details"], 0)
+        self.assertGreaterEqual(stats["detail_failed"], main.GIVE_UP_AFTER)
+        self.assertLess(len(asked), 29)               # it stopped asking
+        self.assertEqual(stats["detail_failed"] + stats["postponed"], 29)
+
+    def test_a_later_list_page_failing_keeps_the_first_pages(self):
+        def fake(url):
+            if url == armeps.list_url(1):
+                return list_page(SEED["tenders"])
+            if "/start/" in url:
+                raise armeps.ScrapeError("Could not open the list.")
+            return detail_page(BY_ID[int(url.rstrip("/").rsplit("/", 1)[1])])
+
+        tenders: dict = {}
+        stats = main.scrape(tenders, AT, fetch=fake, pause=0)
+        self.assertEqual(stats["rows"], 30)
+        self.assertEqual(stats["details"], 29)
+
     def test_layout_change_is_reported(self):
         cwd = os.getcwd()
         with tempfile.TemporaryDirectory() as tmp:
