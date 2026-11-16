@@ -13,7 +13,7 @@ DATA_PATH = os.path.join("docs", "data", "tenders.json")    # the slim copy the 
 KEEP_CLOSED_DAYS = 4
 INVITATION = "https://eauction.armeps.am/application/documents/public_invitation/tender_{id}.zip"
 #: Fields the app shows. The notice URL is left out: the app builds it from the id.
-PUBLIC = ("id", "code", "title", "subject", "buyer", "for", "kind", "sector", "lots",
+PUBLIC = ("id", "code", "title", "subject", "buyer", "bk", "for", "kind", "sector", "lots",
           "status", "pub", "end", "ask", "auc")
 
 STATUS = {"Հրապարակված": "open", "Published": "open",
@@ -99,6 +99,7 @@ def enrich(tenders: list[dict]) -> None:
         kind = t.get("kind") or tp.kind_from_code(code)
         t["subject"] = subject
         t["buyer"] = buyer
+        t["bk"] = tp.buyer_key(t.get("buyer_official")) or None
         t["for"] = None if tp.same_party(for_whom, buyer) else for_whom
         t["kind"] = kind
         t["sector"] = tp.classify(subject or readable, kind)

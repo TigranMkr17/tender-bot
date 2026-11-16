@@ -307,3 +307,34 @@ def parse_detail(html: str) -> Detail:
 
 def detail_url(tid: int) -> str:
     return DETAIL.format(id=tid)
+
+
+class Missing(ScrapeError):
+    """The register answered that there is no such page."""
+
+
+def fetch_bytes(url: str, retries: int = 3, timeout: int = 60) -> bytes:
+    """A file or a page as bytes. The register resets hurried connections, so failures wait longer each time."""
+    last: Exception | None = None
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*",
+                                                       "Accept-Language": "hy,en;q=0.5"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return resp.read()
+        except urllib.error.HTTPError as exc:
+            if exc.code in (404, 410):
+                raise Missing(f"{url} does not exist.") from exc
+            last = exc
+        except (OSError, http.client.HTTPException) as exc:
+            last = exc
+        if attempt + 1 < retries:
+            time.sleep(3 + attempt * 6)
+    raise ScrapeError(f"Could not open {url}: {last}.")
+
+
+def fetch_page(url: str) -> str:
+    return fetch_bytes(url, retries=3, timeout=40).decode("utf-8", errors="replace")
+
+
+INVITATION = BASE + "/application/documents/public_invitation/tender_{id}.zip"

@@ -560,5 +560,179 @@ class TelegramFlow(unittest.TestCase):
                 os.chdir(cwd)
 
 
+# --------------------------------------------------------------------------
+# invitations and results
+# --------------------------------------------------------------------------
+
+W_NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+
+
+def _docx(body: str) -> bytes:
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("word/document.xml", f'<?xml version="1.0"?><w:document {W_NS}><w:body>{body}</w:body></w:document>')
+    return buf.getvalue()
+
+
+def _p(text: str) -> str:
+    return f"<w:p><w:r><w:t>{text}</w:t></w:r></w:p>"
+
+
+def _tbl(rows) -> str:
+    return "<w:tbl>" + "".join("<w:tr>" + "".join(f"<w:tc>{_p(c)}</w:tc>" for c in r) + "</w:tr>" for r in rows) + "</w:tbl>"
+
+
+def invitation_zip() -> bytes:
+    """A small invitation shaped like the real ones: the list of lots sits in a table inside a paragraph."""
+    import io
+    import zipfile
+    lots = _tbl([["Ապրանքի"],
+                 ["Հրավերով նախատեսված չափաբաժնի համարը", "միջանցիկ ծածկագիրը` ըստ ԳՄԱ դասակարգման (CPV)",
+                  "Ամբողջական անվանումը", "Տեխնիկական բնութագիրը"],
+                 ["1", "09132200/514", "բենզին, ռեգուլյար", "Արտաքին տեսքը` մաքուր և պարզ, օկտանային թիվը 91"],
+                 ["2", "09134200/3", "դիզելային վառելիք", "Հայտ-տեխնիկական բնութագիր-կցված"]])
+    plan = _tbl([["Ապրանքի"],
+                 ["չափաբաժնի համարը", "Չափման միավորը", "Միավոր գինը", "Ընդհանուր գինը", "Ընդհանուր քանակը", "Մատակարարման"],
+                 ["", "", "", "", "", "Հասցեն", "Ենթակա քանակը", "Ժամկետը"],
+                 ["1", "լիտր", "", "", "8 670", "ք. Երևան, Ռոստոմի 30", "8670", "20 օրվա ընթացքում"],
+                 ["2", "լիտր", "", "", "1200,5", "ք. Երևան, Ռոստոմի 30", "1200,5", "20 օրվա ընթացքում"]])
+    body = (_p("ՀԱՅՏԱՐԱՐՈՒԹՅՈՒՆ") + _p("կարող եք դիմել գնահատող հանձնաժողովի քարտուղար Ա. Բ.-ին") + _p("Հեռախոս 010 51-56-91")
+            + _p("Էլ. փոստ gnumner@example.am") + _p("Հ Ր Ա Վ Ե Ր")
+            + f"<w:p><w:r><w:t>ՀՀ դրամ</w:t></w:r>{lots}</w:p>" + plan
+            + _p("10.2 Որակավորման ապահովման չափը հավասար է սույն ընթացակարգի շրջանակում գնվելիք ապրանքի գնման գնի 15 տոկոսին:")
+            + _p("10.3. Պայմանագրի ապահովման չափը կազմում է գնման գնի 10 տոկոսը:"))
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("hraver_ru.docx", _docx(_p("ПРИГЛАШЕНИЕ")))
+        z.writestr("hraver.docx", _docx(body))
+    return buf.getvalue()
+
+
+RESULT_PAGE = """<html><body>
+<div class="fe_t">Ծածկագիր</div><div class="fe_v">ՓՈՐՁ-ԷԱՃԱՊՁԲ-26/7</div>
+<div class="fe_t">Վերնագիր</div><div class="fe_v">Փորձնական հիմնարկի կարիքների համար վառելիքի ձեռքբերում</div>
+<div class="fe_t">Գնորդ</div><div class="fe_v">«Փորձնական հիմնարկ» ՊՈԱԿ</div>
+<div class="fe_t">Գնման տեսակ</div><div class="fe_v">Ապրանք</div>
+<div class="fe_t">Պատասխաններ և պարզաբանումներ</div><table class="tb"><thead><tr><td>Հարցում</td><td>Ժամանակ</td></tr><thead><tbody></tbody></table>
+<div class="fe_t">Հրապարակման ժամանակ</div><div class="fe_v">2026-10-01 10:00:00</div>
+<div class="fe_t">Հայտերի ընդունման վերջնաժամկետ</div><div class="fe_v">2026-10-12 10:00:00</div>
+<div class="fe_t">Հակադարձ աճուրդ</div><div class="fe_v">2026-10-13 10:00:00</div>
+<div class="de_t">Կարգավիճակ</div><div class="de_v">Ավարտված</div>
+<table class="tb"><thead><tr><td rowspan="2">Չափաբաժնի համար</td><td rowspan="2">Զբաղեցրած տեղ</td><td rowspan="2">Ներկայացված հայտեր</td>
+<td rowspan="2">Նախահաշվային գին</td><td colspan="3">Նախնական առաջարկ</td><td colspan="3">Վերջին առաջարկ</td><td rowspan="2">Մասնակցի կարգավիճակ</td></tr>
+<tr><td>Արժեք</td><td>ԱԱՀ</td><td>Գին</td><td>Արժեք</td><td>ԱԱՀ</td><td>Գին</td></tr></thead>
+<tr><td>1</td><td>1</td><td><a href="https://eauction.armeps.am/hy/procurer/bo_details/by_end_bid_time/2/tid/900/id/11/.">«ԱՌԱՋԻՆ» ՍՊԸ</a>
+ <a href='https://eauction.armeps.am/hy/dms/specification/bid_id/1'>Ապրանքի ամբողջական նկարագիր</a></td>
+ <td>1200000 AMD</td><td>990000 AMD</td><td>20 %</td><td>1188000 AMD</td><td>800000 AMD</td><td>20 %</td><td>960000.00 AMD</td><td></td></tr>
+<tr><td>1</td><td>2</td><td><a href="https://eauction.armeps.am/hy/procurer/bo_details/by_end_bid_time/2/tid/900/id/12/.">Երկրորդ ՓԲԸ</a></td>
+ <td>1200000 AMD</td><td>1000000 AMD</td><td>20 %</td><td>1200000 AMD</td><td>810000 AMD</td><td>20 %</td><td>972000.00 AMD</td><td></td></tr>
+<tr><td>2</td><td>1</td><td><a href="https://eauction.armeps.am/hy/procurer/bo_details/by_end_bid_time/2/tid/900/id/13/.">Անուն Ազգանուն ԱՁ</a></td>
+ <td>500000 AMD</td><td>400000 AMD</td><td>0 %</td><td>400000 AMD</td><td>300000 AMD</td><td>0 %</td><td>300000.00 AMD</td><td>Մերժված</td></tr>
+<tr><td>2</td><td>2</td><td><a href="https://eauction.armeps.am/hy/procurer/bo_details/by_end_bid_time/2/tid/900/id/12/.">Երկրորդ ՓԲԸ</a></td>
+ <td>500000 AMD</td><td>500000 AMD</td><td>20 %</td><td>500000 AMD</td><td>375000 AMD</td><td>20 %</td><td>450000.00 AMD</td><td></td></tr>
+</table>
+<table class="tb"><thead><tr><td>Չափաբաժնի համար</td><td>CPV</td><td>Անվանում</td><td>Գնառաջարկներ</td></tr></thead><tbody>
+<tr><td>1</td><td>09132200/514</td><td>բենզին, ռեգուլյար</td><td><table class="tb"><tr><td>«ԱՌԱՋԻՆ» ՍՊԸ</td><td>800000 AMD</td><td>2026-10-13 10:05:00</td></tr></table>
+<tr><td>2</td><td>09134200/3</td><td>դիզելային վառելիք</td><td><table class="tb"><tr><td>Երկրորդ ՓԲԸ</td><td>375000 AMD</td><td>2026-10-13 10:06:00</td></tr></table>
+</tbody></table></body></html>"""
+
+
+class Invitations(unittest.TestCase):
+    def test_lots_quantities_and_guarantees(self):
+        from bot import invite
+        info = invite.read(invitation_zip())
+        self.assertEqual([(l["n"], l["cpv"], l["name"]) for l in info["lots"]],
+                         [(1, "09132200", "բենզին, ռեգուլյար"), (2, "09134200", "դիզելային վառելիք")])
+        self.assertEqual((info["lots"][0]["unit"], info["lots"][0]["qty"]), ("լիտր", 8670.0))
+        self.assertEqual(info["lots"][1]["qty"], 1200.5)
+        self.assertTrue(info["lots"][0]["spec"].startswith("Արտաքին տեսքը"))
+        self.assertEqual(info["lots"][1]["spec"], "")           # "see the attached file" is not a description
+        self.assertEqual(info["sec"], {"qual": 15.0, "contract": 10.0})
+        self.assertEqual(info["ask"], {"phone": "010515691", "mail": "gnumner@example.am"})
+        self.assertEqual(info["files"], ["hraver_ru.docx", "hraver.docx"])
+
+    def test_a_broken_archive_is_not_an_error(self):
+        from bot import invite
+        self.assertIsNone(invite.read(b"not a zip"))
+
+
+class Results(unittest.TestCase):
+    def test_lots_and_bids(self):
+        from bot import results
+        out = results.parse(RESULT_PAGE)
+        self.assertEqual(out["lots"], {1: {"cpv": "09132200", "title": "բենզին, ռեգուլյար"},
+                                       2: {"cpv": "09134200", "title": "դիզելային վառելիք"}})
+        self.assertEqual(len(out["bids"]), 4)
+        first = out["bids"][0]
+        self.assertEqual((first["lot"], first["place"], first["cid"], first["name"]), (1, 1, 11, "«ԱՌԱՋԻՆ» ՍՊԸ"))
+        self.assertEqual((first["est"], first["fp"], first["lv"], first["lp"], first["rej"]),
+                         (1200000.0, 1188000.0, 800000.0, 960000.0, 0))
+        self.assertEqual(out["bids"][2]["rej"], 1)
+        self.assertTrue(results.is_person("Անուն Ազգանուն ԱՁ"))
+        self.assertTrue(results.is_person("ԱՁ Անուն Ազգանուն"))
+        self.assertFalse(results.is_person("«ԱՌԱՋԻՆ» ՍՊԸ"))
+
+    def test_the_slow_job_end_to_end(self):
+        from bot import deep
+        at = datetime(2026, 11, 16, 14, 0)
+        asked = []
+
+        def fetch_page(url):
+            asked.append(url)
+            if url.rstrip("/").endswith("/900"):
+                return RESULT_PAGE
+            raise armeps.Missing("no such tender")
+
+        def fetch_bytes(url):
+            asked.append(url)
+            return invitation_zip()
+
+        cwd = os.getcwd()
+        with tempfile.TemporaryDirectory() as tmp:
+            os.chdir(tmp)
+            try:
+                store.save({"meta": {}, "tenders": [
+                    {"id": 905, "code": "Ա-ԷԱՃԱՊՁԲ-26/9", "title": "վառելիքի ձեռքբերում", "status": "open",
+                     "end": "2026-11-25T10:00"}]})
+                with open(deep.HIST_STATE, "w", encoding="utf-8") as fh:
+                    json.dump({"floor": 897}, fh)
+                deep.PAUSE = 0
+                ticks = iter(range(10 ** 7))
+                clock = lambda: next(ticks) * 0.001
+                deep.run(30, at, fetch_bytes, fetch_page, now=clock)
+
+                with open(os.path.join(deep.OUT_T, "905.json"), encoding="utf-8") as fh:
+                    page = json.load(fh)
+                self.assertEqual(len(page["lots"]), 2)
+                self.assertEqual(page["addr"], "ք. Երևան, Ռոստոմի 30")     # the same for both lots: said once
+                self.assertNotIn("addr", page["lots"][0])
+                with open(deep.OUT_LOTS, encoding="utf-8") as fh:
+                    self.assertEqual(json.load(fh)["t"]["905"]["cpv"], ["09132200", "09134200"])
+
+                with open(os.path.join(deep.OUT_H, "r", "18.json"), encoding="utf-8") as fh:
+                    rec = json.load(fh)["900"]
+                self.assertEqual(rec["subject"], "Վառելիքի ձեռքբերում")
+                self.assertEqual(rec["lots"][0]["bids"][0]["nm"], "«Առաջին» ՍՊԸ")
+                with open(os.path.join(deep.OUT_H, "companies.json"), encoding="utf-8") as fh:
+                    companies = json.load(fh)
+                self.assertEqual(companies["12"][1:], [2, 1])           # bid on two lots, best accepted on one
+                self.assertNotIn("13", companies)                       # a sole proprietor gets no page
+                with open(os.path.join(deep.OUT_H, "recent.json"), encoding="utf-8") as fh:
+                    row = json.load(fh)["rows"][0]
+                self.assertEqual(row[:1] + row[6:10], [900, 2, 3, 1700000, 1410000])
+                with open(os.path.join(deep.OUT_H, "v", "09134.json"), encoding="utf-8") as fh:
+                    lot = json.load(fh)["rows"][0]
+                self.assertEqual(lot[7], 450000.0)                      # the rejected lower bid does not count
+                self.assertEqual([c[1] for c in lot[9]], ["Երկրորդ ՓԲԸ"])
+
+                before = len(asked)
+                deep.run(30, at, fetch_bytes, fetch_page, now=clock)
+                self.assertEqual(len(asked), before)                    # nothing is read twice
+            finally:
+                os.chdir(cwd)
+
+
 if __name__ == "__main__":
     unittest.main()

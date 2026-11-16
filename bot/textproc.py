@@ -421,6 +421,13 @@ def clean_name(text: str | None) -> str:
     return _WS.sub(" ", text).strip()
 
 
+def buyer_key(name: str | None) -> str:
+    """A short, stable file name for an organisation, whatever quotes and capitals it is written with."""
+    import hashlib
+    base = re.sub(r"[^\w]+", "", _fix_ev((name or "").lower()))
+    return hashlib.sha1(base.encode("utf-8")).hexdigest()[:8] if base else ""
+
+
 def _stems(text: str) -> set[str]:
     words = re.findall(r"[^\W\d_]{3,}", text.lower())
     return {_fix_ev(w)[:5] for w in words} - _LEGAL
