@@ -22,7 +22,7 @@ MAX_PAGES = 60
 MAX_DETAILS = 600
 DETAIL_TRIES = 3
 BUDGET = 9 * 60     # seconds one run may spend reading ARMEPS; what is left waits for the next run
-WORKERS = 3         # notice pages read side by side
+WORKERS = 2         # notice pages read side by side; the site resets a third connection
 GIVE_UP_AFTER = 8   # notice pages failing in a row before the run stops asking for more
 
 
@@ -65,6 +65,7 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
     A run never spends more than `budget` seconds here: whatever is not read in time keeps
     its title and deadline from the list and gets its notice read by the next run."""
     started = clock()
+    first_run = not tenders     # nothing is remembered yet: what the list holds is not "new"
     floor = at - timedelta(days=1)
     seen: set[int] = set()
     stats = {"pages": 0, "rows": 0, "new": 0, "details": 0, "detail_failed": 0, "postponed": 0}
@@ -98,7 +99,9 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
             stats["rows"] += 1
             t = tenders.get(r.id)
             if t is None:
-                t = tenders[r.id] = {"id": r.id, "seen": store.stamp(at)}
+                t = tenders[r.id] = {"id": r.id}
+                if not first_run:
+                    t["seen"] = store.stamp(at)
                 stats["new"] += 1
             if t.get("end") and t["end"] != r.deadline:
                 t["stale"] = True  # the deadline moved: re-read the other dates too

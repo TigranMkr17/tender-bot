@@ -91,11 +91,11 @@ def enrich(tenders: list[dict]) -> None:
     casing = tp.Casing().learn(
         [t.get("title") for t in tenders] + [t.get("buyer_official") for t in tenders])
     for t in tenders:
-        title = t.get("title") or ""
+        title = t["title"] = tp.clean_chars(t.get("title"))
         code = t.get("code") or ""
         readable = casing.fix(title, "title")
         subject, for_whom = tp.split_title(readable, code)
-        buyer = casing.fix((t.get("buyer_official") or "").strip("«»\"“” "), "name") or None
+        buyer = casing.fix(tp.clean_name(t.get("buyer_official")), "name") or None
         kind = t.get("kind") or tp.kind_from_code(code)
         t["subject"] = subject
         t["buyer"] = buyer

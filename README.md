@@ -18,9 +18,9 @@ Anyone else who should get the messages only has to open the bot and press Start
 
 | When | What |
 |---|---|
-| 09:07, Monday to Saturday | Morning message: new tenders, what closes in the next 3 days, what closes today |
+| About 09:00, Monday to Saturday | Morning message: new tenders, what closes in the next 3 days, what closes today |
 | 13:07, Monday to Friday | Quiet refresh of the app |
-| 18:07, Monday to Friday | Evening message, only if new tenders were published during the day |
+| About 18:00, Monday to Friday | Evening message, only if new tenders were published during the day |
 | Every hour | Answers people who pressed Start or sent `/stop` |
 
 GitHub sometimes starts scheduled jobs 5 to 30 minutes late. To change the times, edit the `cron` lines in `.github/workflows/tenders.yml`. They are in UTC: Yerevan time minus 4 hours.
