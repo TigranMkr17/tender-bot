@@ -53,6 +53,14 @@ def _number(text: str) -> float | None:
         return None
 
 
+def _cut(text: str, limit: int) -> str:
+    text = re.sub(r"\s+", " ", text).strip()
+    half = len(text) // 2
+    if len(text) > 20 and len(text) % 2 == 0 and text[:half] == text[half:]:
+        text = text[:half]                               # a merged cell that was read twice
+    return text if len(text) <= limit else text[:limit].rstrip() + "…"
+
+
 def _lots(tables: list[list[list[str]]]) -> list[dict]:
     lots: dict[int, dict] = {}
     for rows in tables:                                  # the list of lots
@@ -74,15 +82,23 @@ def _lots(tables: list[list[list[str]]]) -> list[dict]:
         head = " ".join(" ".join(r) for r in rows[:3]).lower()
         if "չափման միավոր" not in head or "քանակ" not in head or "հասցե" not in head:
             continue
+        addr_i, when_i = 5, 7                            # goods; services have one column fewer
+        for r in rows[:4]:
+            for i, cell in enumerate(r):
+                low = cell.strip().lower()
+                if low.startswith("հասցե"):
+                    addr_i = i
+                elif low.startswith("ժամկետ"):
+                    when_i = i
         for r in rows:
             if len(r) >= 5 and _NUM.match(r[0].strip()) and int(r[0]) in lots:
                 lot = lots[int(r[0])]
                 lot["unit"] = r[1].strip()
                 lot["qty"] = _number(r[4])
-                if len(r) > 5 and r[5].strip():
-                    lot["addr"] = r[5].strip()[:200]
-                if len(r) > 7 and r[7].strip():
-                    lot["when"] = r[7].strip()[:260]
+                if len(r) > addr_i and r[addr_i].strip():
+                    lot["addr"] = _cut(r[addr_i], 200)
+                if len(r) > when_i and r[when_i].strip():
+                    lot["when"] = _cut(r[when_i], 400)
         break
     return [lots[n] for n in sorted(lots)]
 

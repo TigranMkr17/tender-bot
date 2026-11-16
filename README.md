@@ -1,6 +1,13 @@
 # Մրցույթներ: Armenian tenders, easy to look through
 
-A website that reads the state e-auction register (eauction.armeps.am) and shows every open tender in plain Armenian: what is bought, who buys it, when bids close. Two lists (new, and all open ones by deadline), a search box, a sector filter, and for each tender the key dates and a direct link to the invitation. On a wide screen the list and the chosen tender sit side by side.
+A website that reads the state e-auction register (eauction.armeps.am) and shows every open tender in plain Armenian: what is bought, who buys it, when bids close. Three lists (new, all open ones by deadline, and finished ones), a search box, a sector filter, and for each tender the key dates and a direct link to the invitation. On a wide screen the list and the chosen tender sit side by side.
+
+It also opens what the register keeps in files and on separate pages:
+
+- **Inside a tender**: the lots with quantities and descriptions, the delivery address and term, what a bid has to contain, the guarantees a winner provides, and the buyer's contact. All read from the invitation.
+- **How finished tenders went**: the estimated price, every bid, who came first and by how much the auction lowered the price.
+- **Last time**: for each lot of an open tender, the latest purchase of the same thing, by the same buyer where there is one.
+- **Who takes part**: a page for every company (where it bids, how often it comes first, how far below the estimate) and for every buyer (open tenders, past ones, who usually comes first).
 
 It needs no server. GitHub reads the register on a schedule and hosts the page, both free.
 
@@ -17,8 +24,12 @@ It needs no server. GitHub reads the register on a schedule and hosts the page, 
 | 08:52, Monday to Saturday | Reads the register |
 | Every hour from 09:37 to 17:37, Monday to Friday | Reads the register |
 | 17:52, Monday to Friday | Reads the register |
+| Every hour from 09:17 to 18:17, Monday to Friday | A short look inside new invitations and at tenders that have just finished |
+| 21:17, 23:17, 01:17 and 03:17, every night | Long runs: finished tenders, back through the past 400 days |
 
-GitHub sometimes starts scheduled jobs 5 to 30 minutes late. To change the times, edit the `cron` lines in `.github/workflows/tenders.yml`. They are in UTC: Yerevan time minus 4 hours.
+GitHub sometimes starts scheduled jobs 5 to 30 minutes late. To change the times, edit the `cron` lines in `.github/workflows/tenders.yml` and `history.yml`. They are in UTC: Yerevan time minus 4 hours.
+
+The past year is read a part each night, because the register answers slowly and resets hurried connections. Until it is done, the «Արդյունքներ» list says how far back it reaches. To read more at once: Actions → History → Run workflow, and give it up to 140 minutes.
 
 ## Optional: messages in Telegram
 
@@ -45,7 +56,11 @@ The same data can be sent as a Telegram message: new tenders and the day's deadl
 ## What it does not cover yet
 
 - Only ARMEPS electronic auctions. Open tenders and price quotations announced only on gnumner.am, and donor or private tenders, are not included.
-- It shows what the notice page shows. Estimated prices and the contents of each lot are inside the invitation ZIP, which the site links to.
+- The register does not publish a tender's estimated price before the auction, so an open tender shows the prices of earlier purchases instead.
+- The register names no winner. The site shows who came first in the auction and which bids were turned down; the contract is the buyer's decision, and while it is being made a tender is marked «Հաղթողը որոշվում է» and read again every two days.
+- "The same thing" is judged by the item code and the lot's name. Quantities differ from one purchase to the next, so compare prices per unit where the site shows them.
+- Sole proprietors are people, not companies: they are named only in the record of the tender they bid in, and have no page of their own. Bidders' application files are not downloaded. Buyers' bank details in an invitation are not read.
+- Bids are filled in and signed in ARMEPS itself, so the site lists what a bid needs but does not prepare or submit one.
 - The Telegram messages have only been tested against a stand-in for Telegram (`python -m unittest discover -s tests`); the reader itself runs against the live register.
 
 ## How it is built
@@ -55,6 +70,12 @@ bot/armeps.py      reads the list and notice pages (Python standard library only
 bot/textproc.py    official wording -> short subject, readable buyer name, sector
 bot/store.py       bot/state/tenders.json (everything the bot knows) and the slim
                    docs/data/tenders.json the app downloads
+bot/invite.py      what is inside an invitation ZIP: lots, quantities, guarantees, contact
+bot/docx_read.py   reads paragraphs and tables out of a .docx (standard library only)
+bot/results.py     the bids on a finished tender's page
+bot/deep.py        the slow job:  python -m bot.deep --minutes 30
+                   writes docs/data/t/<id>.json (one open tender), docs/data/lots.json,
+                   and docs/data/h/ (finished tenders, companies, buyers, item codes)
 bot/digest.py      the Telegram messages
 bot/telegram.py    Bot API calls; the list of chats, stored encrypted
 bot/main.py        entry point:  python -m bot.main --mode digest|refresh|inbox [--dry-run]
@@ -64,7 +85,7 @@ tools/, tests/     sample notices and offline tests
 DESIGN.md          the site's colours, type and components
 ```
 
-The site opens from a copy of the last data kept on the device, then refreshes in the background. Long lists are drawn a screenful at a time, so several hundred tenders stay quick on an older phone.
+The site opens from a copy of the last data kept on the device, then refreshes in the background. Long lists are drawn a screenful at a time, so several hundred tenders stay quick on an older phone. What belongs to one screen (a tender's lots, a company's bids) is a small file of its own, fetched when that screen is opened.
 
 The repository is public, so the list of people who pressed Start is stored encrypted in `bot/state/subscribers.enc`. The key is derived from the bot token, which only GitHub's secret store holds. If you ever replace the token, everyone presses Start once more.
 

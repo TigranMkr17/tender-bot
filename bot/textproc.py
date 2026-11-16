@@ -421,6 +421,40 @@ def clean_name(text: str | None) -> str:
     return _WS.sub(" ", text).strip()
 
 
+_FORMS = [
+    (re.compile(r"սահմանափակ\s+պատասխանատվությամբ\s+ընկերությ(?:ուն|ան)\s*(?:\(\s*սպը\s*\))?", re.I), "ՍՊԸ"),
+    (re.compile(r"փակ\s+բաժնետիրական\s+ընկերությ(?:ուն|ան)\s*(?:\(\s*փբը\s*\))?", re.I), "ՓԲԸ"),
+    (re.compile(r"բաց\s+բաժնետիրական\s+ընկերությ(?:ուն|ան)\s*(?:\(\s*բբը\s*\))?", re.I), "ԲԲԸ"),
+    (re.compile(r"անհատ\s+ձեռն(?:արկատեր|երեց)", re.I), "ԱՁ"),
+    (re.compile(r"(?<![^\W\d_])Ա\s*[/\\.․]\s*Ձ[.․]?(?![^\W\d_])", re.I), "ԱՁ"),
+]
+_JOINERS = {"և", "ու", "կամ", "ընդ"}
+_WORD = re.compile(r"[^\W\d_]+", re.UNICODE)
+
+
+def company_name(text: str | None) -> str:
+    """A bidder's name for reading: the legal form in its short spelling, and words that were
+    typed in capitals written as a name is written. The words themselves are never changed."""
+    name = re.sub(r"[\"“„]\s*([^\"“”„]+?)\s*[\"”]", r"«\1»", clean_chars(text))   # typewriter quotes in pairs
+    name = clean_name(name)
+    for rx, short in _FORMS:
+        name = rx.sub(short, name)
+
+    def word(m: re.Match) -> str:
+        w = m.group(0)
+        if len(w) < 2 or not w.isupper() or w in ABBR or w.isascii():
+            return w
+        low = _fix_ev(w.lower())
+        if low in _JOINERS:
+            return low
+        if len(w) <= 4 and not any(c in VOWELS for c in w.lower()):
+            return w                                       # no vowel at all: an abbreviation
+        return low[0].upper() + low[1:]
+
+    name = re.sub(r"»(?=[^\W\d_])", "» ", _WORD.sub(word, name))     # «Մեգա-Ֆարմ»ՍՊԸ
+    return _WS.sub(" ", name).strip()
+
+
 def buyer_key(name: str | None) -> str:
     """A short, stable file name for an organisation, whatever quotes and capitals it is written with."""
     import hashlib

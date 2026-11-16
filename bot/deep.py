@@ -37,11 +37,17 @@ PAUSE = 0.6                # seconds each worker rests after a request
 INVITE_TRIES = 3
 HISTORY_DAYS = 400         # how far back finished tenders are read
 RETRY_HOURS = 20           # a page that was not final yet is looked at again after this long
+RECHECK_HOURS = 48         # while the winner is being chosen a bid can still be turned down: look again
+RECHECK_DAYS = 120         # ...but not for ever
+KEEP_LOTS_DAYS = 75        # how long a closed tender's lot list is kept while its result is awaited
 GIVE_UP_AFTER = 12
 RECENT = 400
 CHUNK = 50                 # finished tenders per docs/data/h/r/<n>.json
 PERSON_LABEL = "անհատ ձեռնարկատեր"
-FINAL = ("ավարտված", "շնորհում", "չկայացած", "չեղարկված", "finished", "award", "failed", "cancel")
+READER = 2                 # raise it when invite.py learns something: every open invitation is read again
+CLOSED = (("չեղարկ", "c"), ("cancel", "c"), ("չկայաց", "f"), ("failed", "f"), ("ավարտ", ""), ("finish", ""))
+AWARDING = ("շնորհ", "award")
+REPLACED = ("փոփոխ", "modified", "changed")     # the notice was amended: it lives on under a new number
 
 
 def say(text: str) -> None:
@@ -135,8 +141,11 @@ def lot_names(lots: list[dict], limit: int = 320) -> str:
 def read_invitations(tenders: list[dict], state: dict, at: datetime, clock: Clock,
                      fetch_bytes=armeps.fetch_bytes, until_share: float = 1.0) -> dict:
     known = state.setdefault("t", {})
+    for entry in known.values():                           # read by an older reader: once more
+        if entry.get("ok") and entry["ok"] != READER and entry.get("v") != READER:
+            entry["v"], entry["dt"] = READER, 0
     todo = [t for t in tenders if store.is_open(t, at)
-            and not known.get(str(t["id"]), {}).get("ok")
+            and known.get(str(t["id"]), {}).get("ok") != READER
             and known.get(str(t["id"]), {}).get("dt", 0) < INVITE_TRIES]
     todo.sort(key=lambda t: -t["id"])
     stats = {"read": 0, "failed": 0, "later": 0, "no_lots": 0}
@@ -159,7 +168,8 @@ def read_invitations(tenders: list[dict], state: dict, at: datetime, clock: Cloc
         lots = info["lots"]
         if not lots:
             stats["no_lots"] += 1
-        entry.update(ok=1, n=len(lots), ln=lot_names(lots), cpv=sorted({lot["cpv"] for lot in lots})[:12])
+        entry.update(ok=READER, n=len(lots), ln=lot_names(lots), cpv=sorted({lot["cpv"] for lot in lots})[:12],
+                     e=(t.get("end") or "")[:10], L=brief(lots))
         page = {"id": t["id"], "lots": lots, "sec": info["sec"], "ask": info["ask"], "files": info["files"]}
         for field in ("addr", "when"):                      # the same for every lot: say it once
             values = {lot.get(field) for lot in lots}
@@ -170,16 +180,32 @@ def read_invitations(tenders: list[dict], state: dict, at: datetime, clock: Cloc
         _write(os.path.join(OUT_T, f"{key}.json"), page)
         stats["read"] += 1
 
-    alive = {str(t["id"]) for t in tenders}                 # forget tenders the hourly job dropped
-    for key in [k for k in known if k not in alive]:
-        del known[key]
+    alive = {str(t["id"]) for t in tenders}                 # tenders the hourly job dropped leave the site;
+    for key in [k for k in known if k not in alive]:        # their lot lists stay until the result is read
         try:
             os.remove(os.path.join(OUT_T, f"{key}.json"))
         except FileNotFoundError:
             pass
     _write(OUT_LOTS, {"t": {k: {"n": v.get("n", 0), "ln": v.get("ln", ""), "cpv": v.get("cpv", [])}
-                            for k, v in sorted(known.items()) if v.get("ok")}})
+                            for k, v in sorted(known.items()) if v.get("ok") and k in alive}})
     return stats
+
+
+def brief(lots: list[dict]) -> list[list]:
+    """A lot list as it is kept for later: number, item code, name, unit, quantity."""
+    return [[lot["n"], lot.get("cpv") or "", lot.get("name") or "", lot.get("unit") or "", lot.get("qty")]
+            for lot in lots]
+
+
+def prune_lots(state: dict, tenders: list[dict], hist: dict, at: datetime) -> None:
+    """Forget the lot lists of tenders that are gone from the site and whose result is in, or long overdue."""
+    known = state.get("t", {})
+    alive = {str(t["id"]) for t in tenders}
+    done = {str(i) for i in hist.get("done", [])}
+    limit = store.stamp(at - timedelta(days=KEEP_LOTS_DAYS))[:10]
+    for key in [k for k in known if k not in alive]:
+        if key in done or (known[key].get("e") or "9999") < limit:
+            del known[key]
 
 
 # --------------------------------------------------------------------------
@@ -208,9 +234,42 @@ def save_results(records: dict[int, dict]) -> None:
         _write(_month_path(month), {"r": sorted(recs, key=lambda r: r["id"])})
 
 
-def is_final(status: str | None) -> bool:
+def stage(status: str | None) -> str:
+    """'early' while bids are not on the page yet, 'award' while the winner is being chosen,
+    otherwise how it closed: '' finished, 'f' failed, 'c' cancelled."""
     low = (status or "").lower()
-    return any(word in low for word in FINAL)
+    for word, code in CLOSED:
+        if word in low:
+            return code
+    return "award" if any(word in low for word in AWARDING) else "early"
+
+
+def is_final(status: str | None) -> bool:
+    return stage(status) != "early"
+
+
+def shown_stage(rec: dict) -> str:
+    """The stage as the site treats it. Between the auction and the award the register uses several
+    names ("evaluation of the application" is one); once bids are on the page it is a result."""
+    how = stage(rec.get("st"))
+    if how == "early" and any(lot[4] for lot in rec["lots"]):
+        return "award"
+    return how
+
+
+def name_lots(rec: dict, info: list[list] | None) -> dict:
+    """Fill in what the result page leaves out. A lot that had one bidder is listed there without
+    its name and item code; the invitation has both, and the quantity."""
+    by_n = {row[0]: row for row in info or []}
+    for lot in rec["lots"]:
+        row = by_n.get(lot[0])
+        if not row:
+            continue
+        lot[1] = lot[1] or row[1]
+        lot[2] = lot[2] or row[2]
+        del lot[5:]
+        lot.extend([row[4], row[3]])                       # quantity, unit
+    return rec
 
 
 def record_from(tid: int, html: str) -> dict | None:
@@ -241,10 +300,14 @@ def record_from(tid: int, html: str) -> dict | None:
 
 
 def read_results(tenders: list[dict], hist: dict, records: dict[int, dict], at: datetime, clock: Clock,
-                 fetch_page=armeps.fetch_page) -> dict:
+                 fetch_page=armeps.fetch_page, lots_state: dict | None = None,
+                 fetch_bytes=armeps.fetch_bytes) -> dict:
     """Newest finished tenders first, then back through the past year."""
     done = set(hist.get("done", []))
     retry = {int(k): v for k, v in hist.get("retry", {}).items()}
+    recheck = {int(k): v for k, v in hist.get("recheck", {}).items()}
+    kept_lots = (lots_state or {}).get("t", {})
+    early: dict[str, int] = {}
     companies = hist.setdefault("companies", {})
     state_ids = {t["id"]: t for t in tenders}
     open_ids = {t["id"] for t in tenders if store.is_open(t, at)}
@@ -259,13 +322,25 @@ def read_results(tenders: list[dict], hist: dict, records: dict[int, dict], at: 
 
     just_closed = {tid for tid, t in state_ids.items()       # the auction is held the next day
                    if tid not in open_ids and (store.parse(t.get("end")) or at) >= at - timedelta(hours=20)}
-    fresh = sorted((tid for tid in state_ids
-                    if tid not in done and tid not in open_ids and tid not in just_closed
-                    and not waiting(tid)), reverse=True)
-    stats = {"new": 0, "not_final": 0, "missing": 0, "failed": 0, "later": 0}
+    again = {tid for tid, seen in recheck.items() if stamp_now - seen >= RECHECK_HOURS * 3600}
+    fresh = sorted({tid for tid in state_ids
+                    if tid not in done and tid not in recheck and tid not in open_ids
+                    and tid not in just_closed and not waiting(tid)} | again, reverse=True)
+    stats = {"new": 0, "again": 0, "not_final": 0, "replaced": 0, "missing": 0, "failed": 0, "later": 0}
+    award_limit = store.stamp(at - timedelta(days=RECHECK_DAYS))
 
     def work(tid):
-        return record_from(tid, fetch_page(armeps.detail_url(tid)))
+        rec = record_from(tid, fetch_page(armeps.detail_url(tid)))
+        if rec is None or shown_stage(rec) == "early" or not rec["lots"]:
+            return rec
+        info = (kept_lots.get(str(tid)) or {}).get("L")
+        if info is None and any(lot[4] and not (lot[1] and lot[2]) for lot in rec["lots"]):
+            try:                                            # a lot with bids and no name: ask the invitation
+                got = invite.read(fetch_bytes(armeps.INVITATION.format(id=tid)))
+                info = brief(got["lots"]) if got else None
+            except armeps.ScrapeError:
+                info = None
+        return name_lots(rec, info)
 
     def take(tid, rec, err) -> str | None:
         """Store one answer. Returns the record's deadline when it is a finished tender."""
@@ -280,16 +355,27 @@ def read_results(tenders: list[dict], hist: dict, records: dict[int, dict], at: 
             stats["failed"] += 1
             say(f"! tender {tid}: {err}")
             return None
-        if not is_final(rec["st"]):
+        how = shown_stage(rec)
+        if how == "early":
+            if any(word in rec["st"].lower() for word in REPLACED):
+                stats["replaced"] += 1                      # nothing more will ever happen under this number
+                done.add(tid)
+                return None
             stats["not_final"] += 1
             retry[tid] = stamp_now
+            early[rec["st"]] = early.get(rec["st"], 0) + 1
             return None
         for cid, name in rec.pop("names").items():
             companies[str(cid)] = name
+        stats["again" if tid in records else "new"] += 1
         records[tid] = rec
-        done.add(tid)
         retry.pop(tid, None)
-        stats["new"] += 1
+        if how == "award" and (rec.get("end") or "") > award_limit:
+            recheck[tid] = stamp_now                        # shown now, read again until the winner is named
+            done.discard(tid)
+        else:
+            recheck.pop(tid, None)
+            done.add(tid)
         return rec.get("end")
 
     for tid, rec, err in _each(fresh, work, clock):
@@ -300,8 +386,8 @@ def read_results(tenders: list[dict], hist: dict, records: dict[int, dict], at: 
     while clock.left() > 20 and cursor > max(floor, 1):
         batch = []
         while cursor > max(floor, 1) and len(batch) < 40:
-            if cursor not in done and cursor not in open_ids and cursor not in just_closed \
-                    and not waiting(cursor):
+            if cursor not in done and cursor not in recheck and cursor not in open_ids \
+                    and cursor not in just_closed and not waiting(cursor):
                 batch.append(cursor)
             cursor -= 1
         if not batch:
@@ -320,6 +406,9 @@ def read_results(tenders: list[dict], hist: dict, records: dict[int, dict], at: 
 
     hist["done"] = sorted(done)
     hist["retry"] = {str(k): v for k, v in retry.items() if stamp_now - v < 7 * 86400}
+    hist["recheck"] = {str(k): v for k, v in recheck.items()}
+    if early:
+        say("Not decided yet: " + ", ".join(f"{name or '?'} {n}" for name, n in sorted(early.items(), key=lambda kv: -kv[1])))
     return stats
 
 
@@ -333,7 +422,7 @@ def _leader(bids: list) -> list | None:
     return min(ok, key=lambda b: b[1]) if ok else None
 
 
-def publish_history(records: dict[int, dict], companies: dict, at: datetime) -> dict:
+def publish_history(records: dict[int, dict], companies: dict, at: datetime, complete: bool = False) -> dict:
     casing = tp.Casing().learn([r.get("title") for r in records.values()]
                                + [r.get("buyer") for r in records.values()]
                                + list(companies.values()))
@@ -341,7 +430,7 @@ def publish_history(records: dict[int, dict], companies: dict, at: datetime) -> 
     person: dict[int, bool] = {}
     for key, raw in companies.items():
         cid = int(key)
-        cname[cid] = casing.fix(tp.clean_name(raw), "name")
+        cname[cid] = tp.company_name(raw)
         person[cid] = results.is_person(raw)
 
     def shown(cid) -> str:
@@ -369,7 +458,10 @@ def publish_history(records: dict[int, dict], companies: dict, at: datetime) -> 
         bidders: set[int] = set()
         leaders: dict[int, int] = {}
         lots_out = []
-        for n, cpv, title, est, bids in rec["lots"]:
+        for n, cpv, title, est, bids, *more in rec["lots"]:
+            amount, unit = (more + [None, None])[:2]
+            if not amount or not unit or unit == "դրամ":     # "1 դրամ" is how services are written: no quantity
+                amount = unit = None
             lead = _leader(bids)
             for b in bids:
                 bidders.add(b[0])
@@ -378,22 +470,26 @@ def publish_history(records: dict[int, dict], companies: dict, at: datetime) -> 
                 low_sum += lead[3] or 0
                 leaders[lead[0]] = leaders.get(lead[0], 0) + 1
             lots_out.append({"n": n, "cpv": cpv, "t": title, "est": est,
+                             **({"q": amount, "u": unit} if amount else {}),
                              "bids": [{"c": b[0], "nm": cname.get(b[0], ""), "p": b[1], "lv": b[2], "lp": b[3],
                                        "fp": b[4], "rej": b[5], **({"per": 1} if person.get(b[0]) else {})}
                                       for b in bids]})
             ok = [b for b in bids if not b[5]]
             row = [cpv, title, rec["id"], bkey, buyer, date, est, lead[3] if lead else None, len(ok),
-                   [[b[0], cname.get(b[0], ""), b[1]] for b in ok[:4] if not person.get(b[0])]]
+                   [[b[0], cname.get(b[0], ""), rank] for rank, b in enumerate(ok[:4], 1) if not person.get(b[0])],
+                   amount, unit]
             if cpv:
                 by_cpv.setdefault(cpv[:5], []).append(row)
             by_buyer.setdefault(bkey, {"name": buyer, "rows": [], "lots": []})["lots"].append(
                 [cpv, title, rec["id"], date, est, lead[3] if lead else None, len(ok),
-                 shown(lead[0]) if lead else ""])
+                 shown(lead[0]) if lead else "", lead[0] if lead and not person.get(lead[0]) else None,
+                 amount, unit])
             for b in bids:
                 if person.get(b[0]):
                     continue                                # sole proprietors get no page of their own
                 by_company.setdefault(b[0], []).append(
-                    [rec["id"], n, cpv, title, buyer, date, b[1], b[3], est, b[5]])
+                    [rec["id"], n, cpv, title, buyer, date, b[1], b[3], est, b[5], bkey,
+                     1 if lead and lead[0] == b[0] else 0])
                 t = tally.setdefault(b[0], [0, 0])
                 t[0] += 1
                 if lead and lead[0] == b[0]:
@@ -401,7 +497,7 @@ def publish_history(records: dict[int, dict], companies: dict, at: datetime) -> 
         top = max(leaders, key=leaders.get) if leaders else None
         summary = [rec["id"], subject or "", buyer, bkey, date, sector, len(rec["lots"]), len(bidders),
                    round(est_sum) or None, round(low_sum) or None,
-                   shown(top), 0 if rec["lots"] and bidders else 1]
+                   shown(top), 0 if rec["lots"] and bidders else 1, {"award": "a", "early": "a"}.get(stage(rec.get("st")), stage(rec.get("st")))]
         by_buyer.setdefault(bkey, {"name": buyer, "rows": [], "lots": []})["rows"].append(summary)
         if len(recent) < RECENT:
             recent.append(summary)
@@ -436,7 +532,8 @@ def publish_history(records: dict[int, dict], companies: dict, at: datetime) -> 
     dates = [r[4] for r in recent if r[4]]
     all_dates = sorted((rec.get("auc") or rec.get("end") or "")[:10] for rec in records.values())
     put("meta.json", {"updated": store.stamp(at), "results": len(records), "companies": len(tally),
-                      "from": next((d for d in all_dates if d), None), "to": dates[0] if dates else None})
+                      "from": next((d for d in all_dates if d), None), "to": dates[0] if dates else None,
+                      "complete": bool(complete)})
 
     removed = 0                                             # files nothing points to any more
     for folder, _, files in os.walk(OUT_H):
@@ -459,19 +556,23 @@ def run(minutes: float, at: datetime | None = None, fetch_bytes=armeps.fetch_byt
     hist = _load(HIST_STATE, {})
     records = load_results()
 
-    backlog = any(not lots_state.get("t", {}).get(str(t["id"]), {}).get("ok") for t in tenders if store.is_open(t, at))
+    backlog = any(lots_state.get("t", {}).get(str(t["id"]), {}).get("ok") != READER
+                  for t in tenders if store.is_open(t, at))
     inv = read_invitations(tenders, lots_state, at, clock, fetch_bytes, until_share=0.6 if backlog else 1.0)
     _write(LOTS_STATE, lots_state)
     say(f"Invitations: {inv['read']} read" + (f", {inv['failed']} failed" if inv["failed"] else "")
         + (f", {inv['later']} left for later" if inv["later"] else ""))
 
-    res = read_results(tenders, hist, records, at, clock, fetch_page)
+    res = read_results(tenders, hist, records, at, clock, fetch_page, lots_state, fetch_bytes)
     save_results(records)
     _write(HIST_STATE, hist)
-    say(f"Results: {res['new']} finished tenders read, {res['not_final']} not decided yet"
+    prune_lots(lots_state, tenders, hist, at)
+    _write(LOTS_STATE, lots_state)
+    say(f"Results: {res['new']} finished tenders read" + (f", {res['again']} read again" if res["again"] else "")
+        + f", {res['not_final']} not decided yet"
         + (f", {res['failed']} failed" if res["failed"] else "") + f"; {len(records)} kept in all")
 
-    out = publish_history(records, hist.get("companies", {}), at)
+    out = publish_history(records, hist.get("companies", {}), at, complete=bool(hist.get("floor")))
     say(f"Published {out['files']} history files" + (f", removed {out['removed']}" if out["removed"] else ""))
     return 0
 

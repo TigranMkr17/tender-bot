@@ -9,7 +9,7 @@ import os
 import sys
 import tempfile
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from html import escape
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -244,6 +244,21 @@ class Wording(unittest.TestCase):
                          "ՀՀ բարձր տեխնոլոգիական արդյունաբերության և արհեստական բանականության նախարարություն")
         self.assertEqual(data[48938]["buyer"], "Վանաձորի բժշկական կենտրոն ՓԲԸ")
         self.assertEqual(data[48954]["buyer"], "Վարչապետի աշխատակազմ")  # already fine: untouched
+
+    def test_bidder_names_are_written_as_names(self):
+        for raw, want in [
+            ("«ՆԵՔՍՏ ՋԵՆԵՐԵՅՇՆ» ՍՊԸ", "«Նեքստ Ջեներեյշն» ՍՊԸ"),
+            ("ՍԵՎ-ԱՐՏ ԳՐՈՒՊ ՍՊԸ", "Սև-Արտ Գրուպ ՍՊԸ"),
+            ("«ՍԵՅՖ ՎԻԺՆ» ՍԱՀՄԱՆԱՓԱԿ ՊԱՏԱՍԽԱՆԱՏՎՈՒԹՅԱՄԲ ԸՆԿԵՐՈՒԹՅՈՒՆ(ՍՊԸ)", "«Սեյֆ Վիժն» ՍՊԸ"),
+            ('"ՆԱՏԱԼԻ ՖԱՐՄ" ՓԱԿ ԲԱԺՆԵՏԻՐԱԿԱՆ ԸՆԿԵՐՈՒԹՅՈՒՆ', "«Նատալի Ֆարմ» ՓԲԸ"),
+            ("ՖԱՐՄ ԵՎ ՄԵԴ ՍՊԸ", "Ֆարմ և Մեդ ՍՊԸ"),
+            ("«ՄԵԳԱ-ՖԱՐՄ»ՍՊԸ", "«Մեգա-Ֆարմ» ՍՊԸ"),
+            ("«Արմինե Հովսեփյան Էլբեկի» Ա/Ձ", "«Արմինե Հովսեփյան Էլբեկի» ԱՁ"),
+            ("Տեքստիլ Փիփ ՍՊԸ", "Տեքստիլ Փիփ ՍՊԸ"),               # already written as a name: untouched
+            ("UNICOMP ՓԲԸ", "UNICOMP ՓԲԸ"),                     # Latin capitals are a trade mark
+            ("ԲՍՏ ՍՊԸ", "ԲՍՏ ՍՊԸ"),                             # no vowel: an abbreviation
+        ]:
+            self.assertEqual(tp.company_name(raw), want, raw)
 
     def test_sectors(self):
         want = {48927: "elec", 48956: "it", 48954: "fuel", 48953: "home", 48946: "fuel",
@@ -657,6 +672,26 @@ class Invitations(unittest.TestCase):
         from bot import invite
         self.assertIsNone(invite.read(b"not a zip"))
 
+    def test_the_schedule_of_a_service_has_one_column_fewer(self):
+        import io
+        import zipfile
+        from bot import invite
+        lots = _tbl([["Ծառայության"],
+                     ["Հրավերով նախատեսված չափաբաժնի համարը", "միջանցիկ ծածկագիրը` ըստ ԳՄԱ դասակարգման (CPV)", "Անվանումը", "Տեխնիկական բնութագիրը"],
+                     ["1", "79711130/1", "պահնորդական ծառայություններ", "Շուրջօրյա պահպանություն"]])
+        long_term = "Պայմանագիրն ուժի մեջ մտնելու օրվանից " + "շատ երկար պայման " * 30
+        plan = _tbl([["Ծառայության"],
+                     ["չափաբաժնի համարը", "Չափման միավորը", "Միավոր գինը", "Ընդհանուր գինը", "Ընդհանուր քանակը", "Մատուցման"],
+                     ["", "", "", "", "", "Հասցեն", "Ժամկետը**"],
+                     ["1", "դրամ", "", "", "1", "ք. Աբովյան, Հանրապետության 1ք. Աբովյան, Հանրապետության 1", long_term]])
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as z:
+            z.writestr("hraver.docx", _docx(f"<w:p>{lots}</w:p>" + plan))
+        lot = invite.read(buf.getvalue())["lots"][0]
+        self.assertEqual(lot["addr"], "ք. Աբովյան, Հանրապետության 1")      # a merged cell read twice is said once
+        self.assertTrue(lot["when"].startswith("Պայմանագիրն ուժի մեջ մտնելու օրվանից"))
+        self.assertTrue(lot["when"].endswith("…") and len(lot["when"]) <= 401)
+
 
 class Results(unittest.TestCase):
     def test_lots_and_bids(self):
@@ -732,6 +767,109 @@ class Results(unittest.TestCase):
                 self.assertEqual(len(asked), before)                    # nothing is read twice
             finally:
                 os.chdir(cwd)
+
+
+class ResultsLater(unittest.TestCase):
+    """What the page of a finished tender leaves out, and what can still change on it."""
+
+    def _run(self, page, at, hist=None, zips=None):
+        from bot import deep
+        asked = []
+
+        def fetch_page(url):
+            asked.append(url)
+            if url.rstrip("/").endswith("/900"):
+                return page
+            raise armeps.Missing("no such tender")
+
+        def fetch_bytes(url):
+            asked.append(url)
+            if zips is not None and "tender_900" in url:
+                zips.append(url)
+            return invitation_zip()
+
+        if hist is not None:
+            os.makedirs(os.path.dirname(deep.HIST_STATE), exist_ok=True)
+            with open(deep.HIST_STATE, "w", encoding="utf-8") as fh:
+                json.dump(hist, fh)
+        deep.PAUSE = 0
+        ticks = iter(range(10 ** 7))
+        deep.run(30, at, fetch_bytes, fetch_page, now=lambda: next(ticks) * 0.001)
+        return asked
+
+    def _in_tmp(self, body):
+        cwd = os.getcwd()
+        with tempfile.TemporaryDirectory() as tmp:
+            os.chdir(tmp)
+            try:
+                store.save({"meta": {}, "tenders": [
+                    {"id": 905, "code": "Ա-ԷԱՃԱՊՁԲ-26/9", "title": "վառելիքի ձեռքբերում", "status": "open",
+                     "end": "2026-12-25T10:00"}]})
+                body()
+            finally:
+                os.chdir(cwd)
+
+    def test_an_amended_notice_is_not_waited_for(self):
+        from bot import deep
+        old = RESULT_PAGE[:RESULT_PAGE.index('<table class="tb"><thead><tr><td rowspan="2">')].replace('<div class="de_v">Ավարտված</div>', '<div class="de_v">Փոփոխված</div>')
+
+        def body():
+            at = datetime(2026, 11, 16, 14, 0)
+            self._run(old, at, {"floor": 897})
+            with open(deep.HIST_STATE, encoding="utf-8") as fh:
+                hist = json.load(fh)
+            self.assertEqual((hist["done"].count(900), hist["retry"]), (1, {}))
+            self.assertFalse(os.path.exists(os.path.join(deep.OUT_H, "r", "18.json")))
+        self._in_tmp(body)
+
+    def test_a_lot_with_one_bidder_is_named_from_the_invitation(self):
+        from bot import deep
+        # only lots that went to auction are listed with a name; lot 2 here is not
+        page = RESULT_PAGE.replace('<tr><td>2</td><td>09134200/3</td><td>դիզելային վառելիք</td>', '<tr><td>7</td><td>09134200/3</td><td>այլ</td>')
+
+        def body():
+            zips = []
+            self._run(page, datetime(2026, 11, 16, 14, 0), {"floor": 897}, zips)
+            self.assertEqual(len(zips), 1)                              # asked once, for the tender with the nameless lot
+            with open(os.path.join(deep.OUT_H, "r", "18.json"), encoding="utf-8") as fh:
+                lots = json.load(fh)["900"]["lots"]
+            self.assertEqual((lots[1]["cpv"], lots[1]["t"], lots[1]["q"], lots[1]["u"]), ("09134200", "դիզելային վառելիք", 1200.5, "լիտր"))
+            self.assertEqual((lots[0]["t"], lots[0]["q"]), ("բենզին, ռեգուլյար", 8670.0))
+            with open(os.path.join(deep.OUT_H, "v", "09134.json"), encoding="utf-8") as fh:
+                row = json.load(fh)["rows"][0]
+            self.assertEqual(row[10:12], [1200.5, "լիտր"])
+        self._in_tmp(body)
+
+    def test_a_tender_still_being_awarded_is_shown_and_read_again(self):
+        from bot import deep
+        awarding = RESULT_PAGE.replace('<div class="de_v">Ավարտված</div>', '<div class="de_v">Շնորհում</div>')
+        # later the buyer turns the first bidder down and the tender is closed
+        closed = RESULT_PAGE.replace('<td>960000.00 AMD</td><td></td>', '<td>960000.00 AMD</td><td>Մերժված</td>')
+        self.assertEqual((deep.stage("Շնորհում"), deep.stage("Ավարտված"), deep.stage("Չկայացած"), deep.stage("Չեղարկված"),
+                          deep.stage("Նախաաճուրդային")), ("award", "", "f", "c", "early"))
+        # between the auction and the award the stage has other names; with bids on the page it is a result all the same
+        odd = deep.record_from(900, RESULT_PAGE.replace('<div class="de_v">Ավարտված</div>', '<div class="de_v">Դիմում-Հայտարարության գնահատում</div>'))
+        self.assertEqual((deep.stage(odd["st"]), deep.shown_stage(odd)), ("early", "award"))
+
+        def recent():
+            with open(os.path.join(deep.OUT_H, "recent.json"), encoding="utf-8") as fh:
+                return json.load(fh)["rows"][0]
+
+        def hist():
+            with open(deep.HIST_STATE, encoding="utf-8") as fh:
+                return json.load(fh)
+
+        def body():
+            at = datetime(2026, 11, 16, 14, 0)
+            self._run(awarding, at, {"floor": 897})
+            self.assertEqual((recent()[10], recent()[12]), ("«Առաջին» ՍՊԸ", "a"))
+            self.assertEqual((list(hist()["recheck"]), hist()["done"].count(900)), (["900"], 0))
+            asked = self._run(closed, at + timedelta(hours=10))
+            self.assertFalse([u for u in asked if u.rstrip("/").endswith("/900")])      # too soon to look again
+            self._run(closed, at + timedelta(hours=50))
+            self.assertEqual((recent()[10], recent()[12]), ("Երկրորդ ՓԲԸ", ""))        # the next bidder leads now
+            self.assertEqual((hist()["recheck"], hist()["done"].count(900)), ({}, 1))
+        self._in_tmp(body)
 
 
 if __name__ == "__main__":

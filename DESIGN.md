@@ -223,11 +223,29 @@ One search field in the header: white on blue, 48px, with a clear button once te
 
 ### Navigation
 
-A two-part segmented control, «Նոր» and «Բոլորը», with a sliding thumb; the active part's count turns press blue. On a phone the notice view is pushed; where the browser supports view transitions the row's date tile travels into the notice. On a wide screen the open row is tinted and its tile filled press blue.
+A three-part segmented control, «Նոր», «Բոլորը» and «Արդյունքներ», with a sliding thumb sized to each label; the active part's count turns press blue. On a phone every screen (a tender, a finished tender, a company, a buyer) is pushed over the last and the back button undoes one step; where the browser supports view transitions the row's date tile travels into the notice. On a wide screen the open row is tinted and its tile filled press blue, and the pane beside the list gets its own «Հետ» once it has gone a level deeper.
+
+Names lead somewhere: a buyer's name opens the buyer, a bidder's name opens the company, a past purchase opens that tender's result.
 
 ### Date tile
 
-The signature component. In «Նոր» it shows weekday, day numeral and month; in «Բոլորը», where the day is already the heading, it shows «ԺԱՄԸ» and the time. In the notice view it is larger and sits beside the deadline, above a bar that shows how much of the bidding period has passed.
+The signature component. In «Նոր» it shows weekday, day numeral and month; in «Բոլորը», where the day is already the heading, it shows «ԺԱՄԸ» and the time. In the notice view it is larger and sits beside the deadline, above a bar that shows how much of the bidding period has passed. In «Արդյունքներ» the tile says «ԳԻՆԸ» and how far the auction took the price below the estimate; a tender that failed or was cancelled gets a grey tile with a dash.
+
+### Price bar
+
+The estimate is the full track in tile blue; the first-place price is the press-blue fill. One bar per comparison, 8px, 10px in a result's summary. It is the only chart on the site.
+
+### Lot rows and bids
+
+A lot is a number badge, a name and, at the right, a quantity; its description opens in place. A bid is its place, the bidder and the price, with the price before tax and the opening price in a smaller line beneath. First place gets a filled badge and bold type; a rejected bid is grey with its price struck through.
+
+### Three figures
+
+A company and a buyer open with three figures in quiet tiles (tenders, lots, first places). Supporting facts, not a headline: they sit in a sheet under the name.
+
+## Motion
+
+Motion reports what happened. The one composed moment is a result opening: the bar falls from the estimate to the first-place price while the figure counts down with it, about 0.9s on an exponential ease-out. Around it: the header numbers count up on the first visit, the deadline bar fills, a sheet rises as its data arrives, a lot's description unfolds. Only what has just arrived moves; pressing «Ցույց տալ բոլորը» adds rows without replaying anything. With reduced motion everything appears in place.
 
 ## Do's and Don'ts
 
@@ -236,7 +254,9 @@ The signature component. In «Նոր» it shows weekday, day numeral and month; 
 - Lead with the deadline, then what is bought, then who buys.
 - Keep official wording available, word for word, in the notice view.
 - Write every label as a plain Armenian sentence or noun.
-- Animate only state: the tab thumb, a row entering, the tile travelling.
+- Animate only state: the tab thumb, a row entering, the tile travelling, a price falling to where the auction left it.
+- Say "first place", never "winner": the register publishes the auction's order, and the buyer decides the contract.
+- Show a number with what it is measured against: a price beside its estimate, a company's first places beside the lots it bid for.
 
 ### Don't:
 
@@ -244,4 +264,6 @@ The signature component. In «Նոր» it shows weekday, day numeral and month; 
 - Add accounts, saved lists or settings: the site is for looking, finding and reading.
 - Add a metric hero, kicker labels or decorative illustrations.
 - Colour sectors; the sector is an icon and a word.
-- State anything the source does not say (prices, winners, eligibility).
+- State anything the source does not say: a winner, an estimate before the auction, who may take part.
+- Give a sole proprietor a page, or list one outside the tender they bid in.
+- Add a second chart type, or colour a bar by anything but press blue.

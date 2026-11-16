@@ -116,11 +116,11 @@ svg{display:block;flex:none}
 
 /* ---------- tabs: a segmented control ---------- */
 .tabs{position:sticky;top:0;z-index:5;padding:.625rem 0 .375rem;background:var(--ground)}
-.seg{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:.25rem;border-radius:.875rem;background:var(--seg)}
-.thumb{position:absolute;top:.25rem;bottom:.25rem;left:0;width:var(--w,calc((100% - .5rem)/2));border-radius:.625rem;background:var(--sheet);
+.seg{position:relative;display:flex;padding:.25rem;border-radius:.875rem;background:var(--seg)}
+.thumb{position:absolute;top:.25rem;bottom:.25rem;left:0;width:var(--w,calc((100% - .5rem)/3));border-radius:.625rem;background:var(--sheet);
   box-shadow:0 1px 3px rgba(20,22,26,.16);transform:translateX(var(--x,.25rem))}
 .seg.live .thumb{transition:transform .28s var(--ease),width .28s var(--ease)}
-.tab{position:relative;z-index:1;height:2.5rem;display:flex;align-items:center;justify-content:center;gap:.375rem;padding-inline:.25rem;
+.tab{position:relative;z-index:1;flex:1 1 auto;height:2.5rem;display:flex;align-items:center;justify-content:center;gap:.375rem;padding-inline:.375rem;
   white-space:nowrap;font-size:min(.9375rem,4vw);font-weight:600;font-stretch:88%;color:var(--ink-2);border-radius:.625rem;
   transition:color .18s var(--ease)}
 .tab[aria-selected="true"]{color:var(--ink)}
@@ -165,6 +165,7 @@ svg{display:block;flex:none}
 .tile.is-warn{background:var(--warn-tile);color:var(--on-warn-tile)}
 .tile.is-crit{background:var(--crit-tile);color:var(--on-crit-tile)}
 .tile.is-off{background:var(--sheet-2);color:var(--ink-3)}
+.tile--ic .ic{width:1.625rem;height:1.625rem}
 .row-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
   font-size:1.0625rem;line-height:1.28;font-weight:650;font-stretch:88%}
 .row-buyer{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-top:.1875rem;
@@ -173,6 +174,10 @@ svg{display:block;flex:none}
 .row-meta .mi{display:flex;flex-wrap:wrap;margin-left:-1rem}
 .row-meta .mi>span{position:relative;display:inline-flex;align-items:center;gap:.3125rem;padding-left:1rem;white-space:nowrap}
 .row-meta .mi>span::before{content:"";position:absolute;left:.375rem;top:.6em;width:.1875rem;height:.1875rem;border-radius:50%;background:var(--ink-3);opacity:.55}
+.row-meta .mi>span.lead{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.row-hit{display:flex;align-items:center;gap:.3125rem;margin-top:.25rem;font-size:.9375rem;line-height:1.35;font-weight:600;color:var(--accent)}
+.row-hit span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.sumv{font-weight:650;color:var(--ink-2)}
 .left.is-warn{color:var(--warn);font-weight:650}
 .left.is-crit{color:var(--crit);font-weight:700}
 .left.is-closed{font-weight:600}
@@ -215,8 +220,13 @@ html[data-nav] #detail .wrap{animation:none}
 .d-title{font-size:1.5rem;line-height:1.2;font-weight:750;font-stretch:80%;text-wrap:balance}
 .d-title:focus{outline:0}
 .d-buyer{margin-top:.5rem;color:var(--on-shell-2);line-height:1.4}
+button.d-buyer{display:flex;align-items:center;gap:.25rem;max-width:100%;margin:.125rem 0 -.375rem -.5rem;padding:.375rem .375rem .375rem .5rem;border-radius:.625rem;text-align:left;transition:background-color .15s var(--ease)}
+button.d-buyer span{text-decoration:underline;text-decoration-color:rgba(255,255,255,.4);text-decoration-thickness:1px;text-underline-offset:.24em}
+button.d-buyer .go{color:inherit;opacity:.85}
+button.d-buyer:active{background:rgba(255,255,255,.14)}
 .hero-tags{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.875rem}
-.hero-tags span{display:inline-flex;align-items:center;gap:.3125rem;padding:.25rem .625rem;border-radius:1rem;background:rgba(255,255,255,.14);font-size:.875rem}
+.hero-tags{font-variant-numeric:tabular-nums lining-nums}
+.hero-tags>span{display:inline-flex;align-items:center;gap:.3125rem;padding:.25rem .625rem;border-radius:1rem;background:rgba(255,255,255,.14);font-size:.875rem}
 .sheet{margin-top:.75rem;padding:1rem;border-radius:1rem;background:var(--sheet);box-shadow:var(--lift)}
 .due{display:grid;grid-template-columns:4.25rem minmax(0,1fr);gap:.875rem;align-items:center}
 .due .tile{min-height:4.75rem;border-radius:.875rem;view-transition-name:tile}
@@ -229,7 +239,7 @@ html[data-nav] #detail .wrap{animation:none}
 .due.is-crit .due-r{color:var(--crit)}
 .prog-w{grid-column:1/-1}
 .prog{height:.375rem;border-radius:.25rem;background:var(--sheet-2);overflow:hidden}
-.prog i{display:block;height:100%;border-radius:.25rem;background:var(--accent);transform-origin:left;animation:grow .6s var(--ease) both}
+.prog i{display:block;height:100%;border-radius:.25rem;background:var(--accent);transform-origin:left;animation:grow .7s var(--ease) .1s both}
 .due.is-warn .prog i{background:var(--warn-tile)}
 .due.is-crit .prog i{background:var(--crit-tile)}
 @keyframes grow{from{transform:scaleX(0)}}
@@ -273,6 +283,152 @@ html[data-nav] #detail .wrap{animation:none}
   display:grid;place-items:center;background:var(--tile);color:var(--tile-ink);font-size:.8125rem;font-weight:800}
 .fine{margin-top:.25rem;font-size:.875rem;color:var(--ink-3)}
 
+/* ---------- inside a tender, how a tender ended, who takes part ---------- */
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:.75rem}
+.sec-n{flex:none;font-size:.875rem;color:var(--ink-3);white-space:nowrap}
+.sec h3{margin-top:1.125rem;font-size:1rem;line-height:1.3;font-weight:750;font-stretch:80%}
+.lede{margin-top:.375rem;font-size:.9375rem;line-height:1.45;color:var(--ink-2)}
+.pct{color:var(--accent);font-weight:750;white-space:nowrap}
+.bad{color:var(--crit);font-weight:700}
+.more{display:block;width:100%;min-height:2.75rem;margin-top:.5rem;padding:.5rem .75rem;border-radius:.75rem;background:var(--sheet-2);
+  font-weight:650;font-stretch:88%;text-align:center;transition:background-color .15s var(--ease),transform .15s var(--ease)}
+.more:active{transform:scale(.985);background:var(--seg)}
+.sheet.none b{display:block;font-size:1.0625rem;line-height:1.3;font-weight:750;font-stretch:80%}
+.sheet.none p{margin-top:.375rem;color:var(--ink-2)}
+.acts--one{grid-template-columns:1fr}
+
+/* the lots of an open tender */
+.lots{margin-top:.5rem}
+.lot{border-top:1px solid var(--rule)}
+.lot:first-child{border-top:0}
+.lot-b{display:grid;grid-template-columns:1.75rem minmax(0,1fr) auto;column-gap:.625rem;align-items:start;padding:.6875rem 0;list-style:none}
+.lot-b::-webkit-details-marker{display:none}
+details.lot>.lot-b{cursor:pointer}
+.lot-n{height:1.5rem;min-width:1.5rem;padding-inline:.25rem;display:grid;place-items:center;border-radius:.4375rem;background:var(--tile);color:var(--tile-ink);
+  font-size:.8125rem;font-weight:800;line-height:1}
+.lot-t{font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.lot-q{padding-top:.0625rem;font-size:.9375rem;font-weight:650;color:var(--ink-2);white-space:nowrap}
+.lot-more{display:block;margin-top:.125rem;font-size:.875rem;font-weight:500;color:var(--accent)}
+.lot-was{display:block;margin-top:.1875rem;font-size:.875rem;line-height:1.35;font-weight:400;color:var(--ink-2)}
+details.lot[open] .lot-more{display:none}
+.lot-s{margin:-.125rem 0 .75rem 2.375rem;font-size:.9375rem;line-height:1.5;color:var(--ink-2);overflow-wrap:anywhere}
+@supports (interpolate-size:allow-keywords){
+  .lot{interpolate-size:allow-keywords}
+  details.lot::details-content{block-size:0;overflow:clip;transition:block-size .3s var(--ease),content-visibility .3s allow-discrete}
+  details.lot[open]::details-content{block-size:auto}
+}
+.lot-find{display:flex;align-items:center;gap:.5rem;height:2.75rem;margin-top:.625rem;padding-inline:.75rem;border-radius:.75rem;background:var(--sheet-2);color:var(--ink-3)}
+.lot-find:focus-within{outline:3px solid var(--focus);outline-offset:1px}
+.lot-find input{flex:1;min-width:0;height:100%;border:0;background:none;font:inherit;color:var(--ink);outline:0;padding:0;appearance:none}
+.lot-find input::placeholder{color:var(--ink-3);opacity:1}
+.lot-find input::-webkit-search-cancel-button{display:none}
+.ship{margin-top:.5rem;padding-top:.75rem;border-top:1px solid var(--rule);font-size:.9375rem;line-height:1.45;color:var(--ink-2)}
+.ship b{display:block;font-size:.875rem;font-weight:400;color:var(--ink-3)}
+.ship p+p{margin-top:.625rem}
+.ship+.fine,.more+.fine,.lots+.fine{margin-top:.75rem}
+
+/* an earlier purchase: the estimate, and where the auction took the price */
+.cmp{display:block;width:100%;padding:.8125rem 0;border-top:1px solid var(--rule);text-align:left}
+.sec-h+.cmp,.lede+.cmp{border-top:0}
+.sec-h+.cmp{padding-top:.5rem}
+.cmp-h{display:flex;align-items:flex-start;gap:.5rem}
+.cmp-h .lot-n{flex:none;margin-top:-.0625rem}
+.cmp-t{display:block;min-width:0;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.cmp-t .and{font-weight:400;color:var(--ink-3)}
+.cmp-m{display:block;margin-top:.125rem;font-size:.875rem;line-height:1.4;font-weight:400;color:var(--ink-3)}
+.cmp-r{display:block;margin-top:.25rem;font-size:.9375rem;line-height:1.4;color:var(--ink-2)}
+.bar{position:relative;display:block;height:.5rem;margin-top:.5625rem;border-radius:.25rem;background:var(--tile);overflow:hidden}
+.bar i{position:absolute;inset:0;border-radius:inherit;background:var(--accent);transform-origin:0 50%;transform:scaleX(var(--v,1))}
+.cmp-n{display:flex;justify-content:space-between;align-items:baseline;gap:.75rem;margin-top:.4375rem;font-size:.9375rem;line-height:1.35;color:var(--ink-2)}
+.cmp-n b{font-weight:750;color:var(--ink)}
+.cmp-n .pct{color:var(--accent)}
+.usual{margin-top:.75rem;padding:.6875rem .8125rem;border-radius:.75rem;background:var(--tile);color:var(--tile-ink);font-weight:600;line-height:1.4}
+.usual b{font-weight:800}
+.usual small{display:block;margin-top:.125rem;font-size:.875rem;font-weight:400;opacity:.85}
+.stat3+.usual{margin-top:.625rem}
+
+.who{display:grid;grid-template-columns:minmax(0,1fr) 1rem;column-gap:.625rem;align-items:center;width:100%;padding:.6875rem 0;border-top:1px solid var(--rule);text-align:left}
+.sec-h+.who{border-top:0;padding-top:.625rem}
+.who b{display:block;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.who small{display:block;margin-top:.125rem;font-size:.875rem;line-height:1.4;color:var(--ink-3)}
+.who small b{display:inline;font-weight:650}
+div.who{grid-template-columns:minmax(0,1fr)}
+.who+.fine,.cmp+.fine{margin-top:.5rem}
+.linkish{display:inline;text-align:left;font-weight:inherit;color:inherit;text-decoration:underline;text-decoration-color:var(--rule-2);text-decoration-thickness:1px;text-underline-offset:.22em}
+
+/* what a bid has to carry */
+.need{margin-top:.75rem}
+.need li{position:relative;padding:0 0 .75rem 2.125rem;line-height:1.35}
+.need li>.ic{position:absolute;left:0;top:.0625rem;width:1.5rem;height:1.5rem;padding:.3125rem;border-radius:.4375rem;background:var(--tile);color:var(--tile-ink);stroke-width:3}
+.need b{font-weight:650}
+.need small{display:block;margin-top:.125rem;font-size:.875rem;line-height:1.4;color:var(--ink-3)}
+.win{margin-top:.25rem}
+.win li{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.5625rem 0;border-bottom:1px solid var(--rule)}
+.win li:last-child{border-bottom:0}
+.win b{display:block;font-weight:600;line-height:1.3}
+.win small{display:block;font-size:.875rem;color:var(--ink-3)}
+.win span{flex:none;font-size:1.375rem;line-height:1.2;font-weight:800;font-stretch:var(--display);color:var(--accent)}
+.ask{display:grid;gap:.5rem;margin-top:.625rem}
+.ask .btn{justify-content:flex-start;min-height:3rem;padding-inline:.875rem;background:var(--sheet-2);box-shadow:none;font-weight:600;min-width:0}
+.ask .btn span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.ask .ic{color:var(--accent)}
+
+/* how a tender ended */
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:.75rem 1rem}
+.sum div span{display:block;font-size:.875rem;line-height:1.35;color:var(--ink-3)}
+.sum div b{display:block;margin-top:.125rem;font-size:1.375rem;line-height:1.2;font-weight:800;font-stretch:var(--display);white-space:nowrap}
+.sum div+div b{color:var(--accent)}
+.sum .bar{grid-column:1/-1;margin-top:0;height:.625rem;border-radius:.3125rem}
+.sum-l,.sum-f{grid-column:1/-1}
+.sum-l{margin-top:-.125rem;font-size:1.0625rem;line-height:1.35;font-weight:600}
+.sum-f{font-size:.9375rem;line-height:1.45;color:var(--ink-2)}
+.sum-l+.sum-f{margin-top:-.5rem}
+.lotr{padding:.9375rem 0 .875rem;border-top:1px solid var(--rule)}
+.lotrs>.lotr:first-child{border-top:0;padding-top:.625rem}
+.lotrs>.lede{padding:.5rem 0 .75rem}
+.sum-w{grid-column:1/-1;margin-top:-.25rem;padding-top:.6875rem;border-top:1px solid var(--rule);font-size:.875rem;line-height:1.45;color:var(--ink-3)}
+.lotr-h{display:grid;grid-template-columns:1.75rem minmax(0,1fr);column-gap:.625rem;align-items:start}
+.lotr-h .lot-t{display:block}
+.lotr .bar{margin:.625rem 0 .25rem}
+.bid{display:grid;grid-template-columns:1.75rem minmax(0,1fr) auto;column-gap:.625rem;align-items:start;padding-top:.5625rem;line-height:1.35}
+.bid-p{justify-self:center;font-weight:800;color:var(--ink-3)}
+.bid-n{min-width:0;overflow-wrap:anywhere}
+.bid-n small{display:block;margin-top:.0625rem;font-size:.875rem;line-height:1.4;color:var(--ink-3)}
+.bid-v{white-space:nowrap;font-weight:600}
+.bid.is-1 .bid-p{width:1.5rem;height:1.5rem;margin-top:-.0625rem;display:grid;place-items:center;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:.875rem}
+.bid.is-1 .bid-n>:first-child,.bid.is-1 .bid-v{font-weight:750}
+.bid.is-rej,.bid.is-rej .bid-p{color:var(--ink-3)}
+.bid.is-rej .bid-v{font-weight:400;text-decoration:line-through}
+.bid-none{margin:.5rem 0 0 2.375rem;color:var(--ink-3)}
+.lotrs+.more{margin-top:.25rem}
+.lotrs+.fine,.lotrs+.more+.fine{margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--rule)}
+
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.stat3 div{padding:.6875rem .375rem .625rem;border-radius:.75rem;background:var(--sheet-2);text-align:center}
+.stat3 b{display:block;font-size:1.5rem;line-height:1.15;font-weight:800;font-stretch:var(--display)}
+.stat3 span{display:block;margin-top:.1875rem;font-size:.8125rem;line-height:1.25;color:var(--ink-2)}
+.stat3+.fine{margin-top:.625rem}
+
+.sec--rows{padding-bottom:.375rem}
+.rows--in{overflow:visible;margin:.375rem -1rem 0;border-radius:0;background:none;box-shadow:none}
+.rows--in .row-main{padding-inline:1rem .875rem}
+.rows--in .row+.row::before{left:5.125rem}
+.rows--in+.more{margin-bottom:.625rem}
+.sec--rows>.lede{padding-bottom:.625rem}
+
+.wait i{display:block;height:1rem;margin-top:.75rem;border-radius:.375rem;background:linear-gradient(100deg,var(--sheet-2) 40%,var(--rule) 50%,var(--sheet-2) 60%) 0 0/300% 100%;animation:shimmer 1.3s linear infinite}
+.wait i:first-child{width:46%;height:1.125rem;margin-top:0}
+.wait i:nth-child(3n){width:72%}
+.wait i:last-child{width:58%}
+
+/* what has just arrived settles into place: sheets rise, bars fall from the estimate to the price */
+.fresh>.sheet{animation:rise .4s var(--ease) both}
+.fresh>.sheet+.sheet{animation-delay:.06s}
+.fresh .bar i{animation:drop .95s var(--ease) .12s both}
+.fresh .cmp~.cmp .bar i,.fresh .lotr~.lotr .bar i{animation-delay:.2s}
+.fresh .cmp~.cmp~.cmp .bar i,.fresh .lotr~.lotr~.lotr .bar i{animation-delay:.28s}
+@keyframes drop{from{transform:scaleX(1)}}
+
 .toast{position:fixed;left:50%;bottom:1.25rem;z-index:20;max-width:calc(100% - 2rem);padding:.6875rem 1rem;border-radius:.875rem;
   background:var(--ink);color:var(--ground);font-size:.9375rem;font-weight:500;box-shadow:0 10px 28px -8px rgba(0,0,0,.4);
   transform:translate(-50%,1rem);opacity:0;pointer-events:none;transition:transform .26s var(--ease),opacity .2s var(--ease)}
@@ -309,7 +465,8 @@ body[data-view="list"] #detail{display:none}
   #detail{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
   #detail .wrap,.dbar-in{max-width:44rem}
   .dbar-in{justify-content:flex-end}
-  .dbar [data-back]{display:none}
+  body[data-deep] .dbar-in{justify-content:space-between}
+  body:not([data-deep]) .dbar [data-back]{display:none}
   .row[aria-current="true"] .row-main{background:var(--sheet-2);background:color-mix(in srgb,var(--accent) 10%,var(--sheet))}
   .row[aria-current="true"] .tile:not(.is-crit):not(.is-warn):not(.is-off){background:var(--accent);color:var(--on-accent)}
   .row[aria-current="true"] .go{color:var(--accent);opacity:1}
@@ -330,7 +487,7 @@ html[data-nav="pop"]::view-transition-new(root){animation:vt-in .26s var(--ease)
 </style>
 </head>
 <body data-view="list">
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-med" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" /><path d="m8.5 8.5 7 7" /></symbol><symbol id="i-food" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></symbol><symbol id="i-fuel" viewBox="0 0 24 24"><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5" /><path d="M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16" /><path d="M2 21h13" /><path d="M3 9h11" /></symbol><symbol id="i-build" viewBox="0 0 24 24"><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5" /><path d="M14 6a6 6 0 0 1 6 6v3" /><path d="M4 15v-3a6 6 0 0 1 6-6" /><rect x="2" y="15" width="20" height="4" rx="1" /></symbol><symbol id="i-it" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></symbol><symbol id="i-auto" viewBox="0 0 24 24"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" /><path d="M15 18H9" /><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" /><circle cx="17" cy="18" r="2" /><circle cx="7" cy="18" r="2" /></symbol><symbol id="i-elec" viewBox="0 0 24 24"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol><symbol id="i-furn" viewBox="0 0 24 24"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" /><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z" /><path d="M5 18v2" /><path d="M19 18v2" /></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 3h.01" /><path d="M7 5h.01" /><path d="M11 7h.01" /><path d="M3 7h.01" /><path d="M7 9h.01" /><path d="M3 11h.01" /><rect width="4" height="4" x="15" y="5" /><path d="m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2" /><path d="m13 14 8-2" /><path d="m13 19 8-2" /></symbol><symbol id="i-cloth" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></symbol><symbol id="i-office" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" /><rect x="6" y="14" width="12" height="8" rx="1" /></symbol><symbol id="i-equip" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z" /></symbol><symbol id="i-serv" viewBox="0 0 24 24"><path d="m11 17 2 2a1 1 0 1 0 3-3" /><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" /><path d="m21 3 1 11h-2" /><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" /><path d="M3 4h8" /></symbol><symbol id="i-other" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /><path d="M12 22V12" /><polyline points="3.29 7 12 12 20.71 7" /><path d="m7.5 4.27 9 5.15" /></symbol><symbol id="i-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34" /><circle cx="11" cy="11" r="8" /></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol><symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2v13" /><path d="m16 6-4-4-4 4" /><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /></symbol><symbol id="i-down" viewBox="0 0 24 24"><path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /></symbol><symbol id="i-out" viewBox="0 0 24 24"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></symbol><symbol id="i-buyer" viewBox="0 0 24 24"><path d="M10 12h4" /><path d="M10 8h4" /><path d="M14 21v-3a2 2 0 0 0-4 0v3" /><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" /></symbol><symbol id="i-lots" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" /><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12" /><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17" /></symbol><symbol id="i-kind" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /><circle cx="7.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-for" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path d="M16 3.128a4 4 0 0 1 0 7.744" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><circle cx="9" cy="7" r="4" /></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></symbol></defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-med" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" /><path d="m8.5 8.5 7 7" /></symbol><symbol id="i-food" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></symbol><symbol id="i-fuel" viewBox="0 0 24 24"><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5" /><path d="M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16" /><path d="M2 21h13" /><path d="M3 9h11" /></symbol><symbol id="i-build" viewBox="0 0 24 24"><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5" /><path d="M14 6a6 6 0 0 1 6 6v3" /><path d="M4 15v-3a6 6 0 0 1 6-6" /><rect x="2" y="15" width="20" height="4" rx="1" /></symbol><symbol id="i-it" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></symbol><symbol id="i-auto" viewBox="0 0 24 24"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" /><path d="M15 18H9" /><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" /><circle cx="17" cy="18" r="2" /><circle cx="7" cy="18" r="2" /></symbol><symbol id="i-elec" viewBox="0 0 24 24"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol><symbol id="i-furn" viewBox="0 0 24 24"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" /><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z" /><path d="M5 18v2" /><path d="M19 18v2" /></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 3h.01" /><path d="M7 5h.01" /><path d="M11 7h.01" /><path d="M3 7h.01" /><path d="M7 9h.01" /><path d="M3 11h.01" /><rect width="4" height="4" x="15" y="5" /><path d="m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2" /><path d="m13 14 8-2" /><path d="m13 19 8-2" /></symbol><symbol id="i-cloth" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></symbol><symbol id="i-office" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" /><rect x="6" y="14" width="12" height="8" rx="1" /></symbol><symbol id="i-equip" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z" /></symbol><symbol id="i-serv" viewBox="0 0 24 24"><path d="m11 17 2 2a1 1 0 1 0 3-3" /><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" /><path d="m21 3 1 11h-2" /><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" /><path d="M3 4h8" /></symbol><symbol id="i-other" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /><path d="M12 22V12" /><polyline points="3.29 7 12 12 20.71 7" /><path d="m7.5 4.27 9 5.15" /></symbol><symbol id="i-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34" /><circle cx="11" cy="11" r="8" /></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol><symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2v13" /><path d="m16 6-4-4-4 4" /><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /></symbol><symbol id="i-down" viewBox="0 0 24 24"><path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /></symbol><symbol id="i-out" viewBox="0 0 24 24"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></symbol><symbol id="i-buyer" viewBox="0 0 24 24"><path d="M10 12h4" /><path d="M10 8h4" /><path d="M14 21v-3a2 2 0 0 0-4 0v3" /><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" /></symbol><symbol id="i-lots" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" /><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12" /><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17" /></symbol><symbol id="i-kind" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /><circle cx="7.5" cy="7.5" r=".5" fill="currentColor" /></symbol><symbol id="i-for" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path d="M16 3.128a4 4 0 0 1 0 7.744" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><circle cx="9" cy="7" r="4" /></symbol><symbol id="i-firm" viewBox="0 0 24 24"><path d="M12 12h.01" /><path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" /><path d="M22 13a18.15 18.15 0 0 1-20 0" /><rect width="20" height="14" x="2" y="6" rx="2" /></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" /></symbol><symbol id="i-mail" viewBox="0 0 24 24"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /><rect x="2" y="4" width="20" height="16" rx="2" /></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></symbol></defs></svg>
 
 <div id="home">
   <header class="shell">
@@ -356,6 +513,7 @@ html[data-nav="pop"]::view-transition-new(root){animation:vt-in .26s var(--ease)
         <span class="thumb" aria-hidden="true"></span>
         <button class="tab" role="tab" type="button" id="tab-new" data-tab="new" aria-controls="list" aria-selected="true">Նոր <span class="n num" id="n-new">–</span></button>
         <button class="tab" role="tab" type="button" id="tab-due" data-tab="due" aria-controls="list" aria-selected="false" tabindex="-1">Բոլորը <span class="n num" id="n-due">–</span></button>
+        <button class="tab" role="tab" type="button" id="tab-res" data-tab="res" aria-controls="list" aria-selected="false" tabindex="-1">Արդյունքներ</button>
       </div>
     </div>
   </nav>
@@ -386,8 +544,9 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const HOUR = 36e5, DAY = 864e5, TZ = 4 * HOUR;            // Yerevan is UTC+4 all year
 const toDate = s => (s ? new Date(s.slice(0, 16) + ':00+04:00') : null);
+const dOnly = s => (/^\d{4}-\d\d-\d\d/.test(s || '') ? new Date(s.slice(0, 10) + 'T12:00:00+04:00') : null);
 const dayNo = d => Math.floor((d.getTime() + TZ) / DAY);   // calendar day in Yerevan
-const parts = d => { const x = new Date(d.getTime() + TZ); return {m: x.getUTCMonth(), d: x.getUTCDate(), wd: x.getUTCDay(), hh: x.getUTCHours(), mm: x.getUTCMinutes()}; };
+const parts = d => { const x = new Date(d.getTime() + TZ); return {y: x.getUTCFullYear(), m: x.getUTCMonth(), d: x.getUTCDate(), wd: x.getUTCDay(), hh: x.getUTCHours(), mm: x.getUTCMinutes()}; };
 const p2 = n => String(n).padStart(2, '0');
 
 const WD = ['կիրակի', 'երկուշաբթի', 'երեքշաբթի', 'չորեքշաբթի', 'հինգշաբթի', 'ուրբաթ', 'շաբաթ'];
@@ -397,10 +556,26 @@ const MON3 = ['ՀՆՎ', 'ՓՏՐ', 'ՄՐՏ', 'ԱՊՐ', 'ՄՅՍ', 'ՀՆՍ', 'ՀԼ�
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const fTime = d => { const p = parts(d); return `${p2(p.hh)}:${p2(p.mm)}`; };
 const fDay = d => { const p = parts(d); return `${p.d} ${MON[p.m]}`; };
+const fDayY = d => fDay(d) + (parts(d).y !== parts(new Date(now())).y ? ` ${parts(d).y}` : '');   // the year only when it is not this one
 const fDayW = d => `${cap(WD[parts(d).wd])}, ${fDay(d)}`;
+const since = d => { const p = parts(d); return `${p.y !== parts(new Date(now())).y ? `${p.y} թ. ` : ''}${MON[p.m]} ${p.d}-ից`; };   // նոյեմբերի 10-ից
 const fFull = d => `${fDay(d)}, ${WD[parts(d).wd]}, ժ. ${fTime(d)}`;
 const fStamp = d => `${fDay(d)}, ${fTime(d)}`;
 const fShort = d => { const p = parts(d); return `${p2(p.d)}.${p2(p.m + 1)}`; };
+
+/* numbers the way they are written in Armenian: 11 520 000 · 11,5 մլն · 12% */
+const NB = ' ';
+const group = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, NB);
+function short(n) {
+  const a = Math.abs(n), f = (v, unit) => String(+v.toFixed(Math.abs(v) < 10 ? 2 : Math.abs(v) < 100 ? 1 : 0)).replace('.', ',') + NB + unit;
+  return a >= 1e9 ? f(n / 1e9, 'մլրդ') : a >= 1e6 ? f(n / 1e6, 'մլն') : a >= 1e4 ? f(n / 1e3, 'հազ.') : group(n);
+}
+const money = n => (n == null ? '—' : short(n) + NB + 'դրամ');
+const qty = n => (Number.isInteger(n) ? group(n) : String(+n.toFixed(3)).replace('.', ','));
+const off = (low, est) => (low && est ? Math.round((1 - low / est) * 100) : null);   // how far below the estimate, in percent
+const median = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const plural = (n, word) => `${group(n)}${NB}${word}`;
+const ord = n => `${n}-${n === 1 ? 'ին' : 'րդ'}`;         // 1-ին, 2-րդ, 3-րդ
 
 const SECTORS = {med: 'Բժշկական', food: 'Սնունդ', fuel: 'Վառելիք', build: 'Շինարարություն', it: 'ՏՏ և կապ', auto: 'Տրանսպորտ',
   elec: 'Էլեկտրական', furn: 'Կահույք', home: 'Տնտեսական', cloth: 'Հագուստ', office: 'Գրասենյակ',
@@ -412,14 +587,15 @@ const KINDS = {
 };
 const NO_SUBJECT = 'Գնման առարկան վերնագրում նշված չէ';
 const ARMEPS = 'https://eauction.armeps.am';
+const pageOf = id => `${ARMEPS}/hy/public/tender_details/by_end_bid_time/2/tid/${id}/`;
 const safe = u => (/^https:\/\//.test(u || '') ? u : '#');
 const ic = (name, cls = '') => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const CALM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const WIDE = matchMedia('(min-width:64rem)');               // room for the list and a notice side by side
 
 /* ---------- state ---------- */
-const S = {all: [], meta: {}, rev: 0, tab: 'new', sector: 'all', q: '', frozen: null, scroll: 0, openId: null,
-  loaded: false, dirty: false, queue: [], stamp: ''};
+const S = {all: [], byId: new Map(), meta: {}, rev: 0, tab: 'new', sector: 'all', q: '', frozen: null, scroll: 0,
+  stack: [], pos: [], more: new Set(), loaded: false, dirty: false, queue: [], stamp: '', idx: null, counted: false};
 const now = () => S.frozen ?? Date.now();
 const store = {
   get(k) { try { return localStorage.getItem('tb.' + k); } catch { return null; } },
@@ -427,6 +603,27 @@ const store = {
 };
 const IN_TG = /tgWebApp/.test(location.hash) || !!window.TelegramWebviewProxy;   // known before the Telegram script loads
 let tg = null;
+
+/* ---------- extra data, fetched when a screen asks for it ---------- */
+const DATA = new Map(), WAIT = new Map(), AT = new Map();
+const peek = path => DATA.get(path);     // undefined: not here yet · null: there is no such file
+function get(path, again) {
+  if (DATA.has(path) && !again) return Promise.resolve(DATA.get(path));
+  let p = WAIT.get(path);
+  if (!p) {
+    p = fetch('data/' + path, {cache: 'no-cache'})
+      .then(r => (r.ok ? r.json() : r.status === 404 ? null : Promise.reject(new Error(r.status))))
+      .then(v => { DATA.set(path, v); AT.set(path, Date.now()); return v; },
+        () => {                                              // no connection: say "nothing" now, ask again later
+          if (!DATA.has(path)) { DATA.set(path, null); AT.set(path, 0); setTimeout(() => { if (AT.get(path) === 0) DATA.delete(path); }, 15e3); }
+          return DATA.get(path);
+        })
+      .finally(() => WAIT.delete(path));
+    WAIT.set(path, p);
+  }
+  return p;
+}
+const stale = path => DATA.get(path) != null && Date.now() - AT.get(path) > 30 * 60e3;
 
 /* ---------- time left ---------- */
 function left(end) {
@@ -437,8 +634,10 @@ function left(end) {
   return {text: `մնաց ${days} օր`, lvl: days <= 3 ? 'warn' : 'ok'};
 }
 const isOpen = t => t.status === 'open' && t.endD && t.endD > now();
-const norm = s => String(s || '').toLowerCase().replace(/և/g, 'եվ').replace(/[«»"“”().,՝։]/g, ' ').replace(/\s+/g, ' ').trim();
-const hay = t => t.hay || (t.hay = norm([t.subject, t.title, t.buyer, t.for, t.code, SECTORS[t.sector]].join(' ')));
+const norm = s => String(s || '').toLowerCase().replace(/և/g, 'եվ').replace(/[«»"“”().,՝։;]/g, ' ').replace(/\s+/g, ' ').trim();
+const hay = t => t.hay || (t.hay = norm(t.res ? [t.subject, t.buyer, t.lead, SECTORS[t.sector]].join(' ')
+  : [t.subject, t.title, t.buyer, t.for, t.code, SECTORS[t.sector], t.ln].join(' ')));
+const words = () => norm(S.q).split(' ').filter(Boolean);
 
 /* ---------- lists ---------- */
 let memo = {rev: -1, min: -1, open: []};
@@ -447,7 +646,14 @@ function openNow() {                      // the open tenders, worked out once a
   if (memo.rev !== S.rev || memo.min !== min) memo = {rev: S.rev, min, open: S.all.filter(isOpen)};
   return memo.open;
 }
+function results() {                      // finished tenders, newest first; undefined while they are on their way
+  const d = peek('h/recent.json');
+  if (!d) return d;
+  return d.list || (d.list = (d.rows || []).map(r => ({res: 1, id: r[0], key: 'r' + r[0], subject: r[1], buyer: r[2], bk: r[3],
+    dateD: dOnly(r[4]) || new Date(0), sector: SECTORS[r[5]] ? r[5] : 'other', lots: r[6], n: r[7], est: r[8], low: r[9], lead: r[10], none: r[11], st: r[12] || ''})));
+}
 function base(tab) {
+  if (tab === 'res') return results() || [];
   const open = openNow();
   if (tab === 'due') return open;
   const today = dayNo(new Date(now()));
@@ -465,9 +671,9 @@ function base(tab) {
   return fresh;
 }
 function visible() {
-  const words = norm(S.q).split(' ').filter(Boolean);
+  const w = words();
   let items = base(S.tab);
-  if (words.length) items = items.filter(t => { const h = hay(t); return words.every(w => h.includes(w)); });
+  if (w.length) items = items.filter(t => { const h = hay(t); return w.every(x => h.includes(x)); });
   const bySector = {};
   items.forEach(t => { bySector[t.sector] = (bySector[t.sector] || 0) + 1; });
   if (S.sector !== 'all' && !bySector[S.sector]) S.sector = 'all';
@@ -483,24 +689,82 @@ function tileHTML(t, mode) {
     ? `<span class="tile tile--time${cls} num"><small>ԺԱՄԸ</small><b>${fTime(t.endD)}</b></span>`
     : `<span class="tile${cls} num"><small>${WD3[p.wd]}</small><b>${p.d}</b><small>${MON3[p.m]}</small></span>`;
 }
+/* when a search found the tender through one of its lots, say which */
+function lotHit(t) {
+  const w = words();
+  if (!w.length || !t.ln) return '';
+  const own = norm([t.subject, t.title, t.buyer, t.for, t.code].join(' '));
+  if (w.every(x => own.includes(x))) return '';
+  const name = t.ln.split('; ').find(n => { const h = norm(n); return w.some(x => h.includes(x)); });
+  return name ? `<span class="row-hit">${ic('lots', 'ic--s')}<span>${esc(name)}</span></span>` : '';
+}
 function rowHTML(t, mode) {
-  const l = left(t.endD), off = !isOpen(t), meta = [];
+  const l = left(t.endD), closed = !isOpen(t), meta = [], key = 't' + t.id;
   if (t.status === 'cancelled') meta.push('<span class="left is-closed">չեղարկված է</span>');
-  else if (off || (mode !== 'due' && l.lvl !== 'ok')) meta.push(`<span class="left is-${l.lvl}">${l.text}</span>`);
+  else if (closed || (mode !== 'due' && l.lvl !== 'ok')) meta.push(`<span class="left is-${l.lvl}">${l.text}</span>`);
   if (mode === 'due' && t.newD && dayNo(t.newD) === dayNo(new Date(now()))) meta.push('<span class="tag">նոր</span>');
   meta.push(`<span>${ic(t.sector, 'ic--s')}${esc(SECTORS[t.sector])}</span>`);
   if (t.lots) meta.push(`<span class="num">${t.lots} չափաբաժին</span>`);
-  return `<li class="row${off ? ' is-off' : ''}" data-id="${t.id}"${t.id === S.openId ? ' aria-current="true"' : ''}>` +
-    `<button class="row-main" type="button" data-open="${t.id}">${tileHTML(t, mode)}` +
+  const inside = mode === 'in';
+  return `<li class="row${closed ? ' is-off' : ''}" data-key="${key}"${!inside && key === S.stack[0] ? ' aria-current="true"' : ''}>` +
+    `<button class="row-main" type="button" data-go="${key}"${inside ? '' : ' data-root'}>${tileHTML(t, mode)}` +
     `<span class="row-text"><span class="row-title">${esc(t.subject || NO_SUBJECT)}</span>` +
-    (t.buyer ? `<span class="row-buyer">${esc(t.buyer)}</span>` : '') +
+    (t.buyer && !inside ? `<span class="row-buyer">${esc(t.buyer)}</span>` : '') + (inside ? '' : lotHit(t)) +
     `<span class="row-meta"><span class="mi">${meta.join('')}</span></span></span>${ic('back', 'go')}</button></li>`;
+}
+/* a finished tender: the tile says how far the price fell */
+function resRowHTML(r, inside) {
+  const dead = r.st === 'c' || r.st === 'f', cut = dead ? null : off(r.low, r.est), meta = [];
+  if (r.st === 'c') meta.push('<span class="left is-closed">չեղարկվել է</span>');
+  else if (r.none) meta.push('<span class="left is-closed">հայտ չի եղել</span>');
+  else {
+    if (dead) meta.push(`<span class="left is-closed">չի կայացել</span>`);
+    else if (r.low) meta.push(`<span class="sumv num">${money(r.low)}</span>`);
+    meta.push(`<span class="num">${plural(r.n, 'մասնակից')}</span>`);
+    if (r.lead && !dead) meta.push(`<span class="lead">առաջինը՝ ${esc(r.lead)}</span>`);
+  }
+  const tile = cut == null ? '<span class="tile tile--time is-off num"><small>ԳԻՆԸ</small><b>—</b></span>'
+    : `<span class="tile tile--time num"><small>ԳԻՆԸ</small><b>${cut > 0 ? '−' : cut < 0 ? '+' : ''}${Math.abs(cut)}%</b></span>`;
+  return `<li class="row" data-key="${r.key}"${!inside && r.key === S.stack[0] ? ' aria-current="true"' : ''}>` +
+    `<button class="row-main" type="button" data-go="${r.key}"${inside ? '' : ' data-root'}>${tile}` +
+    `<span class="row-text"><span class="row-title">${esc(r.subject || NO_SUBJECT)}</span>` +
+    (inside ? (r.dateD > 0 ? `<span class="row-buyer num">${fDayY(r.dateD)}</span>` : '') : r.buyer ? `<span class="row-buyer">${esc(r.buyer)}</span>` : '') +
+    `<span class="row-meta"><span class="mi">${meta.join('')}</span></span></span>${ic('back', 'go')}</button></li>`;
+}
+function firmRowHTML([cid, f]) {
+  return `<li class="row" data-key="c${cid}"${'c' + cid === S.stack[0] ? ' aria-current="true"' : ''}>` +
+    `<button class="row-main" type="button" data-go="c${cid}" data-root><span class="tile tile--ic">${ic('firm')}</span>` +
+    `<span class="row-text"><span class="row-title">${esc(f[0])}</span><span class="row-meta"><span class="mi">` +
+    `<span class="num">${plural(f[1], 'չափաբաժին')}</span>${f[2] ? `<span class="num">${group(f[2])}-ում՝ առաջին տեղ</span>` : ''}</span></span></span>${ic('back', 'go')}</button></li>`;
 }
 
 function emptyHTML() {
-  if (S.q) return `<div class="empty"><h2>Ոչինչ չի գտնվել</h2><p>«${esc(S.q)}» բառով բաց մրցույթ չկա։ Փորձեք ավելի կարճ բառ, օրինակ՝ «դեղ» կամ «վառելիք»։</p></div>`;
+  if (S.tab === 'res') {
+    if (S.q) return `<div class="empty"><h2>Ոչինչ չի գտնվել</h2><p>«${esc(S.q)}» բառով ավարտված մրցույթ կամ ընկերություն չկա վերջին արդյունքներում։</p></div>`;
+    return `<div class="empty"><h2>Արդյունքները հավաքվում են</h2><p>Ավարտված մրցույթների գներն ու մասնակիցները կհայտնվեն այստեղ առաջիկա օրերին։</p></div>`;
+  }
+  if (S.q) {
+    const there = (results() || []).filter(r => words().every(x => hay(r).includes(x))).length;
+    return `<div class="empty"><h2>Ոչինչ չի գտնվել</h2><p>«${esc(S.q)}» բառով բաց մրցույթ չկա։ Փորձեք ավելի կարճ բառ, օրինակ՝ «դեղ» կամ «վառելիք»։</p>` +
+      (there ? `<button class="btn btn--primary" type="button" data-tab="res">Նայել ավարտվածները՝ ${there}</button>` : '') + '</div>';
+  }
   if (S.tab === 'new') return `<div class="empty"><h2>Նոր մրցույթ չկա</h2><p>Վերջին օրերին նոր մրցույթ չի հրապարակվել։ Բոլոր բաց մրցույթները «Բոլորը» բաժնում են։</p></div>`;
   return `<div class="empty"><h2>Բաց մրցույթ չկա</h2><p>Այս պահին հայտեր ընդունող մրցույթ չկա։</p></div>`;
+}
+const SKEL = `<ul class="rows skel" aria-hidden="true">` + [[82, 60, 44], [66, 74, 40], [90, 52, 48], [58, 70, 36]].map(w =>
+  `<li class="row"><div class="row-main"><span class="tile"><i></i></span><span><i style="height:1.1rem;width:${w[0]}%"></i><i style="height:.9rem;width:${w[1]}%;margin-top:.5rem"></i><i style="height:.8rem;width:${w[2]}%;margin-top:.5rem"></i></span></div></li>`).join('') + '</ul>';
+
+/* a number that runs to its value: the header counts on the first visit, the price after an auction */
+function roll(el, from, to, fmt, ms) {
+  if (CALM || from === to || document.hidden) { el.textContent = fmt(to); return; }
+  const t0 = performance.now();
+  const step = t => {
+    const x = Math.min(1, (t - t0) / ms);
+    el.textContent = fmt(from + (to - from) * (1 - Math.pow(1 - x, 4)));
+    if (x < 1 && el.isConnected) requestAnimationFrame(step);
+  };
+  el.textContent = fmt(from);
+  requestAnimationFrame(step);
 }
 
 /* the header numbers, tab counts and footer */
@@ -513,6 +777,7 @@ function chrome() {
   $('#date').textContent = fDayW(new Date(now()));
   $('#stats').innerHTML = `<span class="stat"><b class="num">${fresh}</b> նոր այսօր</span><span class="stat"><b class="num">${open.length}</b> բաց</span>` +
     (hot ? `<span class="stat stat--hot"><b class="num">${hot}</b> փակվում է 3 օրում</span>` : '');
+  if (!S.counted) { S.counted = true; document.querySelectorAll('#stats b').forEach(b => roll(b, 0, +b.textContent, v => Math.round(v), 700)); }
   $('#foot').textContent = `Աղբյուրը՝ eauction.armeps.am։ ${upd ? `Թարմացվել է ${fStamp(upd)}-ին։ ` : ''}Տվյալները թարմացվում են աշխատանքային օրերին՝ ամեն ժամ։`;
 }
 
@@ -529,7 +794,7 @@ function flush(cap) {
       sec = more.previousElementSibling;
     }
     const take = g.rows.splice(0, cap - n);
-    sec.lastElementChild.insertAdjacentHTML('beforeend', take.map(t => rowHTML(t, S.tab)).join(''));
+    sec.lastElementChild.insertAdjacentHTML('beforeend', take.map(t => (t.res ? resRowHTML(t) : rowHTML(t, S.tab))).join(''));
     n += take.length;
     if (!g.rows.length) S.queue.shift();
   }
@@ -545,6 +810,14 @@ const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => { i
 function render(animate) {
   if (!S.loaded) return;
   chrome();
+  const res = S.tab === 'res', due = S.tab === 'due', list = $('#list');
+  list.setAttribute('aria-labelledby', 'tab-' + S.tab);
+  if (res && results() === undefined) {       // the finished tenders are a file of their own: fetch it on the first visit
+    $('#chips').hidden = true;
+    list.innerHTML = SKEL;
+    get('h/recent.json').then(() => { if (S.tab === 'res') render(animate); });
+    return;
+  }
   const {items, bySector, total} = visible();
   const keys = Object.keys(bySector).sort((a, b) => bySector[b] - bySector[a] || a.localeCompare(b));
   $('#chips').innerHTML = total ? `<button class="chip" type="button" data-sector="all" aria-pressed="${S.sector === 'all'}">Բոլոր ոլորտները <span class="n num">${total}</span></button>` +
@@ -552,20 +825,34 @@ function render(animate) {
   $('#chips').hidden = !total;
 
   const today = dayNo(new Date(now())), upd = toDate(S.meta.updated);
-  let html = '';
+  let html = '', firms = 0;
   if (S.meta.note) html += `<p class="strip">${esc(S.meta.note)}</p>`;
   if (upd && !S.frozen && now() - upd > 36 * HOUR) html += `<p class="strip strip--warn">Տվյալները վերջին անգամ թարմացվել են ${fStamp(upd)}-ին։ Հնարավոր է՝ նոր մրցույթներ կան, որոնք այստեղ դեռ չեն երևում։</p>`;
+  if (res) {
+    const m = peek('h/meta.json'), from = m && dOnly(m.from);
+    if (m && !m.complete && from && !S.q) html += `<p class="strip">Նախորդ ամիսների արդյունքներն ավելանում են ամեն գիշեր. այժմ՝ ${plural(m.results, 'մրցույթ')}՝ ${since(from)}։</p>`;
+    if (S.q) {                                // a search here also looks for companies by name
+      const all = peek('h/companies.json'), w = words();
+      if (all === undefined) get('h/companies.json').then(v => { if (v && S.tab === 'res' && S.q) render(); });
+      else if (all) {
+        const hits = Object.entries(all).filter(([, f]) => { const h = norm(f[0]); return w.every(x => h.includes(x)); }).slice(0, 6);
+        firms = hits.length;
+        if (firms) html += `<section class="day"><h2 class="day-h"><span>Ընկերություններ</span><span class="day-n num">${firms}</span></h2><ul class="rows">${hits.map(firmRowHTML).join('')}</ul></section>`;
+      }
+    }
+  }
 
   S.queue = [];
-  if (!items.length) html += emptyHTML();
+  if (!items.length) html += firms ? '' : emptyHTML();
   else {
-    const due = S.tab === 'due', groups = new Map();
-    const sorted = [...items].sort((a, b) => due ? (a.endD - b.endD) || (a.id - b.id) : (b.newD - a.newD) || (b.id - a.id));
-    sorted.forEach(t => { const k = dayNo(due ? t.endD : t.newD); (groups.get(k) || groups.set(k, []).get(k)).push(t); });
+    const when = t => (res ? t.dateD : due ? t.endD : t.newD), groups = new Map();
+    const sorted = [...items].sort((a, b) => due ? (a.endD - b.endD) || (a.id - b.id) : (when(b) - when(a)) || (b.id - a.id));
+    sorted.forEach(t => { const k = dayNo(when(t)); (groups.get(k) || groups.set(k, []).get(k)).push(t); });
     groups.forEach((rows, k) => {
-      const d = due ? rows[0].endD : rows[0].newD, diff = k - today;
-      let label = fDayW(d), side = `${rows.length} մրցույթ`, sideCls = '';
-      if (diff === 0) label = `Այսօր, ${fDay(d)}`;
+      const d = when(rows[0]), diff = k - today;
+      let label = res ? `${cap(WD[parts(d).wd])}, ${fDayY(d)}` : fDayW(d), side = `${rows.length} մրցույթ`, sideCls = '';
+      if (k <= 0) label = 'Ամսաթիվը նշված չէ';
+      else if (diff === 0) label = `Այսօր, ${fDay(d)}`;
       else if (!due && diff === -1) label = `Երեկ, ${fDay(d)}`;
       else if (due && diff === 1) label = `Վաղը, ${fDay(d)}`;
       if (due) {
@@ -575,26 +862,53 @@ function render(animate) {
       S.queue.push({key: k, rows, head: `<h2 class="day-h"><span>${label}</span><span class="day-n num${sideCls}">${side}</span></h2>`});
     });
   }
-  const list = $('#list');
   list.innerHTML = html + '<div id="more" aria-hidden="true"></div>';
-  list.setAttribute('aria-labelledby', 'tab-' + S.tab);
   flush(26);
   if (S.queue.length) {
     if (io) { io.disconnect(); io.observe($('#more')); }
     else setTimeout(function rest() { flush(120); if (S.queue.length) setTimeout(rest, 30); }, 60);
   }
   if (animate && !CALM) { list.classList.add('anim'); setTimeout(() => list.classList.remove('anim'), 520); }
-  if (WIDE.matches && S.openId === null) {     // beside the list there is always a notice to read
-    const firstRow = $('#list .row[data-id]');
-    if (firstRow) show(+firstRow.dataset.id, true);
+  if (WIDE.matches && !S.stack.length) {       // beside the list there is always something to read
+    const first = $('#list .row[data-key]');
+    if (first) go(first.dataset.key, {root: true, quiet: true});
   }
 }
 
-/* ---------- notice view ---------- */
-function detailHTML(t) {
+/* ---------- what a screen is made of ----------
+   A screen is a frame with named slots. Each slot is drawn from whatever data is already here,
+   and drawn again when more arrives, so a screen opens at once and fills in. */
+const topKey = () => S.stack[S.stack.length - 1] || null;
+const lotsOf = id => { const d = peek('lots.json'); return (d && d.t && d.t[id]) || null; };
+const chunk = id => `h/r/${Math.floor(id / 50)}.json`;
+const recOf = id => { const c = peek(chunk(id)); return c ? c[id] || null : c; };
+const flag = name => S.more.has(`${topKey()}:${name}`);    // "show all" was pressed here
+const head = (title, side = '') => `<div class="sec-h"><h2>${title}</h2>${side}</div>`;
+const wait = n => `<section class="sheet wait" aria-hidden="true">${'<i></i>'.repeat(n)}</section>`;
+const more = (name, text) => `<button class="more" type="button" data-more="${name}">${text}</button>`;
+const signed = cut => `${cut > 0 ? '−' : cut < 0 ? '+' : ''}${Math.abs(cut)}%`;
+const THING = {goods: 'ապրանք', services: 'ծառայություն', works: 'աշխատանք'};
+const pc = n => String(+n).replace('.', ',');
+const phone = p => p.replace(/^\+374(\d{2})(\d{6})$/, '+374 $1 $2').replace(/^0(\d{2})(\d{6})$/, '0$1 $2');
+
+function dbar(key) {
+  const share = key[0] === 't' || key[0] === 'r';
+  return `<div class="dbar"><div class="dbar-in"><button type="button" data-back>${ic('back')}Հետ</button>` +
+    (share ? `<button type="button" data-share="${key}">${ic('share')}Ուղարկել</button>` : '') + '</div></div>';
+}
+function heroHTML(title, buyer, bk, tags) {
+  const b = !buyer ? '' : bk ? `<button class="d-buyer" type="button" data-go="b${bk}"><span>${esc(buyer)}</span>${ic('back', 'go')}</button>` : `<p class="d-buyer">${esc(buyer)}</p>`;
+  return `<header class="hero"><h1 class="d-title" tabindex="-1">${esc(title)}</h1>${b}` +
+    (tags.length ? `<p class="hero-tags">${tags.map(x => `<span>${x}</span>`).join('')}</p>` : '') + '</header>';
+}
+const unitPrice = (sum, n) => { const v = sum / n; return v >= 100 ? group(v) : String(+v.toFixed(v >= 10 ? 1 : 2)).replace('.', ','); };
+const priceBar = (low, est) => `<span class="bar" style="--v:${Math.max(.02, Math.min(1, low / est)).toFixed(3)}"><i></i></span>`;
+
+/* ---------- an open tender ---------- */
+function tenderFrame(t) {
   const l = left(t.endD), kind = KINDS[t.kind], p = parts(t.endD);
-  const off = t.status === 'cancelled' || l.lvl === 'closed';
-  const cls = off ? '' : l.lvl === 'crit' || l.lvl === 'warn' ? ` is-${l.lvl}` : '';
+  const closed = t.status === 'cancelled' || l.lvl === 'closed';
+  const cls = closed ? '' : l.lvl === 'crit' || l.lvl === 'warn' ? ` is-${l.lvl}` : '';
   const past = d => (d && d <= now() ? ' is-past' : '');
   const fact = (icon, label, value) => `<div><span class="f-ic">${ic(icon)}</span><dt>${label}</dt><dd>${value}</dd></div>`;
   const facts = [fact(t.sector, 'Ինչ են գնում', esc(t.subject || NO_SUBJECT) + (t.subject ? '' : '<small>Նայեք հրավերը՝ այնտեղ գրված է, թե ինչ է գնվում։</small>'))];
@@ -618,17 +932,11 @@ function detailHTML(t) {
       `<p class="prog-l num"><span>հրապարակվել է ${fShort(t.pubD)}</span><span>վերջնաժամկետը՝ ${fShort(t.endD)}</span></p></div>`;
   }
   const state = t.status === 'cancelled' ? 'մրցույթը չեղարկված է' : l.lvl === 'crit' ? l.text.split(',')[0] : l.text;
-  return `<div class="dbar"><div class="dbar-in">
-      <button type="button" data-back>${ic('back')}Հետ</button>
-      <button type="button" data-share="${t.id}">${ic('share')}Ուղարկել</button></div></div>
+  return `${dbar('t' + t.id)}
     <div class="wrap">
-      <header class="hero">
-        <h1 class="d-title" tabindex="-1">${esc(t.subject || NO_SUBJECT)}</h1>
-        ${t.buyer ? `<p class="d-buyer">${esc(t.buyer)}</p>` : ''}
-        <p class="hero-tags"><span>${ic(t.sector, 'ic--s')}${esc(SECTORS[t.sector])}</span>${kind ? `<span>${kind[0]}</span>` : ''}${t.lots ? `<span class="num">${t.lots} չափաբաժին</span>` : ''}</p>
-      </header>
+      ${heroHTML(t.subject || NO_SUBJECT, t.buyer, t.bk, [`${ic(t.sector, 'ic--s')}${esc(SECTORS[t.sector])}`, ...(kind ? [kind[0]] : []), ...(t.lots ? [`${t.lots} չափաբաժին`] : [])])}
       <section class="sheet due${cls}">
-        <span class="tile${off ? ' is-off' : cls} num"><small>${WD3[p.wd]}</small><b>${p.d}</b><small>${MON3[p.m]}</small></span>
+        <span class="tile${closed ? ' is-off' : cls} num"><small>${WD3[p.wd]}</small><b>${p.d}</b><small>${MON3[p.m]}</small></span>
         <p><span class="due-l">Հայտերն ընդունվում են մինչև</span>
           <b class="due-d num">${fDay(t.endD)}, ժամը ${fTime(t.endD)}</b><span class="due-r">${cap(WD[p.wd])} · ${state}</span></p>
         ${prog}
@@ -638,7 +946,10 @@ function detailHTML(t) {
         <a class="btn" href="${esc(safe(t.url))}" target="_blank" rel="noopener" data-ext>${ic('out')}Բացել ARMEPS-ում</a>
       </div>
       <section class="sheet sec"><h2>Պարզ բառերով</h2><dl class="facts">${facts.join('')}</dl></section>
+      <div data-slot="lots"></div>
       <section class="sheet sec"><h2>Կարևոր օրերը</h2><ol class="tl">${tl.join('')}</ol></section>
+      <div data-slot="before"></div>
+      <div data-slot="who"></div>
       <section class="sheet sec"><h2>Ինչպես մասնակցել</h2>
         <ol class="steps">
           <li>Ներբեռնեք հրավերը և ուշադիր կարդացեք պայմանները։</li>
@@ -647,6 +958,7 @@ function detailHTML(t) {
           <li>Աճուրդի օրը մասնակցեք առցանց։ Սովորաբար հաղթում է պայմաններին համապատասխանող ամենացածր գինը։</li>
         </ol>
         <p class="fine">Մասնակցելու համար պետք է գրանցված լինել ARMEPS համակարգում։ Ճշգրիտ պայմանները միշտ հրավերում են։</p></section>
+      <div data-slot="need"></div>
       <section class="sheet sec"><h2>Պաշտոնական անվանումը</h2>
         <p class="official">${esc(t.title)}</p>
         <p class="code">Ծածկագիր՝ ${esc(t.code)}</p></section>
@@ -654,7 +966,410 @@ function detailHTML(t) {
     </div>`;
 }
 
-/* Swap screens. Where the browser can, the date tile travels from the row to the notice. */
+const LOTS_SHOWN = 6;
+function lotHTML(l, best) {
+  const amount = l.qty != null && !(l.unit === 'դրամ' && l.qty === 1) ? `<span class="lot-q num">${qty(l.qty)}${l.unit ? NB + esc(l.unit) : ''}</span>` : '';
+  const was = best && best.get(l.n), each = was && was.low && was.q && was.u ? ` · միավորը ${unitPrice(was.low, was.q)} դրամ` : '';
+  const body = `<span class="lot-n num">${l.n}</span><span class="lot-t">${esc(l.name)}` +
+    (was && was.low ? `<span class="lot-was num">նախորդ անգամ՝ ${money(was.low)}${each}</span>` : '') +
+    `${l.spec ? '<span class="lot-more">նկարագիրը</span>' : ''}</span>${amount}`;
+  return l.spec ? `<details class="lot"><summary class="lot-b">${body}</summary><p class="lot-s">${esc(l.spec)}</p></details>`
+    : `<div class="lot"><div class="lot-b">${body}</div></div>`;
+}
+function lotsHTML(t, page, p) {
+  const lots = page.lots, n = lots.length, best = p && p.best;
+  if (!n) return '';
+  const all = flag('lots'), uniq = f => [...new Set([page[f], ...lots.map(l => l[f])].filter(Boolean))];
+  const addr = uniq('addr'), when = uniq('when'), ship = [];
+  if (addr.length) ship.push(`<p><b>Հասցեն</b>${addr.length <= 2 ? addr.map(esc).join('<br>') : 'Չափաբաժինների համար տարբեր հասցեներ են նշված. նայեք հրավերը։'}</p>`);
+  if (when.length) ship.push(`<p><b>Ժամկետը</b>${when.length === 1 ? esc(when[0]) : 'Չափաբաժինների համար տարբեր ժամկետներ են նշված. նայեք հրավերը։'}</p>`);
+  return `<section class="sheet sec">${head('Չափաբաժիններ', `<span class="sec-n num">${n}</span>`)}` +
+    (n > 8 ? `<label class="lot-find">${ic('search', 'ic--s')}<input type="search" data-lotq autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Որոնել այս չափաբաժիններում" aria-label="Որոնել չափաբաժիններում"></label>` : '') +
+    `<div class="lots">${(all ? lots : lots.slice(0, LOTS_SHOWN)).map(l => lotHTML(l, best)).join('')}</div>` +
+    (n > LOTS_SHOWN && !all ? more('lots', `Ցույց տալ բոլոր ${n}-ը`) : '') +
+    (ship.length ? `<div class="ship">${ship.join('')}</div>` : '') +
+    `<p class="fine">Վերցված է հրավերից։ Ամբողջական տեխնիկական բնութագիրը հրավերի ֆայլում է։</p></section>`;
+}
+
+/* earlier purchases of the same things: by this buyer, and by others */
+function cpvsOf(t) {
+  const page = peek(`t/${t.id}.json`), idx = lotsOf(t.id);
+  return page ? page.lots.map(l => l.cpv).filter(Boolean) : idx ? idx.cpv || [] : [];
+}
+function cpvFiles(t) {
+  const n = {};
+  cpvsOf(t).forEach(c => { const p = c.slice(0, 5); n[p] = (n[p] || 0) + 1; });
+  return Object.keys(n).sort((a, b) => n[b] - n[a] || a.localeCompare(b)).slice(0, 4).map(p => `h/v/${p}.json`);
+}
+/* Two lot names that mean the same thing: mostly the same words, or the same leading word when
+   it is a telling one (the name of a medicine, say) and not "medical" or "other". */
+const VAGUE = new Set(['բժշկական', 'լաբորատոր', 'տնտեսական', 'գրասենյակային', 'համակարգչային', 'էլեկտրական', 'շինարարական', 'տարբեր', 'հատուկ',
+  'ծառայություն', 'ծառայություններ', 'ծառայության', 'ծառայությունների', 'աշխատանքներ', 'աշխատանքների', 'նյութեր', 'պարագաներ', 'ապրանքներ']);
+const tokMemo = new Map();
+function toks(s) {
+  let t = tokMemo.get(s);
+  if (!t) { t = norm(s).split(' ').filter(w => w.length >= 3 && !/^\d/.test(w)); if (tokMemo.size < 20000) tokMemo.set(s, t); }
+  return t;
+}
+function alike(a, b) {
+  const A = toks(a), B = toks(b);
+  if (!A.length || !B.length) return false;
+  const inB = new Set(B), both = new Set(A.filter(w => inB.has(w))).size;
+  if (both / new Set([...A, ...B]).size >= .5) return true;
+  if (A[0] !== B[0]) return false;
+  return (A.length > 1 && A[1] === B[1]) || (A[0].length >= 6 && !VAGUE.has(A[0]));
+}
+/* What is known from finished tenders about the things this one buys: for each lot the latest
+   purchase of the same thing (this buyer's first), and the companies that bid for such things. */
+const pastMemo = new Map();
+function pastOf(t) {
+  if (!peek('h/meta.json')) return null;
+  const page = peek(`t/${t.id}.json`), codes = new Set(cpvsOf(t));
+  if (!codes.size) return null;
+  const own = (t.bk && peek(`h/b/${t.bk}.json`)) || null, files = cpvFiles(t).map(peek);
+  const sig = `${page ? page.lots.length : -1}|${own ? (own.lots || []).length : -1}|${files.map(v => (v ? (v.rows || []).length : -1)).join()}`;
+  const kept = pastMemo.get(t.id);
+  if (kept && kept.sig === sig) return kept;
+  const byCode = new Map(), best = new Map(), firms = new Map(), cuts = [];
+  (page ? page.lots : []).forEach(l => (byCode.get(l.cpv) || byCode.set(l.cpv, []).get(l.cpv)).push(l));
+  const offer = (x, cpv) => (byCode.get(cpv) || []).forEach(l => {
+    if (!alike(l.name, x.title)) return;
+    const was = best.get(l.n);
+    if (!was || x.own > was.own || (x.own === was.own && x.date > was.date)) best.set(l.n, {...x, lot: l.n});
+  });
+  if (own) (own.lots || []).forEach(r => {
+    if (codes.has(r[0]) && r[2] !== t.id) offer({own: 1, title: r[1], id: r[2], date: r[3] || '', est: r[4], low: r[5], n: r[6], lead: r[7], q: r[9], u: r[10]}, r[0]);
+  });
+  files.forEach(v => {
+    if (v) (v.rows || []).forEach(r => {
+      if (r[2] === t.id) return;
+      const exact = codes.has(r[0]), cos = r[9] || [];
+      if (exact) {
+        const cut = off(r[7], r[6]);
+        if (cut != null && cut >= 0 && cut < 95) cuts.push(cut);
+        if (r[3] !== t.bk) offer({own: 0, title: r[1], id: r[2], buyer: r[4], date: r[5] || '', est: r[6], low: r[7], n: r[8], lead: (cos.find(c => c[2] === 1) || [])[1], q: r[10], u: r[11]}, r[0]);
+      }
+      cos.forEach(([cid, name, rank]) => {
+        const f = firms.get(cid) || firms.set(cid, {cid, name, exact: 0, near: 0, first: 0, here: 0}).get(cid);
+        if (!exact) { f.near++; return; }
+        f.exact++;
+        if (rank === 1) f.first++;
+        if (r[3] === t.bk) f.here++;
+      });
+    });
+  });
+  const out = {sig, best, pairs: [...best.values()].sort((x, y) => y.own - x.own || x.lot - y.lot), firms: [...firms.values()],
+    usual: cuts.length >= 5 ? Math.round(median(cuts)) : null, n: cuts.length};
+  pastMemo.set(t.id, out);
+  if (pastMemo.size > 40) pastMemo.delete(pastMemo.keys().next().value);
+  return out;
+}
+const usualHTML = p => (p.usual != null ? `<p class="usual">Նման գնումներում առաջին տեղի գինը սովորաբար <b class="num">${p.usual}%-ով</b> ցածր է եղել նախահաշվից։<small class="num">Ըստ նույն ծածկագրով ${p.n} չափաբաժնի արդյունքի</small></p>` : '');
+function cmpHTML(x, many) {
+  const cut = off(x.low, x.est), d = dOnly(x.date), tail = [];
+  if (x.q && x.u && x.low) tail.push(`${qty(x.q)}${NB}${esc(x.u)}՝ միավորը ${unitPrice(x.low, x.q)} դրամ`);
+  if (x.n) tail.push(plural(x.n, 'մասնակից'));
+  if (x.lead) tail.push(`առաջինը՝ ${esc(x.lead)}`);
+  return `<button class="cmp" type="button" data-go="r${x.id}"><span class="cmp-h">${many ? `<span class="lot-n num">${x.lot}</span>` : ''}<span class="cmp-t">${esc(x.title || 'Չափաբաժին')}</span></span>` +
+    `<span class="cmp-m num">${[d && fDayY(d), x.own ? 'նույն գնորդը' : x.buyer && esc(x.buyer)].filter(Boolean).join(' · ')}</span>` +
+    (cut != null ? `${priceBar(x.low, x.est)}<span class="cmp-n num"><span>${money(x.est)} → <b>${money(x.low)}</b></span><b class="pct">${signed(cut)}</b></span>`
+      : `<span class="cmp-n"><span>${x.n ? 'գինը նշված չէ' : 'հայտ չի եղել'}</span></span>`) +
+    (tail.length ? `<span class="cmp-m num">${tail.join(' · ')}</span>` : '') + '</button>';
+}
+function beforeHTML(t, p) {
+  if (!p || !p.pairs.length) return '';
+  const list = p.pairs, all = flag('before'), thing = THING[t.kind] || 'ապրանք', page = peek(`t/${t.id}.json`), many = !!page && page.lots.length > 1;
+  return `<section class="sheet sec">${head('Նախորդ անգամ', many ? `<span class="sec-n num">${list.length} չափաբաժին</span>` : '')}` +
+    `<p class="lede">${list[0].own ? `Այս գնորդը նման ${thing} արդեն գնել է։` : `Նման ${thing} վերջերս գնել են այլ գնորդներ։`} Թվերը՝ նախահաշվային գինը և աճուրդից հետո առաջին տեղի գինը։</p>` +
+    (all ? list.slice(0, 40) : list.slice(0, 3)).map(x => cmpHTML(x, many)).join('') +
+    (list.length > 3 && !all ? more('before', `Ցույց տալ ևս ${Math.min(list.length, 40) - 3}-ը`) : '') + usualHTML(p) + '</section>';
+}
+function whoHTML(t, p) {
+  if (!p) return '';
+  let list = p.firms.filter(f => f.exact).sort((a, b) => b.exact - a.exact || b.first - a.first || a.cid - b.cid);
+  if (list.length < 3) list = [...list, ...p.firms.filter(f => !f.exact).sort((a, b) => b.near - a.near || a.cid - b.cid)];
+  if (!list.length) return '';
+  const all = flag('who');
+  const line = f => (f.exact ? [plural(f.exact, 'չափաբաժին'), f.first && `${f.first}-ում՝ առաջին տեղ`, f.here && `այս գնորդի մոտ՝ ${f.here}`].filter(Boolean).join(' · ')
+    : `մոտ ծածկագրով՝ ${plural(f.near, 'չափաբաժին')}`);
+  return `<section class="sheet sec">${head('Ով է մասնակցել նման մրցույթների', `<span class="sec-n num">${list.length}</span>`)}` +
+    (p.pairs.length ? '' : usualHTML(p)) +
+    (all ? list.slice(0, 40) : list.slice(0, 5)).map(f => `<button class="who" type="button" data-go="c${f.cid}"><span><b>${esc(f.name)}</b><small class="num">${line(f)}</small></span>${ic('back', 'go')}</button>`).join('') +
+    (list.length > 5 && !all ? more('who', `Ցույց տալ ևս ${Math.min(list.length, 40) - 5}-ը`) : '') +
+    `<p class="fine">Ըստ նույն ծածկագրով ավարտված մրցույթների։ Անհատ ձեռնարկատերերն այստեղ չեն նշվում։</p></section>`;
+}
+function needHTML(t, page) {
+  const sec = (page && page.sec) || {}, ask = (page && page.ask) || {}, item = (title, note) => `<li>${ic('check', 'ic--s')}<b>${title}</b><small>${note}</small></li>`;
+  const list = [item('Դիմում-հայտարարություն', 'Նշվում են ՀՎՀՀ-ն, հասցեն և հեռախոսահամարը։ Ձևը հրավերի հավելված 1-ն է։'),
+    item('Իրական շահառուների հայտարարագիր', 'Հրավերի հավելված 1.2 կամ 1.3՝ ըստ ձևի։'),
+    item('Գնային առաջարկ', 'Լրացվում է ARMEPS համակարգում։')];
+  if (t.kind === 'goods') list.push(item('Առաջարկվող ապրանքի ամբողջական նկարագիր', 'Տեխնիկական բնութագիրը, ապրանքային նշանը, մոդելը և արտադրողը՝ ամեն չափաբաժնի համար։'));
+  if (sec.bid) list.push(item(`Հայտի ապահովում՝ <span class="num">${pc(sec.bid)}%</span>`, 'Չափը և ձևը նշված են հրավերում։'));
+  const win = [];
+  if (sec.qual) win.push(`<li><p><b>Որակավորման ապահովում</b><small>գնման գնից</small></p><span class="num">${pc(sec.qual)}%</span></li>`);
+  if (sec.contract) win.push(`<li><p><b>Պայմանագրի ապահովում</b><small>գնման գնից</small></p><span class="num">${pc(sec.contract)}%</span></li>`);
+  const links = [];
+  if (ask.phone) links.push(`<a class="btn" href="tel:${esc(ask.phone)}">${ic('phone')}<span class="num">${esc(phone(ask.phone))}</span></a>`);
+  if (ask.mail) links.push(`<a class="btn" href="mailto:${esc(ask.mail)}">${ic('mail')}<span>${esc(ask.mail)}</span></a>`);
+  return `<section class="sheet sec"><h2>Ինչ է պետք հայտի համար</h2><ul class="need">${list.join('')}</ul>` +
+    `<p class="fine">Եթե մասնակցում եք համատեղ (կոնսորցիումով) կամ գործակալի միջոցով, կցվում է նաև այդ պայմանագիրը։ Ձևերը լրացվում և ստորագրվում են ARMEPS համակարգում, ոչ թե այս կայքում։</p>` +
+    (win.length ? `<h3>Եթե հաղթեք</h3><ul class="win">${win.join('')}</ul><p class="fine">Ապահովումները ներկայացնում է միայն ընտրված մասնակիցը։ Ձևը և ժամկետը նշված են հրավերում։</p>` : '') +
+    (links.length ? `<h3>Գնորդի կոնտակտը հրավերից</h3><div class="ask">${links.join('')}</div>` : '') + '</section>';
+}
+function tenderSlots(t) {
+  const page = peek(`t/${t.id}.json`), idx = lotsOf(t.id), p = pastOf(t);
+  return {
+    lots: page ? lotsHTML(t, page, p) : page === undefined && idx ? wait(Math.min(idx.n || 1, 4) + 1) : '',
+    before: beforeHTML(t, p),
+    who: whoHTML(t, p),
+    need: needHTML(t, page)
+  };
+}
+
+/* ---------- a finished tender ---------- */
+const STATES = [['չկայաց', 'f'], ['failed', 'f'], ['չեղարկ', 'c'], ['cancel', 'c'], ['ավարտ', ''], ['finish', '']];
+const stageOf = st => { const low = String(st || '').toLowerCase(), hit = STATES.find(([k]) => low.includes(k)); return hit ? hit[1] : 'a'; };   // 'a': the winner is still being chosen
+const stateOf = st => ({f: 'Չի կայացել', c: 'Չեղարկված է', a: 'Հաղթողը որոշվում է', '': 'Ավարտված է'}[stageOf(st)]);
+const ranked = l => [...l.bids].sort((a, b) => a.p - b.p);
+const leaderOf = l => ranked(l).find(b => !b.rej) || null;
+
+function sumHTML(rec) {
+  let est = 0, low = 0, bare = 0, led = 0;
+  const firms = new Set(), many = rec.lots.length > 1;
+  rec.lots.forEach(l => {
+    const lead = leaderOf(l);
+    l.bids.forEach(b => firms.add(b.c));
+    if (!l.bids.length) bare++;
+    if (lead) led++;
+    if (lead && l.est && lead.lp) { est += l.est; low += lead.lp; }
+  });
+  const aucD = toDate(rec.auc) || toDate(rec.end), how = stageOf(rec.st);
+  if (how === 'c') return `<section class="sheet none"><b>Մրցույթը չեղարկվել է</b><p>Գնորդը դադարեցրել է այս մրցույթը։ Պատճառը նշված է մրցույթի էջում՝ ARMEPS-ում։</p></section>`;
+  if (!firms.size) return `<section class="sheet none"><b>${how === 'f' ? 'Մրցույթը չի կայացել' : 'Հայտ չի ներկայացվել'}</b><p>Ոչ մի հայտ չի ներկայացվել${aucD ? `։ Աճուրդը նշանակված էր ${fDay(aucD)}-ին` : ''}։</p></section>`;
+  const cut = off(low, est), facts = [plural(firms.size, 'մասնակից')];
+  if (aucD) facts.push(`աճուրդը՝ ${fDayY(aucD)}`);
+  if (!led) facts.push('բոլոր հայտերը մերժվել են');
+  else if (bare) facts.push(`${bare} չափաբաժնի համար հայտ չի եղել`);
+  if (how === 'f') return `<section class="sheet none"><b>Մրցույթը չի կայացել</b><p class="num">${cap(facts.join(' · '))}։</p></section>`;
+  const note = how === 'a' ? '<p class="sum-w">Հաղթողը դեռ որոշվում է. գնորդը ստուգում է փաստաթղթերը, և տեղերը կարող են փոխվել։</p>' : '';
+  return '<section class="sheet sum">' + (cut != null
+    ? `<div><span>Նախահաշվային գինը</span><b class="num">${money(est)}</b></div>` +
+      `<div><span>${many ? 'Առաջին տեղերի գինը' : 'Առաջին տեղի գինը'}</span><b class="num" data-roll="${Math.round(est)},${Math.round(low)}">${money(low)}</b></div>` +
+      priceBar(low, est) +
+      `<p class="sum-l num"><b class="pct">${cut > 0 ? `${cut}%-ով ցածր` : cut < 0 ? `${-cut}%-ով բարձր` : 'Նույն գինը'}</b>${cut ? ' նախահաշվից' : ''}</p>` : '') +
+    `<p class="sum-f num">${facts.join(' · ')}</p>${note}</section>`;
+}
+function bidHTML(b, lead) {
+  const notes = [];
+  if (b.rej) notes.push('մերժված է');
+  if (b.lv && b.lp && Math.abs(b.lv - b.lp) > 1) notes.push(`առանց ԱԱՀ՝ ${group(b.lv)}`);
+  if (b.fp && b.lp && b.fp > b.lp * 1.005 && b.fp < b.lp * 5) notes.push(`սկզբում՝ ${group(b.fp)}`);
+  const name = b.per || !b.c ? `<span>${esc(b.nm)}</span>` : `<a class="linkish" href="#c${b.c}" data-go="c${b.c}">${esc(b.nm)}</a>`;
+  return `<div class="bid${b.rej ? ' is-rej' : b === lead ? ' is-1' : ''}"><span class="bid-p num">${b.p}</span>` +
+    `<span class="bid-n">${name}${notes.length ? `<small class="num">${notes.join(' · ')}</small>` : ''}</span>` +
+    `<span class="bid-v num">${b.lp ? group(b.lp) : '—'}</span></div>`;
+}
+function lotResHTML(l, i, all) {
+  const bids = ranked(l), lead = bids.find(b => !b.rej) || null, cut = lead ? off(lead.lp, l.est) : null;
+  const title = l.t || (all && all.length === 1 && all.one) || `Չափաբաժին ${l.n}`;
+  const unit = l.q && l.u ? `<span class="cmp-m num">${qty(l.q)}${NB}${esc(l.u)}${lead && lead.lp ? ` · միավորը՝ ${unitPrice(lead.lp, l.q)} դրամ` : ''}</span>` : '';
+  return `<div class="lotr" data-find="${esc(norm(`${l.t} ${l.cpv} ${bids.map(b => b.nm).join(' ')}`))}"><div class="lotr-h"><span class="lot-n num">${l.n}</span><p><b class="lot-t">${esc(title)}</b>` +
+    `<span class="cmp-m num">${l.est ? `նախահաշիվը՝ ${group(l.est)} դրամ` : 'նախահաշիվը նշված չէ'}${cut ? ` · <b class="pct">${signed(cut)}</b>` : ''}</span>${unit}</p></div>` +
+    (cut != null ? priceBar(lead.lp, l.est) : '') +
+    (bids.length ? bids.map(b => bidHTML(b, lead)).join('') : '<p class="bid-none">Հայտ չի եղել</p>') + '</div>';
+}
+function firmsHTML(rec) {
+  const by = new Map();
+  rec.lots.forEach(l => {
+    const lead = leaderOf(l);
+    l.bids.forEach(b => {
+      const f = by.get(b.c) || by.set(b.c, {c: b.c, nm: b.nm, per: b.per, lots: 0, first: 0, sum: 0, rej: 0}).get(b.c);
+      f.lots++;
+      if (b.rej) f.rej++;
+      if (b === lead) { f.first++; f.sum += b.lp || 0; }
+    });
+  });
+  if (rec.lots.length < 2 || by.size < 2) return '';
+  const list = [...by.values()].sort((a, b) => b.first - a.first || b.lots - a.lots), all = flag('firms');
+  const row = f => {
+    const inner = `<span><b>${esc(f.nm)}</b>${f.first ? `<small class="num"><b class="pct">առաջին տեղ՝ ${f.first} չափաբաժնում</b></small>` : ''}` +
+      `<small class="num">${[f.first && money(f.sum), `մասնակցել է ${f.lots}-ին`, !f.first && 'առաջին տեղ չունի', f.rej && `${f.rej}-ը մերժված`].filter(Boolean).join(' · ')}</small></span>`;
+    return f.per || !f.c ? `<div class="who">${inner}</div>` : `<button class="who" type="button" data-go="c${f.c}">${inner}${ic('back', 'go')}</button>`;
+  };
+  return `<section class="sheet sec">${head('Մասնակիցները', `<span class="sec-n num">${list.length}</span>`)}` +
+    (all ? list : list.slice(0, 5)).map(row).join('') + (list.length > 5 && !all ? more('firms', `Ցույց տալ բոլոր ${list.length}-ը`) : '') + '</section>';
+}
+function bidsHTML(rec) {
+  const lots = rec.lots, all = flag('bids'), cap5 = 5;
+  if (!lots.length) return '';
+  lots.one = rec.subject;                    // a tender of one lot: the lot is the tender
+  return firmsHTML(rec) + `<section class="sheet sec">${head(lots.length > 1 ? 'Չափաբաժիններ և գնառաջարկներ' : 'Գնառաջարկները', lots.length > 1 ? `<span class="sec-n num">${lots.length}</span>` : '')}` +
+    (lots.length > 8 ? `<label class="lot-find">${ic('search', 'ic--s')}<input type="search" data-resq autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Որոնել այս մրցույթում" aria-label="Որոնել չափաբաժին կամ մասնակից"></label>` : '') +
+    `<div class="lotrs">${(all ? lots : lots.slice(0, cap5)).map(l => lotResHTML(l, 0, lots)).join('')}</div>` +
+    (lots.length > cap5 && !all ? more('bids', `Ցույց տալ բոլոր ${lots.length} չափաբաժինները`) : '') +
+    `<p class="fine">Գները դրամով են՝ ներառյալ ԱԱՀ-ն։ Տեղերը որոշվում են առանց ԱԱՀ արժեքով, ուստի ԱԱՀ չվճարողի գինը կարող է ավելի ցածր երևալ։</p></section>`;
+}
+function resultSlots(id) {
+  const rec = recOf(id), row = (results() || []).find(r => r.id === id), t = S.byId.get(id), meta = peek('h/meta.json');
+  const src = rec || row || t || {}, sector = SECTORS[src.sector] ? src.sector : null, kind = KINDS[src.kind];
+  const tags = [];
+  if (sector) tags.push(`${ic(sector, 'ic--s')}${esc(SECTORS[sector])}`);
+  if (kind) tags.push(kind[0]);
+  if (rec && rec.lots.length > 1) tags.push(`${rec.lots.length} չափաբաժին`);
+  if (rec && stateOf(rec.st)) tags.push(stateOf(rec.st));
+  const loading = rec === undefined && meta !== null;
+  const out = {hero: heroHTML(src.subject || (loading ? 'Բեռնվում է…' : NO_SUBJECT), src.buyer, src.bk, tags)};
+  out.acts = `<div class="acts acts--one"><a class="btn" href="${esc(pageOf(id))}" target="_blank" rel="noopener" data-ext>${ic('out')}Բացել ARMEPS-ում</a></div>`;
+  if (loading) { out.sum = wait(3); out.bids = wait(6); return out; }
+  if (!rec) {
+    out.sum = `<section class="sheet none"><b>Արդյունքը դեռ հավաքված չէ</b><p>Այս մրցույթի գնառաջարկները կայքում դեռ չկան։ Դրանք կարող եք տեսնել մրցույթի էջում՝ ARMEPS-ում։</p></section>`;
+    return out;
+  }
+  out.sum = sumHTML(rec);
+  out.bids = bidsHTML(rec);
+  out.tail = `<section class="sheet sec"><h2>Պաշտոնական անվանումը</h2><p class="official">${esc(rec.title)}</p><p class="code">Ծածկագիր՝ ${esc(rec.code)}</p></section>` +
+    `<p class="foot">Աղբյուրը՝ eauction.armeps.am։ Ցույց են տրված մրցույթի էջում հրապարակված գնառաջարկները։ Հաղթողին պաշտոնապես ճանաչում է գնորդը, ուստի վերջնական արդյունքը միշտ ARMEPS-ում է։</p>`;
+  return out;
+}
+
+/* ---------- a company that takes part in tenders ---------- */
+const led = r => (r[11] != null ? !!r[11] : r[6] === 1 && !r[9]);
+function partHTML(g) {
+  const rs = g.rows, r = rs[0], d = dOnly(g.date), firsts = rs.filter(led).length, rej = rs.filter(x => x[9]).length;
+  let line;
+  if (rs.length === 1) {
+    const cut = off(r[7], r[8]);
+    line = r[9] ? '<b class="bad">մերժված է</b>' : `<b${led(r) ? ' class="pct"' : ''}>${ord(r[6])} տեղ</b>` + (r[7] ? ` · ${group(r[7])} դրամ` : '') + (cut != null ? ` · ${signed(cut)}` : '');
+  } else line = [`${rs.length} չափաբաժին`, firsts ? `<b class="pct">${firsts}-ում՝ առաջին տեղ</b>` : 'առաջին տեղ չկա', rej && `${rej}-ը մերժված`].filter(Boolean).join(' · ');
+  return `<button class="cmp" type="button" data-go="r${g.id}"><span class="cmp-t">${esc(r[3] || `Չափաբաժին ${r[1]}`)}${rs.length > 1 ? ` <span class="and">և ևս ${rs.length - 1}-ը</span>` : ''}</span>` +
+    `<span class="cmp-m num">${[esc(g.buyer), d && fDayY(d)].filter(Boolean).join(' · ')}</span><span class="cmp-r num">${line}</span></button>`;
+}
+function firmSlots(cid) {
+  const shard = peek(`h/c/${cid % 40}.json`), meta = peek('h/meta.json'), f = shard ? shard[cid] || null : shard;
+  if (f === undefined && meta !== null) return {hero: heroHTML('Բեռնվում է…', '', null, []), body: wait(3) + wait(6)};
+  if (!f) return {hero: heroHTML('Ընկերությունը չի գտնվել', '', null, []), body: `<section class="sheet none"><b>Տվյալ չկա</b><p>Այս մասնակցի մասին ավարտված մրցույթներում գրառում չկա։</p></section>`};
+  const rows = f.rows || [], groups = new Map(), buyers = new Map();
+  rows.forEach(r => (groups.get(r[0]) || groups.set(r[0], {id: r[0], buyer: r[4], bk: r[10], date: r[5], rows: []}).get(r[0])).rows.push(r));
+  groups.forEach(g => { const b = buyers.get(g.buyer) || buyers.set(g.buyer, {name: g.buyer, bk: g.bk, n: 0, lots: 0}).get(g.buyer); b.n++; b.lots += g.rows.length; });
+  const firsts = rows.filter(led).length;
+  const cuts = rows.filter(r => !r[9]).map(r => off(r[7], r[8])).filter(x => x != null && x > -50 && x < 95);
+  const usual = cuts.length >= 3 ? Math.round(median(cuts)) : null;
+  const top = [...buyers.values()].filter(b => b.name).sort((a, b) => b.lots - a.lots || b.n - a.n).slice(0, 5), list = [...groups.values()], all = flag('parts');
+  const span = rows.length ? dOnly(rows[rows.length - 1][5]) : null;
+  return {
+    hero: heroHTML(f.name || 'Մասնակից', '', null, ['Մրցույթների մասնակից', ...(span ? [since(span)] : [])]),
+    body: `<section class="sheet"><div class="stat3"><div><b class="num" data-up="${groups.size}">${group(groups.size)}</b><span>մրցույթ</span></div>` +
+      `<div><b class="num" data-up="${rows.length}">${group(rows.length)}</b><span>չափաբաժին</span></div>` +
+      `<div><b class="num" data-up="${firsts}">${group(firsts)}</b><span>առաջին տեղ</span></div></div>` +
+      (usual != null ? `<p class="usual">Սովորաբար առաջարկում է նախահաշվից <b class="num">${Math.abs(usual)}%-ով</b> ${usual >= 0 ? 'ցածր' : 'բարձր'} գին։<small class="num">Ըստ ${cuts.length} չափաբաժնի վերջին գնի</small></p>` : '') +
+      (rows.length >= 200 ? '<p class="fine">Հաշվարկված է վերջին 200 չափաբաժնով։</p>' : '') + '</section>' +
+      (top.length ? `<section class="sheet sec">${head('Որ գնորդների մոտ է մասնակցում')}` + top.map(b => {
+        const inner = `<span><b>${esc(b.name)}</b><small class="num">${plural(b.n, 'մրցույթ')} · ${plural(b.lots, 'չափաբաժին')}</small></span>`;
+        return b.bk ? `<button class="who" type="button" data-go="b${b.bk}">${inner}${ic('back', 'go')}</button>` : `<div class="who">${inner}</div>`;
+      }).join('') + '</section>' : '') +
+      `<section class="sheet sec">${head('Վերջին մասնակցությունները', `<span class="sec-n num">${list.length}</span>`)}` +
+      (all ? list : list.slice(0, 8)).map(partHTML).join('') +
+      (list.length > 8 && !all ? more('parts', `Ցույց տալ բոլոր ${list.length}-ը`) : '') + '</section>' +
+      `<p class="foot">Ըստ eauction.armeps.am-ում հրապարակված գնառաջարկների։ Առաջին տեղը աճուրդի արդյունքն է. պայմանագիրը կնքվում է գնորդի որոշմամբ։</p>`
+  };
+}
+
+/* ---------- a buyer ---------- */
+function buyerSlots(bk) {
+  const d = peek(`h/b/${bk}.json`), meta = peek('h/meta.json');
+  const open = openNow().filter(t => t.bk === bk).sort((a, b) => a.endD - b.endD);
+  const name = (d && d.name) || (S.all.find(t => t.bk === bk) || {}).buyer || 'Գնորդ';
+  const out = {hero: heroHTML(name, '', null, ['Գնորդ', ...(open.length ? [`${open.length} բաց մրցույթ`] : [])])};
+  out.open = `<section class="sheet sec sec--rows">${head('Բաց մրցույթներ', open.length ? `<span class="sec-n num">${open.length}</span>` : '')}` +
+    (open.length ? `<ul class="rows rows--in">${(flag('open') ? open : open.slice(0, 6)).map(t => rowHTML(t, 'in')).join('')}</ul>` +
+      (open.length > 6 && !flag('open') ? more('open', `Ցույց տալ բոլոր ${open.length}-ը`) : '') : '<p class="lede">Այս պահին բաց մրցույթ չունի։</p>') + '</section>';
+  if (d === undefined && meta !== null) { out.hist = wait(3) + wait(6); return out; }
+  if (!d || !(d.rows || []).length) { out.hist = `<section class="sheet none"><b>Ավարտված մրցույթներ դեռ չկան</b><p>Այս գնորդի նախորդ մրցույթների արդյունքները կավելանան առաջիկա օրերին։</p></section>`; return out; }
+  const rows = d.rows.map(r => ({res: 1, id: r[0], key: 'r' + r[0], subject: r[1], buyer: r[2], bk: r[3], dateD: dOnly(r[4]) || new Date(0),
+    sector: r[5], lots: r[6], n: r[7], est: r[8], low: r[9], lead: r[10], none: r[11], st: r[12] || ''}));
+  const withBids = rows.filter(r => !r.none), cuts = withBids.map(r => off(r.low, r.est)).filter(x => x != null && x >= 0 && x < 95);
+  const firms = median(withBids.map(r => r.n)), usual = cuts.length ? Math.round(median(cuts)) : null;
+  const lead = new Map();
+  (d.lots || []).forEach(r => {
+    if (!r[7] || (r[8] == null && r.length > 8)) return;        // nobody led, or a sole proprietor
+    const k = r[8] != null ? 'c' + r[8] : r[7], x = lead.get(k) || lead.set(k, {name: r[7], cid: r[8], n: 0}).get(k);
+    x.n++;
+  });
+  const top = [...lead.values()].filter(x => x.cid != null).sort((a, b) => b.n - a.n).slice(0, 5), all = flag('past');
+  out.hist = `<section class="sheet"><div class="stat3"><div><b class="num" data-up="${rows.length}">${group(rows.length)}</b><span>ավարտված մրցույթ</span></div>` +
+    `<div><b class="num">${firms != null ? pc(Math.round(firms * 10) / 10) : '—'}</b><span>մասնակից՝ միջինում</span></div>` +
+    `<div><b class="num">${usual != null ? signed(usual) : '—'}</b><span>գինը նախահաշվից</span></div></div></section>` +
+    (top.length ? `<section class="sheet sec">${head('Ով է հաճախ առաջին տեղում')}` +
+      top.map(x => `<button class="who" type="button" data-go="c${x.cid}"><span><b>${esc(x.name)}</b><small class="num">${plural(x.n, 'չափաբաժին')}</small></span>${ic('back', 'go')}</button>`).join('') + '</section>' : '') +
+    `<section class="sheet sec sec--rows">${head('Ավարտված մրցույթներ', `<span class="sec-n num">${rows.length}</span>`)}` +
+    `<ul class="rows rows--in">${(all ? rows : rows.slice(0, 8)).map(r => resRowHTML(r, true)).join('')}</ul>` +
+    (rows.length > 8 && !all ? more('past', `Ցույց տալ բոլոր ${rows.length}-ը`) : '') + '</section>' +
+    `<p class="foot">Ըստ eauction.armeps.am-ում հրապարակված տվյալների։</p>`;
+  return out;
+}
+
+/* ---------- drawing a screen and filling it in ---------- */
+const FRAMES = {r: ['hero', 'sum', 'acts', 'bids', 'tail'], c: ['hero', 'body'], b: ['hero', 'open', 'hist']};
+function frame(key) {
+  const t = key[0] === 't' && S.byId.get(+key.slice(1));
+  return t ? tenderFrame(t) : `${dbar(key)}<div class="wrap">${(FRAMES[key[0]] || ['hero']).map(s => `<div data-slot="${s}"></div>`).join('')}</div>`;
+}
+function slotsOf(key) {
+  const k = key[0], id = key.slice(1);
+  if (k === 't') { const t = S.byId.get(+id); return t ? tenderSlots(t) : {hero: heroHTML('Մրցույթն այլևս ցանկում չէ', '', null, [])}; }
+  return k === 'r' ? resultSlots(+id) : k === 'c' ? firmSlots(+id) : buyerSlots(id);
+}
+function needs(key) {
+  const k = key[0], id = key.slice(1), meta = peek('h/meta.json'), out = [];
+  if (meta === undefined) out.push('h/meta.json');
+  if (k === 't') {
+    const t = S.byId.get(+id);
+    if (!t) return out;
+    if (peek('lots.json') === undefined) out.push('lots.json');
+    else if (lotsOf(t.id)) out.push(`t/${t.id}.json`);
+    if (meta) { if (t.bk) out.push(`h/b/${t.bk}.json`); out.push(...cpvFiles(t)); }
+  } else if (meta) out.push(k === 'r' ? chunk(+id) : k === 'c' ? `h/c/${+id % 40}.json` : `h/b/${id}.json`);
+  return out;
+}
+let drawn = {};
+function patch(key, still) {
+  if (topKey() !== key) return;
+  const all = slotsOf(key);
+  document.querySelectorAll('#detail [data-slot]').forEach(el => {
+    const name = el.dataset.slot, html = all[name] || '';
+    if (drawn[name] === html) return;
+    const first = !drawn[name] || /class="sheet wait"/.test(drawn[name]);
+    drawn[name] = html;
+    el.innerHTML = html;
+    if (!first || still || !html || /class="sheet wait"/.test(html)) return;
+    el.classList.add('fresh');                               // only what has just arrived moves
+    setTimeout(() => el.classList.remove('fresh'), 1500);
+    el.querySelectorAll('[data-roll]').forEach(n => { const [a, b] = n.dataset.roll.split(','); roll(n, +a, +b, money, 900); });
+    el.querySelectorAll('[data-up]').forEach(n => roll(n, 0, +n.dataset.up, group, 650));
+  });
+}
+async function fill(key) {
+  for (let turn = 0; turn < 5 && topKey() === key; turn++) {
+    const want = needs(key), todo = want.filter(p => peek(p) === undefined);
+    want.filter(stale).forEach(p => get(p, true).then(() => patch(key, true)));   // an old copy shows at once; the new one replaces it
+    if (!todo.length) break;
+    await Promise.all(todo.map(p => get(p).then(() => patch(key))));
+  }
+}
+function paintScreen(y, still) {
+  const key = topKey(), pane = $('#detail');
+  drawn = {};
+  pane.innerHTML = frame(key);
+  patch(key, still);
+  document.body.dataset.view = 'detail';
+  document.body.toggleAttribute('data-deep', S.stack.length > 1);
+  if (WIDE.matches) pane.scrollTop = y; else window.scrollTo(0, y);
+  fill(key);
+}
+
+/* ---------- moving between screens ----------
+   On a phone each screen is a step the back button undoes. On a wide screen the list stays
+   and the pane beside it shows the last thing opened. */
 let moving = null;
 function nav(kind, update) {
   const done = () => { delete document.documentElement.dataset.nav; if (moving) { moving.style.viewTransitionName = ''; moving = null; } };
@@ -662,68 +1377,90 @@ function nav(kind, update) {
   document.documentElement.dataset.nav = kind;
   try { document.startViewTransition(update).finished.then(done, done); } catch { done(); update(); }
 }
-function carry(id) {                       // name the row's tile so it can travel
-  const tile = id && $(`[data-open="${id}"] .tile`);
+function carry(key) {                       // name the row's date tile so it can travel into the notice
+  const tile = key && key[0] === 't' && $(`#list [data-go="${key}"] .tile`);
   if (tile && !CALM) { tile.style.viewTransitionName = 'tile'; moving = tile; }
 }
-function mark() {                           // show which row's notice is open beside the list
-  document.querySelectorAll('.row[aria-current]').forEach(r => r.removeAttribute('aria-current'));
-  const row = S.openId !== null && $(`.row[data-id="${S.openId}"]`);
+function mark() {                           // show which row is open beside the list
+  document.querySelectorAll('#list .row[aria-current]').forEach(r => r.removeAttribute('aria-current'));
+  const row = S.stack.length && $(`#list .row[data-key="${S.stack[0]}"]`);
   if (row) row.setAttribute('aria-current', 'true');
 }
-function show(id, fromRoute) {
-  const t = S.all.find(x => x.id === id);
-  if (!t) return showList(true);
-  if (WIDE.matches) {                        // side by side: nothing to leave and nothing to come back to
-    S.openId = id;
-    const pane = $('#detail');
-    pane.innerHTML = detailHTML(t);
-    pane.scrollTop = 0;
-    document.body.dataset.view = 'detail';
+const bare = () => location.pathname + location.search;
+function go(key, opt = {}) {
+  if (!key) return;
+  if (key[0] === 't' && !S.byId.has(+key.slice(1))) key = 'r' + key.slice(1);   // no longer open: show how it ended
+  if (WIDE.matches) {
+    if (opt.root ? S.stack.length === 1 && S.stack[0] === key : topKey() === key) return;
+    if (opt.root) { S.stack = [key]; S.pos = []; }
+    else { S.pos[S.stack.length - 1] = $('#detail').scrollTop; S.stack.push(key); }
+    paintScreen(0, opt.quiet);
     mark();
-    if (!IN_TG && !fromRoute) history.replaceState(null, '', '#t' + id);
+    if (!IN_TG && !opt.quiet) history.replaceState(null, '', '#' + key);
     return;
   }
-  if (document.body.dataset.view === 'list') { S.scroll = window.scrollY; carry(id); }
-  S.openId = id;
+  if (topKey() === key) return;
+  if (S.stack.length) S.pos[S.stack.length - 1] = window.scrollY;
+  else { S.scroll = window.scrollY; carry(key); }
+  S.stack.push(key);
   nav('push', () => {
-    $('#detail').innerHTML = detailHTML(t);
-    document.body.dataset.view = 'detail';
-    window.scrollTo(0, 0);
-    $('.d-title').focus({preventScroll: true});
+    paintScreen(0);
+    const title = $('#detail .d-title');
+    if (title) title.focus({preventScroll: true});
   });
   if (tg) tg.BackButton.show();
-  if (!IN_TG && !fromRoute && location.hash !== '#t' + id) { S.pushed = true; location.hash = 't' + id; }
+  if (!IN_TG && !opt.quiet) history.pushState({d: S.stack.length}, '', '#' + key);
 }
-function showList(fromRoute) {
-  const id = S.openId;
-  S.openId = null;
-  if (WIDE.matches) {
-    $('#detail').innerHTML = '';
+/* leave `depth` screens open: 0 is the list */
+function pop(depth) {
+  const from = topKey();
+  S.stack.length = depth;
+  const y = depth ? S.pos[depth - 1] || 0 : S.scroll;
+  S.pos.length = Math.max(0, depth - 1);
+  const list = () => {
     document.body.dataset.view = 'list';
-    S.dirty = false;
-    return render();                         // which opens the first notice again
+    document.body.removeAttribute('data-deep');
+    $('#detail').innerHTML = '';
+  };
+  if (WIDE.matches) {
+    if (depth) { paintScreen(y, true); return; }
+    list(); S.dirty = false;
+    return render();                           // which opens the first row again
   }
   nav('pop', () => {
-    document.body.dataset.view = 'list';
-    $('#detail').innerHTML = '';
-    if (S.dirty) { S.dirty = false; render(); }
-    else chrome();                           // the list is still there: only the counts can have changed
-    window.scrollTo(0, S.scroll);
-    carry(id);
-    const row = id && $(`[data-open="${id}"]`);
+    if (depth) {
+      paintScreen(y, true);
+      const link = $(`#detail [data-go="${from}"]`);
+      if (link) link.focus({preventScroll: true});
+      return;
+    }
+    list();
+    if (S.dirty) { S.dirty = false; render(); } else chrome();   // the list is still there: only the counts can have changed
+    window.scrollTo(0, y);
+    carry(from);
+    const row = $(`#list [data-go="${from}"]`);
     if (row) row.focus({preventScroll: true});
     pump();
   });
-  if (tg) tg.BackButton.hide();
-  if (!IN_TG && !fromRoute && /^#t\d+$/.test(location.hash)) {
-    if (S.pushed) { S.pushed = false; history.back(); } else location.hash = '';
-  }
+  if (tg && !depth) tg.BackButton.hide();
 }
+function back() {
+  if (!S.stack.length) return;
+  if (!WIDE.matches && !IN_TG && history.state && history.state.d) return history.back();   // the browser's own step back: route() does the rest
+  pop(S.stack.length - 1);
+  if (!IN_TG) history.replaceState(null, '', topKey() ? '#' + topKey() : bare());
+}
+/* the address decides what is on screen: back and forward buttons, and links that were sent to someone */
 function route() {
-  const m = /^#t(\d+)$/.exec(location.hash);
-  if (m && S.loaded) { if (S.openId !== +m[1]) show(+m[1], true); }
-  else if (S.openId !== null) showList(true);
+  if (IN_TG || !S.loaded) return;
+  const m = /^#([trc]\d{1,9}|b[0-9a-f]{8})$/.exec(location.hash);
+  let key = m ? m[1] : null;
+  if (key && key[0] === 't' && !S.byId.has(+key.slice(1))) key = 'r' + key.slice(1);
+  if (key === topKey()) return;
+  if (!key) { if (S.stack.length && !WIDE.matches) pop(0); return; }
+  const at = S.stack.indexOf(key);
+  if (at >= 0 && !WIDE.matches) pop(at + 1);
+  else go(key, {quiet: true, root: WIDE.matches});
 }
 
 /* ---------- small messages ---------- */
@@ -735,19 +1472,19 @@ function toast(text) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('on'), 2200);
 }
-
-function share(id) {
-  const t = S.all.find(x => x.id === id);
-  if (!t) return;
-  const text = `${t.subject || NO_SUBJECT}\nՀայտերը՝ մինչև ${fFull(t.endD)}`;
-  if (tg) return tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(t.url)}&text=${encodeURIComponent(text)}`);
-  const copy = () => navigator.clipboard.writeText(`${text}\n${t.url}`).then(() => toast('Հղումը պատճենվեց'), () => toast('Չհաջողվեց պատճենել հղումը'));
-  if (navigator.share) navigator.share({text, url: t.url}).catch(e => { if (e && e.name !== 'AbortError') copy(); });
+function share(key) {
+  const id = +key.slice(1), t = S.byId.get(id), rec = recOf(id) || (results() || []).find(r => r.id === id);
+  const url = (t && t.url) || pageOf(id);
+  const text = key[0] === 't' && t ? `${t.subject || NO_SUBJECT}\nՀայտերը՝ մինչև ${fFull(t.endD)}`
+    : `${(rec && rec.subject) || (t && t.subject) || 'Մրցույթ'}\nԱվարտված մրցույթի գնառաջարկները`;
+  if (tg) return tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
+  const copy = () => navigator.clipboard.writeText(`${text}\n${url}`).then(() => toast('Հղումը պատճենվեց'), () => toast('Չհաջողվեց պատճենել հղումը'));
+  if (navigator.share) navigator.share({text, url}).catch(e => { if (e && e.name !== 'AbortError') copy(); });
   else copy();
 }
 
 /* ---------- events ---------- */
-const TABS = ['new', 'due'];
+const TABS = ['new', 'due', 'res'];
 function setTab(tab, focus) {
   S.tab = tab;
   document.querySelectorAll('.tab').forEach(b => {
@@ -757,6 +1494,7 @@ function setTab(tab, focus) {
     if (on && focus) b.focus();
   });
   thumb();
+  if (WIDE.matches) { S.stack = []; S.pos = []; }      // another list: its first row opens beside it
   render(true);
 }
 /* the white thumb sits exactly under the chosen tab, whatever its width */
@@ -771,7 +1509,7 @@ else addEventListener('resize', thumb);
 thumb();
 requestAnimationFrame(() => requestAnimationFrame(() => $('#seg').classList.add('live')));
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-tab],[data-sector],[data-open],[data-back],[data-share],[data-ext],[data-retry]');
+  const el = e.target.closest('[data-tab],[data-sector],[data-go],[data-back],[data-share],[data-more],[data-ext],[data-retry]');
   if (!el) return;
   if (el.dataset.tab) {
     if (el.dataset.tab === S.tab) return;
@@ -780,12 +1518,41 @@ document.addEventListener('click', e => {
     if (WIDE.matches) $('#list').scrollTop = 0; else if (window.scrollY > top) window.scrollTo(0, top);
   }
   else if (el.dataset.sector) { S.sector = el.dataset.sector; render(); }
-  else if (el.dataset.open) show(+el.dataset.open);
-  else if ('back' in el.dataset) showList();
-  else if (el.dataset.share) share(+el.dataset.share);
+  else if (el.dataset.go) {
+    if (el.tagName === 'A' && (e.metaKey || e.ctrlKey || e.shiftKey)) return;   // a new tab, as asked
+    e.preventDefault();
+    go(el.dataset.go, {root: 'root' in el.dataset});
+  }
+  else if ('back' in el.dataset) back();
+  else if (el.dataset.share) share(el.dataset.share);
+  else if (el.dataset.more) { S.more.add(`${topKey()}:${el.dataset.more}`); patch(topKey(), true); }
   else if ('retry' in el.dataset) load();
   else if ('ext' in el.dataset && tg) { e.preventDefault(); tg.openLink(el.href); }
   try { if (tg && (el.dataset.tab || el.dataset.sector)) tg.HapticFeedback.selectionChanged(); } catch { /* optional */ }
+});
+/* a long list of lots can be searched where it stands */
+document.addEventListener('input', e => {
+  const res = e.target.closest('[data-resq]');
+  if (res) {                                 // a finished tender: by lot name or by bidder
+    const key = topKey(), rec = key && recOf(+key.slice(1)), sec = res.closest('section'), box = sec && $('.lotrs', sec);
+    if (!rec || !box) return;
+    const w = norm(res.value).split(' ').filter(Boolean), btn = $('[data-more="bids"]', sec);
+    const hit = w.length ? rec.lots.filter(l => { const h = norm(`${l.t} ${l.cpv} ${l.bids.map(b => b.nm).join(' ')}`); return w.every(x => h.includes(x)); }) : null;
+    box.innerHTML = hit ? (hit.length ? hit.slice(0, 80).map(l => lotResHTML(l)).join('') : '<p class="lede">Այդ բառով չափաբաժին կամ մասնակից չկա։</p>')
+      : (flag('bids') ? rec.lots : rec.lots.slice(0, 5)).map(l => lotResHTML(l, 0, rec.lots)).join('');
+    if (btn) btn.hidden = !!hit;
+    return;
+  }
+  const el = e.target.closest('[data-lotq]');
+  if (!el) return;
+  const key = topKey(), page = key && peek(`t/${key.slice(1)}.json`), sec = el.closest('section'), box = sec && $('.lots', sec);
+  if (!page || !box) return;
+  const w = norm(el.value).split(' ').filter(Boolean), btn = $('[data-more="lots"]', sec);
+  const t = S.byId.get(+key.slice(1)), past = t && pastOf(t), row = l => lotHTML(l, past && past.best);
+  const hit = w.length ? page.lots.filter(l => { const h = norm(`${l.name} ${l.cpv} ${l.spec || ''}`); return w.every(x => h.includes(x)); }) : null;
+  box.innerHTML = hit ? (hit.length ? hit.slice(0, 60).map(row).join('') : '<p class="lede">Այդ բառով չափաբաժին չկա։</p>')
+    : (flag('lots') ? page.lots : page.lots.slice(0, LOTS_SHOWN)).map(row).join('');
+  if (btn) btn.hidden = !!hit;
 });
 $('#seg').addEventListener('keydown', e => {
   if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
@@ -798,7 +1565,7 @@ q.addEventListener('input', () => {
   clearTimeout(typing);
   typing = setTimeout(() => {                // wait for a pause in typing before redrawing
     S.q = q.value.trim();
-    if (S.q && S.tab !== 'due') setTab('due'); else render();   // a search looks through every open tender
+    if (S.q && S.tab === 'new') setTab('due'); else render();   // a search looks through every open tender, or every result
   }, 140);
 });
 q.addEventListener('keydown', e => { if (e.key === 'Enter') q.blur(); });
@@ -809,7 +1576,8 @@ $('#sizeBtn').addEventListener('click', () => {
   toast(['Տառերը՝ սովորական', 'Տառերը՝ մեծ', 'Տառերը՝ շատ մեծ'][next]);
 });
 function applySize(n) { document.documentElement.style.fontSize = ['100%', '112.5%', '125%'][n] || '100%'; }
-window.addEventListener('hashchange', () => { if (!IN_TG) route(); });
+addEventListener('popstate', route);
+addEventListener('hashchange', route);
 const ROOMY = matchMedia('(min-width:80rem)');              // room for all the sector chips above the notice
 function seat() {
   const chips = $('#chips');
@@ -825,10 +1593,15 @@ $('#chips').addEventListener('wheel', e => {                // a mouse wheel mov
 }, {passive: false});
 WIDE.addEventListener('change', () => {     // the window was made wider or narrower
   if (!S.loaded) return;
-  if (WIDE.matches) render();
-  else if (S.openId !== null) showList(true);
+  if (WIDE.matches) { if (S.stack.length) { paintScreen(0, true); mark(); } else render(); return; }
+  S.stack = []; S.pos = [];                  // narrow again: back to the list
+  document.body.dataset.view = 'list';
+  document.body.removeAttribute('data-deep');
+  $('#detail').innerHTML = '';
+  if (!IN_TG) history.replaceState(null, '', bare());
+  render();
 });
-/* arrow keys walk the list; on a wide screen the notice follows */
+/* arrow keys walk the list; on a wide screen the pane follows */
 $('#list').addEventListener('keydown', e => {
   if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
   const cur = e.target.closest('.row-main');
@@ -837,7 +1610,7 @@ $('#list').addEventListener('keydown', e => {
   if (!next) return;
   e.preventDefault();
   next.focus();
-  if (WIDE.matches) show(+next.dataset.open);
+  if (WIDE.matches && next.dataset.go) go(next.dataset.go, {root: true});
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.loaded && Date.now() - S.fetchedAt > 10 * 60e3) load(true); });
 
@@ -849,19 +1622,34 @@ function ingest(data) {
     endD: toDate(t.end), pubD: toDate(t.pub), askD: toDate(t.ask), aucD: toDate(t.auc),
     newD: toDate(t.pub || t.seen),   // seen: first met in the list, when the notice gave no time
     sector: SECTORS[t.sector] ? t.sector : 'other',
-    url: t.url || `${ARMEPS}/hy/public/tender_details/by_end_bid_time/2/tid/${t.id}/`,
+    ln: (lotsOf(t.id) || {}).ln || '',
+    url: t.url || pageOf(t.id),
     inv: t.inv === 1 ? `${ARMEPS}/application/documents/public_invitation/tender_${t.id}.zip` : t.inv}));
+  S.byId = new Map(S.all.map(t => [t.id, t]));
   S.stamp = `${S.meta.updated}|${S.all.length}`;
   S.rev++;
   S.loaded = true;
 }
 function paint(first) {
-  if (S.openId !== null && !WIDE.matches) { S.dirty = true; return; }   // a notice is open: redraw the list when the reader returns
+  if (S.stack.length && !WIDE.matches) { S.dirty = true; return; }   // a screen is open: redraw the list when the reader returns
   const list = $('#list'), y = WIDE.matches ? list.scrollTop : window.scrollY;
   render(first);
-  if (!first) { if (WIDE.matches) list.scrollTop = y; else window.scrollTo(0, y); }
-  const t = WIDE.matches && S.openId !== null && S.all.find(x => x.id === S.openId);
-  if (t && !first) { const pane = $('#detail'), at = pane.scrollTop; pane.innerHTML = detailHTML(t); pane.scrollTop = at; }
+  if (first) return;
+  if (WIDE.matches) list.scrollTop = y; else window.scrollTo(0, y);
+  if (WIDE.matches && S.stack.length === 1 && S.stack[0][0] === 't') paintScreen($('#detail').scrollTop, true);   // its deadline may have moved
+}
+/* what the lists can do without for a moment: the lots inside each tender, and whether past results exist */
+function extras(again) {
+  get('lots.json', again).then(d => {
+    if (!d || !d.t) return;
+    S.all.forEach(t => { const x = d.t[t.id]; t.ln = x ? x.ln || '' : ''; t.hay = null; });
+    if (S.q && S.tab !== 'res' && (!S.stack.length || WIDE.matches)) render();
+  });
+  get('h/meta.json', again).then(m => {
+    if (!m) return;
+    const later = window.requestIdleCallback || (f => setTimeout(f, 900));
+    later(() => get('h/recent.json', again).then(() => { if (S.tab === 'res' && again && (!S.stack.length || WIDE.matches)) render(); }));
+  });
 }
 async function load(quiet) {
   try {
@@ -874,6 +1662,7 @@ async function load(quiet) {
     if (first || S.stamp !== was) paint(first);
     if (text.length < 15e5) store.set('data', text);       // next time the list is on screen before the network answers
     if (!quiet && !IN_TG) route();
+    extras(quiet);
   } catch (err) {
     if (quiet || S.loaded) return;
     $('#date').textContent = 'Տվյալները չեն բեռնվել';
@@ -896,8 +1685,8 @@ function initTelegram() {
       const css = getComputedStyle(document.documentElement), ground = css.getPropertyValue('--ground').trim();
       try { tg.setHeaderColor(css.getPropertyValue('--shell').trim()); tg.setBackgroundColor(ground); tg.setBottomBarColor && tg.setBottomBarColor(ground); } catch { /* old clients */ }
     };
-    try { tg.ready(); tg.expand(); theme(); tg.onEvent('themeChanged', theme); tg.BackButton.onClick(() => showList()); } catch { /* old clients */ }
-    try { if (S.openId !== null) tg.BackButton.show(); } catch { /* old clients */ }
+    try { tg.ready(); tg.expand(); theme(); tg.onEvent('themeChanged', theme); tg.BackButton.onClick(() => back()); } catch { /* old clients */ }
+    try { if (S.stack.length && !WIDE.matches) tg.BackButton.show(); } catch { /* old clients */ }
   };
   s.onload = start;
   document.head.appendChild(s);
@@ -906,7 +1695,7 @@ function initTelegram() {
 /* ---------- start ---------- */
 applySize(+store.get('size') || 0);
 initTelegram();
-try { const kept = store.get('data'); if (kept) { ingest(JSON.parse(kept)); render(true); if (!IN_TG) route(); } } catch { /* a damaged copy: wait for the network */ }
+try { const kept = store.get('data'); if (kept) { ingest(JSON.parse(kept)); render(true); route(); } } catch { /* a damaged copy: wait for the network */ }
 load();
 })();
 </script>
