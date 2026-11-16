@@ -127,7 +127,8 @@ def update_data(at: datetime, fetch=armeps.fetch, pause: float = 0.3) -> dict:
     data["tenders"] = [store.compact(t) for t in items]
     data["meta"] = {"updated": store.stamp(at), "source": "eauction.armeps.am",
                     "open": sum(store.is_open(t, at) for t in items)}
-    store.save(data)
+    store.save(data)       # what the bot remembers
+    store.publish(data)    # what the app shows
     print(f"ARMEPS: {stats['pages']} pages, {stats['rows']} current tenders, "
           f"{stats['new']} new, {stats['details']} notices read"
           + (f", {stats['detail_failed']} notices unreadable" if stats["detail_failed"] else ""))

@@ -250,6 +250,16 @@ class EndToEnd(unittest.TestCase):
                 first = len(calls)
                 self.assertEqual(first, 2 + 29)            # two list pages + 29 notices
 
+                with open(store.DATA_PATH, encoding="utf-8") as fh:
+                    shown = {t["id"]: t for t in json.load(fh)["tenders"]}
+                self.assertEqual(len(shown), 30)
+                self.assertEqual(shown[48927]["inv"], 1)   # the app rebuilds the usual links itself
+                self.assertNotIn("url", shown[48927])
+                self.assertNotIn("buyer_official", shown[48927])
+                self.assertNotIn("dt", shown[48927])
+                self.assertEqual(shown[48927]["buyer"], "Կարեն Դեմիրճյանի անվան Երևանի մետրոպոլիտեն ՓԲԸ")
+                self.assertTrue(os.path.exists(store.STATE_PATH))
+
                 data = main.update_data(AT, fetch=fake, pause=0)
                 self.assertEqual(len(calls) - first, 2)    # second run: lists only
                 self.assertEqual(len(data["tenders"]), 30)

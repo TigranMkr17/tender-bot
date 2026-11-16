@@ -1,4 +1,4 @@
-"""Build docs/data/tenders.json from the notices saved in tools/seed_*.json.
+"""Build the app's data file (docs/data/tenders.json) from the notices saved in tools/seed_*.json.
 
 Used for tests and for the preview: it runs the same clean-up the live bot runs,
 so the preview shows exactly what the real pipeline produces.
@@ -38,7 +38,7 @@ def build(seed_path, out_path, note=None):
         meta["note"] = note
         meta["preview"] = True
     data = {"meta": meta, "tenders": [store.compact(t) for t in items]}
-    store.save(data, out_path)
+    store.publish(data, out_path)
     return data
 
 

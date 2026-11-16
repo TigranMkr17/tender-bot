@@ -1,4 +1,4 @@
-"""The data file the app reads (docs/data/tenders.json) and how records are built."""
+"""What the bot remembers (bot/state/tenders.json) and what the app reads (docs/data/tenders.json)."""
 from __future__ import annotations
 
 import json
@@ -6,11 +6,15 @@ import os
 from datetime import datetime, timedelta, timezone
 
 from . import textproc as tp
-from .armeps import detail_url
 
 YEREVAN = timezone(timedelta(hours=4))  # Armenia has no daylight saving time
-DATA_PATH = os.path.join("docs", "data", "tenders.json")
+STATE_PATH = os.path.join("bot", "state", "tenders.json")   # everything the bot knows
+DATA_PATH = os.path.join("docs", "data", "tenders.json")    # the slim copy the app downloads
 KEEP_CLOSED_DAYS = 4
+INVITATION = "https://eauction.armeps.am/application/documents/public_invitation/tender_{id}.zip"
+#: Fields the app shows. The notice URL is left out: the app builds it from the id.
+PUBLIC = ("id", "code", "title", "subject", "buyer", "for", "kind", "sector", "lots",
+          "status", "pub", "end", "ask", "auc")
 
 STATUS = {"Հրապարակված": "open", "Published": "open",
           "Չեղարկված": "cancelled", "Cancelled": "cancelled", "Canceled": "cancelled"}
@@ -33,7 +37,7 @@ def stamp(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M")
 
 
-def load(path: str = DATA_PATH) -> dict:
+def load(path: str = STATE_PATH) -> dict:
     try:
         with open(path, encoding="utf-8") as fh:
             data = json.load(fh)
@@ -44,12 +48,33 @@ def load(path: str = DATA_PATH) -> dict:
     return data
 
 
-def save(data: dict, path: str = DATA_PATH) -> None:
+def _write(obj: dict, path: str) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    data["tenders"].sort(key=lambda t: (t.get("end") or "", t["id"]))
     with open(path, "w", encoding="utf-8") as fh:
-        json.dump(data, fh, ensure_ascii=False, separators=(",", ":"))
+        json.dump(obj, fh, ensure_ascii=False, separators=(",", ":"))
         fh.write("\n")
+
+
+def save(data: dict, path: str = STATE_PATH) -> None:
+    data["tenders"].sort(key=lambda t: (t.get("end") or "", t["id"]))
+    _write(data, path)
+
+
+def public_view(t: dict) -> dict:
+    """One tender as the app needs it: no bookkeeping, no empty fields, short links."""
+    out = {k: t[k] for k in PUBLIC if t.get(k) not in (None, "", False)}
+    if "pub" not in out and t.get("seen"):
+        out["seen"] = t["seen"]
+    inv = t.get("inv")
+    if inv:  # 1 means "the usual address for this id"; anything else is kept as written
+        out["inv"] = 1 if inv == INVITATION.format(id=t["id"]) else inv
+    return out
+
+
+def publish(data: dict, path: str = DATA_PATH) -> None:
+    """Write the copy the app downloads."""
+    tenders = sorted(data["tenders"], key=lambda t: (t.get("end") or "", t["id"]))
+    _write({"meta": data["meta"], "tenders": [public_view(t) for t in tenders]}, path)
 
 
 def status_key(text: str | None) -> str:
@@ -77,7 +102,7 @@ def enrich(tenders: list[dict]) -> None:
         t["for"] = None if tp.same_party(for_whom, buyer) else for_whom
         t["kind"] = kind
         t["sector"] = tp.classify(subject or readable, kind)
-        t["url"] = detail_url(t["id"])
+        t.pop("url", None)
 
 
 def prune(tenders: list[dict], at: datetime) -> list[dict]:
