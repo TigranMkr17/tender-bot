@@ -29,6 +29,7 @@ jobs:
             name=$(printf 'f%02d' "$n")
             code=$(curl -sS -L --max-time 150 --retry 2 -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36" -H "Accept-Language: hy,en;q=0.5" -o "$name.bin" -w '%{http_code} %{content_type} %{size_download}' "$u" || echo "failed")
             echo "$name $code $u" | tee -a index.txt
+            sleep 6
           done
       - name: Put them on the samples branch
         run: |
