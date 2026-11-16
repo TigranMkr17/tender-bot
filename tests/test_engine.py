@@ -840,6 +840,44 @@ class ResultsLater(unittest.TestCase):
             self.assertEqual(row[10:12], [1200.5, "լիտր"])
         self._in_tmp(body)
 
+    def test_an_invitation_that_did_not_come_is_asked_for_again_a_few_times(self):
+        from bot import deep
+        page = RESULT_PAGE.replace('<tr><td>2</td><td>09134200/3</td><td>դիզելային վառելիք</td>', '<tr><td>7</td><td>09134200/3</td><td>այլ</td>')
+        calls = []
+
+        def run(at, hist=None):
+            def fetch_page(url):
+                if url.rstrip("/").endswith("/900"):
+                    return page
+                raise armeps.Missing("no such tender")
+
+            def fetch_bytes(url):
+                if "tender_900" in url:
+                    calls.append(url)
+                    raise armeps.ScrapeError("connection reset")
+                return invitation_zip()
+
+            if hist is not None:
+                os.makedirs(os.path.dirname(deep.HIST_STATE), exist_ok=True)
+                with open(deep.HIST_STATE, "w", encoding="utf-8") as fh:
+                    json.dump(hist, fh)
+            deep.PAUSE = 0
+            ticks = iter(range(10 ** 7))
+            deep.run(30, at, fetch_bytes, fetch_page, now=lambda: next(ticks) * 0.001)
+
+        def body():
+            at = datetime(2026, 11, 16, 14, 0)
+            run(at, {"floor": 897})
+            for days in (3, 6, 9, 12):
+                run(at + timedelta(days=days))
+            self.assertEqual(len(calls), 3)                             # three tries, then the lot stays unnamed
+            with open(deep.HIST_STATE, encoding="utf-8") as fh:
+                hist = json.load(fh)
+            self.assertEqual((hist["recheck"], hist["done"].count(900)), ({}, 1))
+            with open(os.path.join(deep.OUT_H, "r", "18.json"), encoding="utf-8") as fh:
+                self.assertEqual(json.load(fh)["900"]["lots"][1]["t"], "")
+        self._in_tmp(body)
+
     def test_a_tender_still_being_awarded_is_shown_and_read_again(self):
         from bot import deep
         awarding = RESULT_PAGE.replace('<div class="de_v">Ավարտված</div>', '<div class="de_v">Շնորհում</div>')

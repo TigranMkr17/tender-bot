@@ -248,6 +248,11 @@ def is_final(status: str | None) -> bool:
     return stage(status) != "early"
 
 
+def nameless(rec: dict) -> bool:
+    """True when a lot that drew bids is listed without its name or item code."""
+    return any(lot[4] and not (lot[1] and lot[2]) for lot in rec["lots"])
+
+
 def shown_stage(rec: dict) -> str:
     """The stage as the site treats it. Between the auction and the award the register uses several
     names ("evaluation of the application" is one); once bids are on the page it is a result."""
@@ -322,24 +327,36 @@ def read_results(tenders: list[dict], hist: dict, records: dict[int, dict], at: 
 
     just_closed = {tid for tid, t in state_ids.items()       # the auction is held the next day
                    if tid not in open_ids and (store.parse(t.get("end")) or at) >= at - timedelta(hours=20)}
+    award_limit = store.stamp(at - timedelta(days=RECHECK_DAYS))
+    for tid, rec in records.items():                       # kept from before these were looked after:
+        if tid in done and tid not in recheck and (        # still being awarded, or a lot without a name
+                (shown_stage(rec) == "award" and (rec.get("end") or "") > award_limit)
+                or (nameless(rec) and rec.get("z", 0) < 3)):
+            done.discard(tid)
+            recheck[tid] = 0
     again = {tid for tid, seen in recheck.items() if stamp_now - seen >= RECHECK_HOURS * 3600}
     fresh = sorted({tid for tid in state_ids
                     if tid not in done and tid not in recheck and tid not in open_ids
                     and tid not in just_closed and not waiting(tid)} | again, reverse=True)
     stats = {"new": 0, "again": 0, "not_final": 0, "replaced": 0, "missing": 0, "failed": 0, "later": 0}
-    award_limit = store.stamp(at - timedelta(days=RECHECK_DAYS))
 
     def work(tid):
         rec = record_from(tid, fetch_page(armeps.detail_url(tid)))
         if rec is None or shown_stage(rec) == "early" or not rec["lots"]:
             return rec
         info = (kept_lots.get(str(tid)) or {}).get("L")
-        if info is None and any(lot[4] and not (lot[1] and lot[2]) for lot in rec["lots"]):
+        tries = (records.get(tid) or {}).get("z", 0)
+        if info is None and nameless(rec) and tries < 3:
             try:                                            # a lot with bids and no name: ask the invitation
                 got = invite.read(fetch_bytes(armeps.INVITATION.format(id=tid)))
-                info = brief(got["lots"]) if got else None
+                info = brief(got["lots"]) if got and got["lots"] else None
+                tries = tries if info else 9                # an archive that cannot be read is not asked for again
+            except armeps.Missing:
+                tries = 9
             except armeps.ScrapeError:
-                info = None
+                tries += 1                                  # the register did not answer: a few more tries later
+        if tries:
+            rec["z"] = tries
         return name_lots(rec, info)
 
     def take(tid, rec, err) -> str | None:
@@ -370,9 +387,9 @@ def read_results(tenders: list[dict], hist: dict, records: dict[int, dict], at: 
         stats["again" if tid in records else "new"] += 1
         records[tid] = rec
         retry.pop(tid, None)
-        if how == "award" and (rec.get("end") or "") > award_limit:
-            recheck[tid] = stamp_now                        # shown now, read again until the winner is named
-            done.discard(tid)
+        if (how == "award" and (rec.get("end") or "") > award_limit) or (nameless(rec) and rec.get("z", 0) < 3):
+            recheck[tid] = stamp_now                        # shown now, read again: until the winner is named,
+            done.discard(tid)                               # or until the invitation has given the lots their names
         else:
             recheck.pop(tid, None)
             done.add(tid)
