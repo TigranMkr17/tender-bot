@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="hy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Մեր դաշտը</title>
+<meta name="description" content="Ընկերության պայմանագրերը, մրցակիցները և գնորդները՝ պետական գնումների բաց գրանցամատյանից։">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0E3B34">
+<meta name="apple-mobile-web-app-title" content="Մեր դաշտը">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="../fonts/nsa-armenian.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/nse-armenian.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<symbol id="i-today" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/><circle cx="12" cy="15.2" r="1.6" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-us" viewBox="0 0 24 24"><circle cx="12" cy="8.6" r="4.9"/><circle cx="8.1" cy="15.1" r="4.9"/><circle cx="15.9" cy="15.1" r="4.9"/></symbol>
+<symbol id="i-rivals" viewBox="0 0 24 24"><path d="M9 20V8.5h6V20M3.5 20v-7H9M15 20v-4.5h5.5V20M2.5 20h19"/></symbol>
+<symbol id="i-buyers" viewBox="0 0 24 24"><path d="M3.5 9.5 12 4l8.5 5.5M5 10v8M9.7 10v8M14.3 10v8M19 10v8M3 20.5h18"/></symbol>
+<symbol id="i-set" viewBox="0 0 24 24"><path d="M4 7.5h9M17.5 7.5H20M4 16.5h2.5M11 16.5h9"/><circle cx="15.25" cy="7.5" r="2.25"/><circle cx="8.75" cy="16.5" r="2.25"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol>
+<symbol id="i-go" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
+<symbol id="i-out" viewBox="0 0 24 24"><path d="M10 5H6.5A2.5 2.5 0 0 0 4 7.5v10A2.5 2.5 0 0 0 6.5 20h10a2.5 2.5 0 0 0 2.5-2.5V14M14 4h6v6M20 4l-8.5 8.5"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19.5 7"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+<symbol id="i-table" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10"/></symbol>
+<symbol id="i-bars" viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6M3 20h18"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></symbol>
+<symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19c.4-3.2 2.6-5 5.5-5s5.1 1.8 5.5 5M15.5 5.6a3.2 3.2 0 0 1 0 5.9M17.5 14.3c1.7.7 2.8 2.3 3 4.7"/></symbol>
+<symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2l.1.7h4.8l.1-.7c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3Z"/></symbol>
+</svg>
+
+<div class="app" id="app">
+  <header class="plate" id="plate" data-tab="today">
+    <div class="wheel" id="wheel" aria-hidden="true"></div>
+    <div class="sheen" id="sheen" aria-hidden="true"></div>
+    <div class="plate-top">
+      <h1 class="brand">Մեր դաշտը</h1>
+      <div class="sig" id="sig" aria-hidden="true"></div>
+      <button class="ibtn" id="b-set" type="button" data-act="settings" aria-label="Կարգավորումներ" hidden><svg class="ic"><use href="#i-set"/></svg></button>
+    </div>
+    <div class="plate-body" id="plate-body"><div class="plate-in"><p class="lead">Կարդում ենք պայմանագրերի գրանցամատյանը…</p></div></div>
+    <div class="loadline" id="loadline" role="progressbar" aria-label="Տվյալների բեռնում" aria-valuemin="0" aria-valuemax="100"><i></i></div>
+  </header>
+  <main class="view" id="view" tabindex="-1">
+    <ul class="list skel" aria-hidden="true" style="margin-top:1rem">
+      <li><i class="a"></i><div><i class="b"></i><i class="c"></i></div></li>
+      <li><i class="a"></i><div><i class="b"></i><i class="c"></i></div></li>
+      <li><i class="a"></i><div><i class="b"></i><i class="c"></i></div></li>
+      <li><i class="a"></i><div><i class="b"></i><i class="c"></i></div></li>
+      <li><i class="a"></i><div><i class="b"></i><i class="c"></i></div></li>
+    </ul>
+  </main>
+  <footer class="foot" id="foot" hidden></footer>
+</div>
+
+<nav class="tabs" id="tabs" aria-label="Բաժիններ" hidden>
+  <div class="tabs-in">
+    <span class="tab-ind" aria-hidden="true"><i></i></span>
+    <button class="tab" type="button" data-act="tab" data-tab="today" aria-current="page"><svg class="ic"><use href="#i-today"/></svg>Այսօր</button>
+    <button class="tab" type="button" data-act="tab" data-tab="us"><svg class="ic"><use href="#i-us"/></svg>Մենք</button>
+    <button class="tab" type="button" data-act="tab" data-tab="rivals"><svg class="ic"><use href="#i-rivals"/></svg>Մրցակիցներ</button>
+    <button class="tab" type="button" data-act="tab" data-tab="buyers"><svg class="ic"><use href="#i-buyers"/></svg>Գնորդներ</button>
+  </div>
+</nav>
+
+<dialog class="sheet" id="sheet" aria-label="Մանրամասներ">
+  <div class="sheet-head">
+    <button class="ibtn" type="button" data-act="sheet-back" id="sheet-back" aria-label="Հետ" hidden><svg class="ic"><use href="#i-back"/></svg></button>
+    <span class="grab" aria-hidden="true"></span>
+    <button class="ibtn" type="button" data-act="sheet-close" aria-label="Փակել" style="grid-column:3"><svg class="ic"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="sheet-body" id="sheet-body" tabindex="-1" autofocus></div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<noscript><p style="padding:1.5rem">Էջն աշխատում է միայն JavaScript-ով։</p></noscript>
+<script src="app.js" defer></script>
+</body>
+</html>

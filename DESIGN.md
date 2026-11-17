@@ -275,3 +275,16 @@ Motion reports what happened. The one composed moment is a result opening: the b
 - State anything the source does not say: a winner, an estimate before the auction, who may take part.
 - Give a sole proprietor a page, or list one outside the tender they bid in.
 - Add a second chart type, or colour a bar by anything but press blue.
+
+## A second surface: Մեր դաշտը (`docs/my/`)
+
+A company's own view of the contracts register is a different thing from the public list, and it looks different on purpose: the list is a notice board, this is a ledger about money. Its world is the security print of a banknote, and it lends four things only: type, palette, density and one signature move.
+
+- **Signature: the seal.** A guilloche rosette drawn from a tax number: the digits set the lobes of the rim, the petals of the lace, the heart and the turn (`sealPaths` in `app.js`). Every company has its own, it never changes, and it stands wherever the company does: beside its name, in the legend, on the plate. The same drawing, large and in foil, is the wheel behind the plate; it turns a notch with every tab. Seals draw themselves line by line once, when they appear.
+- **Palette.** Paper `#F2EDE1`, sheet `#FBF8F1`, ink `#17201D`; one deep-green plate `#0E3B34` with foil `#D8B45A`; the plate keeps its colour in both themes. The three companies are `#B9541E`, `#2D62B5`, `#B03A7A` on the light sheet and `#DE6E3A`, `#4C8BDF`, `#D06AA6` on the dark sheet and on the plate. Both sets were run through the colour-blind separation and contrast checks against their surface; that is why there are three companies and not four. Magnitude bars are one green; amber is only for a deadline that is close.
+- **Type.** Noto Serif Armenian for titles and section heads, the digits of Bodoni Moda for the one large figure and for ranks, Noto Sans Armenian for everything that is read or tapped. No serif in labels, buttons or data rows.
+- **Lists are ledgers.** One sheet with hairlines, a tile on the left (days left, a date, a rank), the amount on the right in tabular figures. Elevation is a hairline border; only the bottom sheet has a shadow.
+- **Text never wears a company's colour.** A dot or a seal beside the name carries it.
+- **Motion.** The plate changes height and its text swaps; the wheel turns; the total counts up; columns grow from the baseline; rows rise with a short stagger; the sheet slides up and can be pulled down. Everything has a still state: with reduced motion nothing moves and nothing is missing.
+- **Sole proprietors** are one unnamed row beside every ranking, never inside it.
+

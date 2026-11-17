@@ -27,6 +27,21 @@ The site has its own icon, so it can sit among the apps.
 
 A phone keeps the icon it was given when the shortcut was made. If the icon changes later, remove the shortcut and add it again.
 
+## A company's own view: `my/`
+
+`https://<your-username>.github.io/<repository-name>/my/` is a second page, built on the contracts register (every signed contract, whatever the procedure). Give it up to three companies and the things they sell, and it shows:
+
+- **Այսօր**: the open e-auctions that fit, with a mark on the ones from a buyer the companies have already sold to; what was signed a year ago in the days now ahead (the same buyers may buy again); and what was signed in the last 30 days, with whom and at what price.
+- **Մենք**: the companies' own contracts month by month, and the tenders they took part in where the contract went to someone else.
+- **Մրցակիցներ**: the suppliers met in the same tenders, and who signs the most in each line of goods.
+- **Գնորդներ**: who has bought from the companies and what share of that buyer's purchases they hold, and who buys the same things from others.
+
+Tap anything for its detail: a buyer's past contracts in the same line and how far below the estimate they were signed, a rival's usual discount and main buyers, a tender's participants.
+
+The page is the same for everyone and holds no names. Which companies to show comes from its address: `?c=` carries the tax numbers and `&w=` the lines, and *Settings → Copy link* writes that address out. The choice is also kept on the device, so the plain address opens the same view next time. Nothing is sent anywhere, and everything shown is already public in the register; the address only saves the typing. It is not a password: anyone who has the link sees the same page.
+
+A line is a name and the beginnings of the words that belong to it, so «կահույք» also finds «կահույքի». Sole proprietors are counted together as one unnamed row in every ranking.
+
 ## When it reads the register (Yerevan time)
 
 **On time: 08:50, 11:50, 14:50 and 17:50, Monday to Saturday.** Each time it reads the register and takes a 15-minute look inside new invitations and at tenders that have just finished. Every night at 20:50, 23:50, 02:50 and 05:50 it reads for 170 minutes further back through the past year of finished tenders, so the reading hardly pauses until morning. At 05:50 it also reads the last 45 days of the contracts register, which takes a few minutes.
@@ -99,7 +114,10 @@ bot/clock.py       keeps the time for the Clock workflow: when to wake, what to 
 bot/contracts.py   the contracts register: who signed what with whom, for every procedure
                    (bot/state/contracts/, one contract a line; docs/data/k/ for the site)
 docs/index.html    the site (one file, no build step)
-docs/fonts/        Noto Sans Armenian (SIL Open Font License, see OFL.txt)
+docs/my/           a company's own view of the contracts register: index.html, app.css, app.js
+                   (no build step; the seal on its icon is drawn by the same code as the page's)
+docs/fonts/        Noto Sans Armenian and Noto Serif Armenian (SIL Open Font License, see OFL.txt),
+                   and the digits of Bodoni Moda (same licence, see OFL-BodoniModa.txt)
 docs/icons/        the mark, cut for a phone's Home Screen and for browser tabs;
                    docs/manifest.webmanifest gives phones the site's name and these files
 tools/mark.py      draws the mark and cuts the files in docs/icons/
