@@ -91,7 +91,7 @@ def look(url: str, find: str = "", post: str = "", grep: str = "") -> None:
     m = re.search(rb"charset=[\"']?([\w-]+)", body[:2000])
     text = body.decode(m.group(1).decode() if m else "utf-8", "replace")
     if grep:
-        for src in re.findall(r"<script[^>]+src=[\"']([^\"']+)", text)[:30]:
+        for src in re.findall(r"<script[^>]+src=[\"']([^\"']+)", text)[:90]:
             print(f"    script {urllib.parse.urljoin(final, src)}")
         hits = [line.strip() for line in re.split(r"[\r\n]+|(?<=;)(?=[a-zA-Z$_.]{2,30}[=(])", text) if line and re.search(grep, line)]
         for line in hits[:70]:
