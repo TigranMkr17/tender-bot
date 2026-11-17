@@ -96,11 +96,14 @@ bot/digest.py      the Telegram messages
 bot/telegram.py    Bot API calls; the list of chats, stored encrypted
 bot/main.py        entry point:  python -m bot.main --mode digest|refresh|inbox [--dry-run]
 bot/clock.py       keeps the time for the Clock workflow: when to wake, what to start
+bot/contracts.py   the contracts register: who signed what with whom, for every procedure
+                   (bot/state/contracts/, one contract a line)
 docs/index.html    the site (one file, no build step)
 docs/fonts/        Noto Sans Armenian (SIL Open Font License, see OFL.txt)
 docs/icons/        the mark, cut for a phone's Home Screen and for browser tabs;
                    docs/manifest.webmanifest gives phones the site's name and these files
 tools/mark.py      draws the mark and cuts the files in docs/icons/
+tools/look.py      prints what is on a page as a GitHub runner sees it (the Look workflow)
 tools/, tests/     sample notices and offline tests
 DESIGN.md          the site's colours, type and components
 ```

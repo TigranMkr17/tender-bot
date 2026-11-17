@@ -1,0 +1,58 @@
+name: Contracts
+
+# The contracts register (www.armeps.am/ppcm/public/contracts): every contract a state buyer has signed,
+# whatever the procedure, with its supplier and value. It answers quickly: a year takes a quarter of an hour.
+# Started by the Clock workflow each morning, or by hand.
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "How many days back to read (whole months are read again)"
+        default: "45"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: contracts
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Read the contracts register
+        env:
+          DAYS: ${{ inputs.days }}
+          PYTHONUNBUFFERED: "1"
+        run: python3 -m bot.contracts --days "$DAYS"
+
+      - name: Save the data
+        if: always()
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name "tender-bot"
+          git config user.email "tender-bot@users.noreply.github.com"
+          git add -A bot/state/contracts
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git commit -q -m "Update contracts $(date -u +'%Y-%m-%d %H:%M') UTC"
+          for attempt in 1 2 3 4; do
+            if git push -q origin "HEAD:$BRANCH"; then
+              echo "Saved."
+              exit 0
+            fi
+            git fetch -q origin "$BRANCH"
+            git rebase -q -X theirs "origin/$BRANCH" || git rebase --abort
+            sleep 3
+          done
+          echo "::error::The data could not be saved to the repository."
+          exit 1
