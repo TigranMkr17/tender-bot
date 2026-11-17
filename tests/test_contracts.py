@@ -29,21 +29,25 @@ def contract(i: int, d: date, supplier="«ՕՐԻՆԱԿ» ՍՊԸ", tin="01234567"
 
 
 class Register:
-    """Answers `count` and `list` like the register. With `shuffle`, pages overlap, as an unstable order makes them."""
+    """Answers `count` and `list` like the register. With `shift`, the second page going forward repeats the first,
+    as an order that shifts between pages can make it."""
 
-    def __init__(self, rows, shuffle=False):
-        self.rows, self.shuffle, self.asked = rows, shuffle, []
+    def __init__(self, rows, shift=False):
+        self.rows, self.shift, self.asked = rows, shift, []
 
     def __call__(self, path, body):
         f = body["filter"]["dateSigned"]
         lo, hi = f["min"][:10], f["max"][:10]
         hit = [c for c in self.rows if lo <= contracts.day(c["dateSigned"]) <= hi]
-        self.asked.append((path, lo, hi))
         if path == "count":
+            self.asked.append(("count", lo))
             return len(hit)
-        i, size = body["page"]["index"], body["page"]["size"]
-        if self.shuffle and len(hit) > size and lo != hi:
-            return hit[:size]                              # every page the same: the count cannot add up
+        i, size, up = body["page"]["index"], body["page"]["size"], body["order"]["ascending"]
+        self.asked.append(("list" if up else "back", lo, i))
+        if not up:
+            hit = hit[::-1]
+        elif self.shift and i == 1:
+            i = 0
         return hit[i * size:(i + 1) * size]
 
 
@@ -75,19 +79,20 @@ class Contracts(unittest.TestCase):
         self.assertNotIn("st", row)
         self.assertNotIn("43119505", json.dumps(row))
 
-    def test_pages_are_gathered_until_the_count_is_reached(self):
-        rows = [contract(i, date(2026, 11, 1) + timedelta(days=i % 9)) for i in range(1, 12)]
+    def test_a_day_is_one_question_and_a_full_page_asks_for_the_next(self):
+        rows = [contract(i, date(2026, 11, 2)) for i in range(1, 4)] + [contract(i, date(2026, 11, 3)) for i in range(4, 10)]
         reg = Register(rows)
-        got = contracts.read_days(date(2026, 11, 1), date(2026, 11, 30), reg, pause=0)
-        self.assertEqual(len(got), 11)
-        self.assertEqual([a[0] for a in reg.asked], ["count", "list", "list", "list"])
+        got = contracts.read_days(date(2026, 11, 1), date(2026, 11, 3), reg, pause=0)
+        self.assertEqual(len(got), 9)
+        self.assertEqual(reg.asked, [("list", "2026-11-01", 0), ("list", "2026-11-02", 0), ("list", "2026-11-03", 0),
+                                     ("list", "2026-11-03", 1), ("count", "2026-11-03")])
 
-    def test_a_stretch_that_does_not_add_up_is_read_day_by_day(self):
-        rows = [contract(i, date(2026, 11, 1) + timedelta(days=i % 9)) for i in range(1, 12)]
-        reg = Register(rows, shuffle=True)
-        got = contracts.read_days(date(2026, 11, 1), date(2026, 11, 9), reg, pause=0)
-        self.assertEqual(len(got), 11)
-        self.assertIn(("count", "2026-11-03", "2026-11-03"), reg.asked)
+    def test_a_long_day_whose_pages_shifted_is_read_from_the_other_end_too(self):
+        rows = [contract(i, date(2026, 11, 3)) for i in range(1, 8)]              # two pages of four
+        reg = Register(rows, shift=True)
+        got = contracts.read_day(date(2026, 11, 3), reg, pause=0)
+        self.assertEqual(len(got), 7)
+        self.assertIn(("back", "2026-11-03", 0), reg.asked)
 
     def test_whole_months_are_stored_one_contract_a_line(self):
         rows = ([contract(i, date(2026, 10, 30)) for i in range(1, 4)] + [contract(i, date(2026, 11, 2)) for i in range(4, 9)])
@@ -112,6 +117,23 @@ class Contracts(unittest.TestCase):
         finally:
             contracts.say = keep
         self.assertEqual(len(contracts.load_month("2026-11")), 8)
+
+    def test_newest_month_first_and_long_closed_months_are_not_read_twice(self):
+        rows = [contract(1, date(2026, 6, 10)), contract(2, date(2026, 10, 20)), contract(3, date(2026, 11, 5))]
+        said = []
+        contracts.say, keep = said.append, contracts.say
+        try:
+            contracts.run(200, today=date(2026, 11, 17), ask=Register(rows), pause=0)
+            first = list(said)
+            del said[:]
+            reg = Register(rows)
+            contracts.run(200, today=date(2026, 11, 17), ask=reg, pause=0)
+        finally:
+            contracts.say = keep
+        self.assertTrue(first[0].startswith("2026-11: 1 contracts"))
+        self.assertIn("2026-06: 1 contracts, stored already", said)
+        self.assertNotIn("2026-06", {a[1][:7] for a in reg.asked})          # June closed long ago
+        self.assertIn("2026-10", {a[1][:7] for a in reg.asked})             # October may still change
 
     def test_months_cover_the_stretch_whole(self):
         self.assertEqual(contracts.months(date(2025, 12, 20), date(2026, 2, 3)),

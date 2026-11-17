@@ -1,6 +1,7 @@
 """Reads the contracts register: every contract a state buyer has signed, whatever the procedure.
 
-    python -m bot.contracts --days 45       contracts signed in the last 45 days (whole months are read again)
+    python -m bot.contracts --days 45       contracts signed in the last 45 days, in whole months
+    python -m bot.contracts --days 400      a year back; months already stored and long closed are skipped
 
 The register is the public page www.armeps.am/ppcm/public/contracts, which loads its rows as JSON. A row has far
 more than this keeps: only the contract, its buyer, its supplier and its value are stored, one contract a line, in
@@ -94,28 +95,39 @@ def question(first: date, last: date) -> dict:
             "procurementSubjectCode": None, "procurementSubjectObj": None, "year": None}
 
 
-def read_days(first: date, last: date, ask=post, pause: float = 0.4) -> dict[str, dict]:
-    """Every contract signed in the days from `first` to `last`. The register hands its rows out a page at a time
-    in an order that can shift between pages, so the count is checked, and a stretch that does not add up is read
-    again a day at a time."""
-    f = question(first, last)
-    count = ask("count", {"filter": f})
-    rows: dict[str, dict] = {}
-    for index in range((count + PAGE - 1) // PAGE):
+def read_day(d: date, ask=post, pause: float = 0.2) -> dict[str, dict]:
+    """Every contract signed on one day. A day nearly always fits one page. When it does not, the pages are read in
+    both directions, because the register's order can shift between two pages, and the count is checked."""
+    f, rows, index = question(d, d), {}, 0
+    while True:
         page = ask("list", {"filter": f, "order": {"field": "date_signed", "ascending": True},
                             "page": {"index": index, "size": PAGE}})
         for c in page:
             rows[c["id"]] = slim(c)
         if pause:
             time.sleep(pause)
-    if len(rows) != count and last > first:
-        rows = {}
-        d = first
-        while d <= last:
-            rows.update(read_days(d, d, ask, pause))
-            d += timedelta(days=1)
-    elif len(rows) != count:
-        say(f"{first}: the register counts {count} contracts and handed out {len(rows)}.")
+        if len(page) < PAGE:
+            break
+        index += 1
+    if index:
+        count = ask("count", {"filter": f})
+        back = 0
+        while len(rows) < count and back <= index:
+            for c in ask("list", {"filter": f, "order": {"field": "date_signed", "ascending": False},
+                                  "page": {"index": back, "size": PAGE}}):
+                rows[c["id"]] = slim(c)
+            back += 1
+        if len(rows) != count:
+            say(f"{d}: the register counts {count} contracts and handed out {len(rows)}.")
+    return rows
+
+
+def read_days(first: date, last: date, ask=post, pause: float = 0.2) -> dict[str, dict]:
+    rows: dict[str, dict] = {}
+    d = first
+    while d <= last:
+        rows.update(read_day(d, ask, pause))
+        d += timedelta(days=1)
     return rows
 
 
@@ -149,17 +161,22 @@ def months(first: date, last: date) -> list[tuple[date, date]]:
     return out
 
 
-def run(days: int, today: date | None = None, ask=post, pause: float = 0.4) -> int:
+def run(days: int, today: date | None = None, ask=post, pause: float = 0.2, again: bool = False) -> int:
+    """Newest month first. A month that ended more than 45 days ago and is already stored is not read again,
+    unless `again`: late entries and corrections arrive within weeks, not later."""
     today = today or (datetime.now(timezone.utc) + YEREVAN).date()
     total = 0
-    for first, last in months(today - timedelta(days=days), today):
+    for first, last in reversed(months(today - timedelta(days=days), today)):
         month = first.strftime("%Y-%m")
+        was = load_month(month)
+        if was and not again and last < today - timedelta(days=45):
+            say(f"{month}: {len(was)} contracts, stored already")
+            continue
         try:
             rows = read_days(first, min(last, today), ask, pause)
         except RuntimeError as e:
             say(f"{month}: could not be read ({e}); what was stored stays.")
             continue
-        was = load_month(month)
         if len(rows) < len(was) // 2:
             say(f"{month}: only {len(rows)} contracts came where {len(was)} were stored; what was stored stays.")
             continue
@@ -172,8 +189,10 @@ def run(days: int, today: date | None = None, ask=post, pause: float = 0.4) -> i
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--days", type=int, default=45, help="how far back to read; whole months are read again")
-    return run(ap.parse_args(argv).days)
+    ap.add_argument("--days", type=int, default=45, help="how far back to read, in whole months")
+    ap.add_argument("--again", action="store_true", help="read old months again even if they are stored")
+    args = ap.parse_args(argv)
+    return run(args.days, again=args.again)
 
 
 if __name__ == "__main__":
