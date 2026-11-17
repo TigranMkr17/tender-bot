@@ -18,6 +18,9 @@ on:
       grep:
         description: "Print the lines of the page's source that match this pattern, and its scripts"
         default: ""
+      show:
+        description: "How many characters to print of an answer that is not a page"
+        default: "1500"
 
 permissions:
   contents: read
@@ -34,5 +37,6 @@ jobs:
           FIND: ${{ inputs.find }}
           POST: ${{ inputs.post }}
           GREP: ${{ inputs.grep }}
+          SHOW: ${{ inputs.show }}
           PYTHONUNBUFFERED: "1"
         run: python3 tools/look.py

@@ -71,8 +71,10 @@ class Page(HTMLParser):
 
 
 def fetch(url: str, post: str = ""):
-    req = urllib.request.Request(url, data=post.encode() if post else None,
-                                 headers={"User-Agent": AGENT, "Accept-Language": "hy,en;q=0.8"})
+    headers = {"User-Agent": AGENT, "Accept-Language": "hy,en;q=0.8"}
+    if post.startswith(("{", "[")):                          # a JSON body, for pages that load their data that way
+        headers.update({"Content-Type": "application/json;charset=UTF-8", "Accept": "application/json, text/plain, */*"})
+    req = urllib.request.Request(url, data=post.encode() if post else None, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=45) as r:
             return r.status, r.geturl(), r.headers.get("Content-Type", ""), r.read(3_000_000)
@@ -86,7 +88,7 @@ def look(url: str, find: str = "", post: str = "", grep: str = "") -> None:
     status, final, kind, body = fetch(url, post)
     print(f"\n=== {url}\n    {status} {kind} {len(body)} bytes" + (f" -> {final}" if final != url else ""))
     if "html" not in kind and "xml" not in kind and not grep:
-        print("    " + body[:1500].decode("utf-8", "replace").replace("\n", "\n    "))
+        print("    " + body[:int(os.environ.get("SHOW", "1500"))].decode("utf-8", "replace").replace("\n", "\n    "))
         return
     m = re.search(rb"charset=[\"']?([\w-]+)", body[:2000])
     text = body.decode(m.group(1).decode() if m else "utf-8", "replace")
@@ -94,11 +96,11 @@ def look(url: str, find: str = "", post: str = "", grep: str = "") -> None:
         for src in re.findall(r"<script[^>]+src=[\"']([^\"']+)", text)[:90]:
             print(f"    script {urllib.parse.urljoin(final, src)}")
         hits = [line.strip() for line in re.split(r"[\r\n]+|(?<=;)(?=[a-zA-Z$_.]{2,30}[=(])", text) if line and re.search(grep, line)]
-        for line in hits[:70]:
+        for line in hits[:260]:
             i = re.search(grep, line).start()
-            print(f"    > {line[max(0, i - 160):i + 240]}")
-        if len(hits) > 70:
-            print(f"    … and {len(hits) - 70} more lines")
+            print(f"    > {line[max(0, i - 160):i + 400]}")
+        if len(hits) > 260:
+            print(f"    … and {len(hits) - 260} more lines")
         if "html" not in kind and "xml" not in kind:
             return
     page = Page()
