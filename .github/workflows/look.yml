@@ -15,6 +15,9 @@ on:
       post:
         description: "Form data to send (a=b&c=d) instead of asking for the page"
         default: ""
+      grep:
+        description: "Print the lines of the page's source that match this pattern, and its scripts"
+        default: ""
 
 permissions:
   contents: read
@@ -30,5 +33,6 @@ jobs:
           URLS: ${{ inputs.urls }}
           FIND: ${{ inputs.find }}
           POST: ${{ inputs.post }}
+          GREP: ${{ inputs.grep }}
           PYTHONUNBUFFERED: "1"
         run: python3 tools/look.py
