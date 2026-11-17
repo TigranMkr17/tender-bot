@@ -220,7 +220,7 @@ button.row:active,a.row:active{background:var(--sheet-2)}
 .tab-ind i{width:3.75rem;height:1.875rem;border-radius:1rem;background:var(--tint)}
 
 /* ---------- the sheet ---------- */
-dialog.sheet{position:fixed;inset:auto 0 0 0;margin:0 auto;width:100%;max-width:36rem;max-height:88vh;max-height:88dvh;padding:0;border:0;border-radius:1rem 1rem 0 0;background:var(--sheet);color:var(--ink);box-shadow:var(--shadow);overflow:hidden}
+dialog.sheet{position:fixed;inset:auto 0 0 0;top:auto;bottom:0;height:auto;min-height:min(22rem,60vh);margin:0 auto;width:100%;max-width:36rem;max-height:88vh;max-height:88dvh;padding:0;border:0;border-radius:1rem 1rem 0 0;background:var(--sheet);color:var(--ink);box-shadow:var(--shadow);overflow:hidden}
 dialog.sheet[open]{display:flex;flex-direction:column;animation:up .5s var(--out)}
 dialog.sheet::backdrop{background:rgba(6,16,13,.52);animation:fade .3s ease-out}
 dialog.sheet.out{animation:down .24s cubic-bezier(.4,0,1,1) forwards}
@@ -235,7 +235,7 @@ dialog.sheet.plain{z-index:30;box-shadow:var(--shadow),0 0 0 100vmax rgba(6,16,1
 @media (hover:hover){.sheet-head .ibtn:hover{background:var(--sheet-2)}}
 .grab{justify-self:center;width:2.5rem;height:.25rem;border-radius:.125rem;background:var(--line)}
 .sheet-body:focus{outline:0}
-.sheet-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:.125rem 1.125rem calc(1.75rem + env(safe-area-inset-bottom,0px))}
+.sheet-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:.125rem 1.125rem calc(1.75rem + env(safe-area-inset-bottom,0px))}
 .sheet-body.swap{animation:swap .42s var(--out)}
 .sheet h2{font:600 1.3125rem/1.3 var(--serif);text-wrap:balance}
 .sheet .sub{margin-top:.375rem;font-size:.875rem;line-height:1.5;color:var(--ink-2)}
