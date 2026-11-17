@@ -95,7 +95,8 @@ def look(url: str, find: str = "", post: str = "", grep: str = "") -> None:
     if grep:
         for src in re.findall(r"<script[^>]+src=[\"']([^\"']+)", text)[:90]:
             print(f"    script {urllib.parse.urljoin(final, src)}")
-        hits = [line.strip() for line in re.split(r"[\r\n]+|(?<=;)(?=[a-zA-Z$_.]{2,30}[=(])", text) if line and re.search(grep, line)]
+        lines = (line.strip() for line in re.split(r"[\r\n]+|(?<=;)(?=[a-zA-Z$_.]{2,30}[=(])", text) if line)
+        hits = [line for line in lines if line and re.search(grep, line)]
         for line in hits[:260]:
             i = re.search(grep, line).start()
             print(f"    > {line[max(0, i - 160):i + 400]}")
