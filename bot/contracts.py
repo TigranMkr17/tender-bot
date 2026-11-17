@@ -6,7 +6,7 @@
 The register is the public page www.armeps.am/ppcm/public/contracts, which loads its rows as JSON. A row has far
 more than this keeps: only the contract, its buyer, its supplier and its value are stored, one contract a line, in
 bot/state/contracts/<year>-<month>.jsonl. Bank accounts, e-mail addresses and staff names are never stored, and a
-sole proprietor's tax number is left out.
+sole proprietor's tax number is left out. The site gets them as docs/data/k/<year>-<month>.json.
 
 Standard library only.
 """
@@ -26,6 +26,12 @@ from . import armeps, results, textproc
 BASE = "https://www.armeps.am/ppcm/public/contracts/"
 PAGE = 500
 STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "state", "contracts")
+PUBLIC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "data", "k")
+# What the site is given: the procedures suppliers compete in, and purchases from one supplier when they are large.
+FORMS = {"ԷԱՃ": "Էլեկտրոնային աճուրդ", "ԳՀ": "Գնանշման հարցում", "ԲՄ": "Բաց մրցույթ", "ՀԲՄ": "Հրատապ բաց մրցույթ",
+         "ԵՄ": "Երկփուլ մրցույթ", "ՄԱ": "Մեկ անձից գնում", "ՀՄԱ": "Հրատապ գնում մեկ անձից"}
+ONE_SOURCE = {"ՄԱ", "ՀՄԱ"}
+ONE_SOURCE_FROM = 1_000_000
 KINDS = {"GOODS": "g", "SERVICES": "s", "WORKS": "w"}
 YEREVAN = timedelta(hours=4)
 
@@ -187,12 +193,74 @@ def run(days: int, today: date | None = None, ask=post, pause: float = 0.2, agai
     return 0
 
 
+def published(r: dict) -> bool:
+    form = r.get("f")
+    return form in FORMS and (form not in ONE_SOURCE or (r.get("v") or 0) >= ONE_SOURCE_FROM)
+
+
+def month_page(month: str, rows: list[dict]) -> dict:
+    """A month as the site loads it: names once, rows as short lists.
+    R: [day, buyer, supplier, value, estimate, form, kind, subject, tender]; the buyer, supplier, form and tender
+    are positions in B, S, F and T, and the tender is -1 when the register lists no participants for it."""
+    buyers, suppliers, forms, tenders = {}, {}, {}, {}
+    B, S, F, T, R = [], [], [], [], []
+
+    def at(table: dict, rowset: list, key, row) -> int:
+        if key not in table:
+            table[key] = len(rowset)
+            rowset.append(row)
+        return table[key]
+
+    for r in sorted(rows, key=lambda r: (r.get("d") or "", r.get("n") or "", r["id"])):
+        if not published(r) or not r.get("d"):
+            continue
+        b = at(buyers, B, r.get("bt") or r.get("b"), [r.get("bt") or "", r.get("b") or ""])
+        sup = at(suppliers, S, r.get("si") or r.get("sn"), [r.get("si") or "", r.get("sn") or "", r.get("st") or "", 1 if r.get("p") else 0])
+        f = at(forms, F, r["f"], r["f"])
+        t = at(tenders, T, r.get("tc"), [r.get("tc"), r["ps"]]) if r.get("ps") and r.get("tc") else -1
+        value = r.get("v") or 0
+        R.append([int(r["d"][8:10]), b, sup, value, round(value + r["sv"]) if r.get("sv") else 0, f, r.get("k") or "",
+                  r.get("s") or "", t])
+    return {"m": month, "B": B, "S": S, "F": F, "T": T, "R": R}
+
+
+def publish(now: datetime | None = None) -> dict:
+    """Write every stored month for the site, and a list of them."""
+    os.makedirs(PUBLIC, exist_ok=True)
+    stored = sorted(f[:-6] for f in os.listdir(STATE) if f.endswith(".jsonl")) if os.path.isdir(STATE) else []
+    listed, total, first, last = [], 0, None, None
+    for month in stored:
+        rows = list(load_month(month).values())
+        page = month_page(month, rows)
+        if not page["R"]:
+            continue
+        with open(os.path.join(PUBLIC, month + ".json"), "w", encoding="utf-8") as fh:
+            json.dump(page, fh, ensure_ascii=False, separators=(",", ":"))
+        days = [r["d"] for r in rows if r.get("d") and published(r)]
+        first, last = min([first or days[0]] + days), max([last or days[0]] + days)
+        listed.append([month, len(page["R"])])
+        total += len(page["R"])
+    for name in os.listdir(PUBLIC):                        # a month that is no longer stored is no longer offered
+        if name.endswith(".json") and name != "meta.json" and name[:-5] not in {m for m, _ in listed}:
+            os.remove(os.path.join(PUBLIC, name))
+    stamp = ((now or datetime.now(timezone.utc)) + YEREVAN).strftime("%Y-%m-%dT%H:%M")
+    meta = {"updated": stamp, "from": first, "to": last, "contracts": total, "months": listed, "forms": FORMS,
+            "source": "armeps.am/ppcm/public/contracts"}
+    with open(os.path.join(PUBLIC, "meta.json"), "w", encoding="utf-8") as fh:
+        json.dump(meta, fh, ensure_ascii=False, separators=(",", ":"))
+    return meta
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--days", type=int, default=45, help="how far back to read, in whole months")
     ap.add_argument("--again", action="store_true", help="read old months again even if they are stored")
+    ap.add_argument("--publish-only", action="store_true", help="write the site's files from what is stored, read nothing")
     args = ap.parse_args(argv)
-    return run(args.days, again=args.again)
+    code = 0 if args.publish_only else run(args.days, again=args.again)
+    meta = publish()
+    say(f"Published {meta['contracts']} contracts for the site, {meta['from']} to {meta['to']}.")
+    return code
 
 
 if __name__ == "__main__":

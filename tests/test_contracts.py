@@ -135,6 +135,37 @@ class Contracts(unittest.TestCase):
         self.assertNotIn("2026-06", {a[1][:7] for a in reg.asked})          # June closed long ago
         self.assertIn("2026-10", {a[1][:7] for a in reg.asked})             # October may still change
 
+    def test_the_site_gets_a_month_with_each_name_written_once(self):
+        rows = [contracts.slim(contract(i, date(2026, 11, 2 + i % 3))) for i in range(1, 6)]
+        rows.append(contracts.slim(dict(contract(6, date(2026, 11, 9)), formAbbrHy="ՄԱ", contractValueTotal=30000.0)))    # small, one source
+        rows.append(contracts.slim(dict(contract(7, date(2026, 11, 9)), formAbbrHy="ՄԱ", contractValueTotal=2500000.0)))
+        rows.append(contracts.slim(dict(contract(8, date(2026, 11, 9)), formAbbrHy="ԳՉԾ")))                                # not a purchase
+        page = contracts.month_page("2026-11", rows)
+        self.assertEqual((len(page["B"]), len(page["S"]), sorted(page["F"])), (1, 1, ["ԷԱՃ", "ՄԱ"]))
+        self.assertEqual(len(page["R"]), 6)
+        day, b, sup, value, est, f, kind, subject, t = page["R"][0]
+        self.assertEqual((day, page["B"][b], page["S"][sup][1:], value, est, page["F"][f], kind, subject),
+                         (2, ["02500052", "Երևանի քաղաքապետարան"], ["«Օրինակ» ՍՊԸ", "01234567", 0], 3000.0, 3250, "ԷԱՃ", "s",
+                          "միջոցառման կազմակերպում"))
+        self.assertEqual(page["T"][t], ["ԵՔ-ԷԱՃԾՁԲ-26/3", ["3d953a28c7", "48c888df0f"]])
+        self.assertNotIn("1570000000000000", json.dumps(page))
+
+    def test_publishing_lists_the_months_and_forgets_one_that_is_gone(self):
+        public = tempfile.TemporaryDirectory()
+        was, contracts.PUBLIC = contracts.PUBLIC, public.name
+        try:
+            contracts.save_month("2026-10", {r["id"]: r for r in [contracts.slim(contract(1, date(2026, 10, 5)))]})
+            contracts.save_month("2026-11", {r["id"]: r for r in [contracts.slim(contract(2, date(2026, 11, 5)))]})
+            meta = contracts.publish(datetime(2026, 11, 17, 6, 0, tzinfo=timezone.utc))
+            self.assertEqual((meta["months"], meta["from"], meta["to"], meta["contracts"], meta["updated"]),
+                             ([["2026-10", 1], ["2026-11", 1]], "2026-10-05", "2026-11-05", 2, "2026-11-17T10:00"))
+            os.remove(contracts.month_file("2026-10"))
+            contracts.publish(datetime(2026, 11, 18, 6, 0, tzinfo=timezone.utc))
+            self.assertEqual(sorted(os.listdir(public.name)), ["2026-11.json", "meta.json"])
+        finally:
+            contracts.PUBLIC = was
+            public.cleanup()
+
     def test_months_cover_the_stretch_whole(self):
         self.assertEqual(contracts.months(date(2025, 12, 20), date(2026, 2, 3)),
                          [(date(2025, 12, 1), date(2025, 12, 31)), (date(2026, 1, 1), date(2026, 1, 31)),

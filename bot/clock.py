@@ -8,7 +8,8 @@ The Clock workflow runs one tick at a time. GitHub holds a tick's job in the "cl
 environment's wait timer (175 minutes, set in Settings -> Environments); nothing runs while it is held. The tick
 then wakes a few minutes before one of eight moments a day, three hours apart, sleeps the rest, starts the next
 tick and, at 08:50, 11:50, 14:50 and 17:50 Yerevan time from Monday to Saturday, the two update jobs. At the
-four night slots it starts the long reading that works back through the past year.
+four night slots it starts the long reading that works back through the past year, and each morning the reading
+of the contracts register.
 
 Standard library only. Times are UTC inside; Yerevan is four hours ahead all year.
 """
@@ -37,6 +38,7 @@ HISTORY_MINUTES = "15"                     # with each of those, a short look in
 # Every night at 20:50, 23:50, 02:50 and 05:50 in Yerevan: the History job's long reading, back through the past year.
 NIGHTS = {(16, 50), (19, 50), (22, 50), (1, 50)}
 NIGHT_MINUTES = "170"                    # nearly the whole three hours, so the reading hardly pauses at night
+CONTRACTS = (1, 50)                        # every morning at 05:50 in Yerevan: the contracts register, the last 45 days
 TICK = "Tick"                              # the run name of a tick, set in the workflow
 
 
@@ -143,11 +145,21 @@ def hhmm(at: datetime) -> str:
     return (at + timedelta(hours=4)).strftime("%H:%M")      # as a clock in Yerevan shows it
 
 
+def work(slot: datetime) -> list[tuple[str, dict]]:
+    """The workflows to start at this slot, each with what it is told."""
+    out = []
+    if due(slot):
+        out.append(("tenders.yml", {"mode": due(slot)}))
+    if reading(slot):
+        out.append(("history.yml", {"minutes": reading(slot)}))
+    if (slot.hour, slot.minute) == CONTRACTS:
+        out.append(("contracts.yml", {"days": "45"}))
+    return out
+
+
 def start_updates(hub, slot: datetime, say) -> bool:
     ok = True
-    for workflow, inputs in (("tenders.yml", {"mode": due(slot)}), ("history.yml", {"minutes": reading(slot)})):
-        if not list(inputs.values())[0]:
-            continue                       # at night only the reading runs
+    for workflow, inputs in work(slot):
         try:
             hub.start(workflow, **inputs)
             say(f"Started {workflow} for {hhmm(slot)}: {inputs}")
@@ -179,7 +191,7 @@ def tick(hub, now=lambda: datetime.now(timezone.utc), sleep=time.sleep, say=prin
     except RuntimeError as e:
         ok = False
         say(f"::error::The next tick could not be started: {e}")
-    if reading(p.slot):
+    if work(p.slot):
         ok = start_updates(hub, p.slot, say) and ok
     else:
         say(f"Nothing is due at {hhmm(p.slot)}.")

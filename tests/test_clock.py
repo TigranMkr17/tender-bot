@@ -97,9 +97,12 @@ class Ticks(unittest.TestCase):
         self.assertEqual(tick(at(21, 13, 46))[1].started[1], ("tenders.yml", {"mode": "digest"}))     # Saturday
 
     def test_at_night_it_starts_the_long_reading_and_on_sunday_nothing_else(self):
-        for woke in (at(17, 16, 45), at(17, 19, 46), at(17, 22, 47), at(18, 1, 44), at(22, 22, 45)):
+        for woke in (at(17, 16, 45), at(17, 19, 46), at(17, 22, 47), at(22, 22, 45)):
             code, h, _ = tick(woke)
             self.assertEqual((code, h.started), (0, [("clock.yml", {"do": "tick"}), ("history.yml", {"minutes": "170"})]))
+        code, h, _ = tick(at(18, 1, 44))                                                      # 05:50 in Yerevan
+        self.assertEqual(h.started, [("clock.yml", {"do": "tick"}), ("history.yml", {"minutes": "170"}),
+                                     ("contracts.yml", {"days": "45"})])
         for woke in (at(22, 4, 45), at(22, 7, 45), at(22, 10, 45), at(22, 13, 45)):          # Sunday, by day
             code, h, _ = tick(woke)
             self.assertEqual((code, h.started), (0, [("clock.yml", {"do": "tick"})]))
