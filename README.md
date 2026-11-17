@@ -17,6 +17,15 @@ It needs no server. GitHub reads the register on a schedule and hosts the page, 
 2. **Turn on the page.** Settings → Pages → Source: *Deploy from a branch* → Branch: `main`, folder: `/docs` → Save. After a minute the site is live at `https://<your-username>.github.io/<repository-name>/`.
 3. **Read the register once.** Actions → Tenders → Run workflow. After a few minutes the site shows today's tenders.
 
+## On a phone's Home Screen
+
+The site has its own icon, so it can sit among the apps.
+
+- **iPhone**: open the site in Safari → Share → *Add to Home Screen*.
+- **Android**: open it in Chrome → ⋮ → *Add to Home screen*.
+
+A phone keeps the icon it was given when the shortcut was made. If the icon changes later, remove the shortcut and add it again.
+
 ## When it reads the register (Yerevan time)
 
 | When | What |
@@ -81,6 +90,9 @@ bot/telegram.py    Bot API calls; the list of chats, stored encrypted
 bot/main.py        entry point:  python -m bot.main --mode digest|refresh|inbox [--dry-run]
 docs/index.html    the site (one file, no build step)
 docs/fonts/        Noto Sans Armenian (SIL Open Font License, see OFL.txt)
+docs/icons/        the mark, cut for a phone's Home Screen and for browser tabs;
+                   docs/manifest.webmanifest gives phones the site's name and these files
+tools/mark.py      draws the mark and cuts the files in docs/icons/
 tools/, tests/     sample notices and offline tests
 DESIGN.md          the site's colours, type and components
 ```

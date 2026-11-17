@@ -243,6 +243,14 @@ A lot is a number badge, a name and, at the right, a quantity; its description o
 
 A company and a buyer open with three figures in quiet tiles (tenders, lots, first places). Supporting facts, not a headline: they sit in a sheet under the name.
 
+## Mark
+
+The letter «Մ» as a paper ribbon. The band runs down, round and up; at the top of the right stem it folds over to the right, and the back of the band, the letter's arm, ends in a swallowtail like a page marker. The band is white and its back amber, on press blue with the header's dot screen growing toward the lower right corner. `tools/mark.py` draws it and cuts the files in `docs/icons/`.
+
+- **On a phone's Home Screen** the icon is square and runs to the edges; the phone rounds it. Android cuts a shape of its own, so its file keeps the letter at 80% of the size.
+- **In a browser tab** the letter is larger and the dot screen is left out.
+- **Amber stays in the mark.** On a screen amber still means a deadline three days away or less, so the header carries the name in type and no mark.
+
 ## Motion
 
 Motion reports what happened. The one composed moment is a result opening: the bar falls from the estimate to the first-place price while the figure counts down with it, about 0.9s on an exponential ease-out. Around it: the header numbers count up on the first visit, the deadline bar fills, a sheet rises as its data arrives, a lot's description unfolds. Only what has just arrived moves; pressing «Ցույց տալ բոլորը» adds rows without replaying anything. With reduced motion everything appears in place.
