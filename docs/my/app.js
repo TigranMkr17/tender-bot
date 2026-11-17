@@ -486,7 +486,7 @@ function todayView() {
 function usPlate() {
   const cs = ours(), total = cs.reduce((a, c) => a + c.v, 0), from = dOnly(D.meta.from);
   return `<div class="note-seals">${G.map((g, i) => sealSVG(g.tin, {detail: 1, size: 104, stroke: 1.15, cls: `draw c${i + 1}`, style: `--wait:${i * 220}ms;--step:60ms`})).join('')}</div>
-    <p class="sum"><span data-count="${Math.round(total)}">${group(total)}</span><small>դրամ</small></p>
+    <p class="sum"><span class="vh">${group(total)} դրամ</span><span aria-hidden="true" data-count="${Math.round(total)}">${group(total)}</span><small aria-hidden="true">դրամ</small></p>
     <p class="lead"><b>${plural(cs.length, 'պայմանագիր')}</b>, ${plural(ourBuyers().size, 'գնորդ')}՝ ${parts(from).y} թ. ${MON[parts(from).m]} ${parts(from).d}-ից</p>`;
 }
 function usView() {
