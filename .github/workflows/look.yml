@@ -1,0 +1,34 @@
+name: Look
+
+# Looks at pages of a register from a GitHub runner, which the registers answer, and prints what is on them:
+# forms, links, the first rows of tables. It is how a new source is studied before a reader is written for it.
+# Started by hand only. What it prints can be read by anyone, like everything in this repository's Actions.
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: "Addresses, separated by spaces"
+        required: true
+      find:
+        description: "Show only links that contain this text"
+        default: ""
+      post:
+        description: "Form data to send (a=b&c=d) instead of asking for the page"
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  look:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Look
+        env:
+          URLS: ${{ inputs.urls }}
+          FIND: ${{ inputs.find }}
+          POST: ${{ inputs.post }}
+          PYTHONUNBUFFERED: "1"
+        run: python3 tools/look.py

@@ -36,7 +36,7 @@ UPDATES = {(4, 50): "digest", (7, 50): "refresh", (10, 50): "refresh", (13, 50):
 HISTORY_MINUTES = "15"                     # with each of those, a short look inside new invitations and at fresh results
 # Every night at 20:50, 23:50, 02:50 and 05:50 in Yerevan: the History job's long reading, back through the past year.
 NIGHTS = {(16, 50), (19, 50), (22, 50), (1, 50)}
-NIGHT_MINUTES = "95"
+NIGHT_MINUTES = "170"                    # nearly the whole three hours, so the reading hardly pauses at night
 TICK = "Tick"                              # the run name of a tick, set in the workflow
 
 
