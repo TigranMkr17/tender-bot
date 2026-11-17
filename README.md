@@ -16,6 +16,7 @@ It needs no server. GitHub reads the register on a schedule and hosts the page, 
 1. **Put these files in a GitHub repository.** Create a new **public** repository and upload everything in this folder, including the hidden `.github` folder.
 2. **Turn on the page.** Settings → Pages → Source: *Deploy from a branch* → Branch: `main`, folder: `/docs` → Save. After a minute the site is live at `https://<your-username>.github.io/<repository-name>/`.
 3. **Read the register once.** Actions → Tenders → Run workflow. After a few minutes the site shows today's tenders.
+4. **Give it a clock.** Settings → Environments → `clock` (it appears after the first run; otherwise *New environment*, named `clock`) → tick **Wait timer** and enter `175` → *Save protection rules*. From then on the site is updated at 08:50, 11:50, 14:50 and 17:50, Monday to Saturday.
 
 ## On a phone's Home Screen
 
@@ -28,6 +29,12 @@ A phone keeps the icon it was given when the shortcut was made. If the icon chan
 
 ## When it reads the register (Yerevan time)
 
+**On time: 08:50, 11:50, 14:50 and 17:50, Monday to Saturday.** Each time it reads the register and takes a 15-minute look inside new invitations and at tenders that have just finished.
+
+GitHub's own schedule cannot be relied on for this: on this repository it started only a few of the jobs it was asked to, some of them hours late. So the `Clock` workflow keeps the time. GitHub holds each of its runs for 175 minutes (the wait timer of step 4, during which nothing runs); the run wakes a few minutes before the next of eight moments a day, starts the next run and, at the four times above, the two update jobs. The update jobs start the clock if they find none, so it starts by itself and mends itself. Without the wait timer it starts nothing. To stop it: Actions → Clock → ⋯ → Disable workflow. To change the times, edit `UPDATES` in `bot/clock.py`; they are in UTC, Yerevan time minus 4 hours.
+
+**And whenever GitHub's schedule does fire**, as a second way in:
+
 | When | What |
 |---|---|
 | 08:52, Monday to Saturday | Reads the register |
@@ -36,7 +43,7 @@ A phone keeps the icon it was given when the shortcut was made. If the icon chan
 | Every hour from 09:17 to 18:17, Monday to Friday | A short look inside new invitations and at tenders that have just finished |
 | 21:17, 23:17, 01:17 and 03:17, every night | Long runs: finished tenders, back through the past 400 days |
 
-GitHub sometimes starts scheduled jobs 5 to 30 minutes late. To change the times, edit the `cron` lines in `.github/workflows/tenders.yml` and `history.yml`. They are in UTC: Yerevan time minus 4 hours.
+These are the `cron` lines in `.github/workflows/tenders.yml` and `history.yml`, in UTC.
 
 The past year is read a part each night, because the register answers slowly and resets hurried connections. Until it is done, the «Արդյունքներ» list says how far back it reaches. To read more at once: Actions → History → Run workflow, and give it up to 140 minutes.
 
@@ -88,6 +95,7 @@ bot/deep.py        the slow job:  python -m bot.deep --minutes 30
 bot/digest.py      the Telegram messages
 bot/telegram.py    Bot API calls; the list of chats, stored encrypted
 bot/main.py        entry point:  python -m bot.main --mode digest|refresh|inbox [--dry-run]
+bot/clock.py       keeps the time for the Clock workflow: when to wake, what to start
 docs/index.html    the site (one file, no build step)
 docs/fonts/        Noto Sans Armenian (SIL Open Font License, see OFL.txt)
 docs/icons/        the mark, cut for a phone's Home Screen and for browser tabs;

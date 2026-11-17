@@ -1,0 +1,65 @@
+name: Clock
+run-name: ${{ inputs.do == 'trial' && 'Trial' || inputs.do == 'nothing' && 'Nothing' || 'Tick' }}
+
+# GitHub starts scheduled jobs late, or not at all, so this workflow keeps the time instead.
+#
+# A tick is held by the "clock" environment for its wait timer: 175 minutes, set once in
+# Settings -> Environments -> clock -> Wait timer. Nothing runs while it is held. It then wakes a few minutes
+# before one of eight moments a day, three hours apart, starts the next tick and, at 08:50, 11:50, 14:50 and
+# 17:50 Yerevan time from Monday to Saturday, the Tenders and History jobs. Those jobs start a tick themselves
+# if they find none, so the clock starts on its own and mends itself.
+#
+# Without the wait timer a tick starts nothing, so it cannot run in circles.
+# To stop the clock for good: Actions -> Clock -> ... -> Disable workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      do:
+        description: "tick = keep the time (it waits 175 minutes first), trial = try the wiring now, nothing = do nothing"
+        type: choice
+        options: [tick, trial, nothing]
+        default: tick
+
+permissions:
+  actions: write
+  contents: read
+
+# One tick at a time. A newer one waits its turn, and replaces any other that was waiting.
+concurrency:
+  group: clock-${{ inputs.do }}
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    if: inputs.do == 'tick'
+    runs-on: ubuntu-latest
+    environment: clock
+    timeout-minutes: 170
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Keep the time
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PYTHONUNBUFFERED: "1"
+        run: python3 -m bot.clock
+
+  trial:
+    if: inputs.do == 'trial'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start one harmless run of each
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PYTHONUNBUFFERED: "1"
+        run: python3 -m bot.clock --trial
+
+  nothing:
+    if: inputs.do == 'nothing'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: echo "Started by a trial. Nothing to do."

@@ -2,6 +2,8 @@ name: History
 
 # The slow reading, apart from the hourly job: what is inside each open tender's invitation,
 # and the lots and bids of finished tenders. Times are in UTC; Yerevan is four hours ahead.
+# GitHub starts these schedules late or not at all, so the Clock workflow also starts a 15-minute run
+# with each of its four daily updates (see clock.yml).
 on:
   schedule:
     - cron: "17 5-14 * * 1-5"         # 09:17-18:17 on weekdays: a short look for new invitations and results
@@ -14,6 +16,7 @@ on:
 
 permissions:
   contents: write
+  actions: write    # to start the Clock workflow if it has stopped
 
 concurrency:
   group: history
@@ -77,3 +80,10 @@ jobs:
           done
           echo "::error::The data could not be saved to the repository."
           exit 1
+
+      # The Clock workflow starts this job on time; this job starts the clock if it finds none.
+      - name: Keep the clock going
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m bot.clock --watch

@@ -1,5 +1,7 @@
 name: Tenders
 
+# GitHub starts these schedules late or not at all, so the Clock workflow starts this job too, on time:
+# at 08:50 and 17:50 as "digest", at 11:50 and 14:50 as "refresh" (see clock.yml). The schedules stay as a second way in.
 # Times are in UTC. Yerevan is UTC+4 all year, so 04:52 UTC is 08:52 in Yerevan.
 # Reading ARMEPS takes a few minutes, so a run that starts at 08:52 sends its message at about 09:00.
 on:
@@ -17,6 +19,7 @@ on:
 
 permissions:
   contents: write
+  actions: write    # to start the Clock workflow if it has stopped
 
 concurrency:
   group: tenders
@@ -89,6 +92,13 @@ jobs:
           done
           echo "::error::The data could not be saved to the repository."
           exit 1
+
+      # The Clock workflow starts this job on time; this job starts the clock if it finds none.
+      - name: Keep the clock going
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m bot.clock --watch
 
       - name: Keep the page that could not be read
         if: failure()
