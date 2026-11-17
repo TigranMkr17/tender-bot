@@ -29,9 +29,9 @@ A phone keeps the icon it was given when the shortcut was made. If the icon chan
 
 ## When it reads the register (Yerevan time)
 
-**On time: 08:50, 11:50, 14:50 and 17:50, Monday to Saturday.** Each time it reads the register and takes a 15-minute look inside new invitations and at tenders that have just finished.
+**On time: 08:50, 11:50, 14:50 and 17:50, Monday to Saturday.** Each time it reads the register and takes a 15-minute look inside new invitations and at tenders that have just finished. Every night at 20:50, 23:50, 02:50 and 05:50 it reads for 95 minutes further back through the past year of finished tenders.
 
-GitHub's own schedule cannot be relied on for this: on this repository it started only a few of the jobs it was asked to, some of them hours late. So the `Clock` workflow keeps the time. GitHub holds each of its runs for 175 minutes (the wait timer of step 4, during which nothing runs); the run wakes a few minutes before the next of eight moments a day, starts the next run and, at the four times above, the two update jobs. The update jobs start the clock if they find none, so it starts by itself and mends itself. Without the wait timer it starts nothing. To stop it: Actions → Clock → ⋯ → Disable workflow. To change the times, edit `UPDATES` in `bot/clock.py`; they are in UTC, Yerevan time minus 4 hours.
+GitHub's own schedule cannot be relied on for this: on this repository it started only a few of the jobs it was asked to, some of them hours late. So the `Clock` workflow keeps the time. GitHub holds each of its runs for 175 minutes (the wait timer of step 4, during which nothing runs); the run wakes a few minutes before the next of eight moments a day, starts the next run and whatever is due at that moment. The update jobs start the clock if they find none, so it starts by itself and mends itself. Without the wait timer it starts nothing. To stop it: Actions → Clock → ⋯ → Disable workflow. To change the times, edit `UPDATES` and `NIGHTS` in `bot/clock.py`; they are in UTC, Yerevan time minus 4 hours.
 
 **And whenever GitHub's schedule does fire**, as a second way in:
 

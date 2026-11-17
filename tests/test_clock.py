@@ -96,10 +96,20 @@ class Ticks(unittest.TestCase):
         self.assertEqual(tick(at(17, 10, 46))[1].started[1], ("tenders.yml", {"mode": "refresh"}))
         self.assertEqual(tick(at(21, 13, 46))[1].started[1], ("tenders.yml", {"mode": "digest"}))     # Saturday
 
-    def test_at_night_and_on_sunday_it_only_keeps_the_time(self):
-        for woke in (at(17, 16, 45), at(17, 22, 47), at(18, 1, 44), at(22, 4, 45), at(22, 13, 45)):
+    def test_at_night_it_starts_the_long_reading_and_on_sunday_nothing_else(self):
+        for woke in (at(17, 16, 45), at(17, 19, 46), at(17, 22, 47), at(18, 1, 44), at(22, 22, 45)):
+            code, h, _ = tick(woke)
+            self.assertEqual((code, h.started), (0, [("clock.yml", {"do": "tick"}), ("history.yml", {"minutes": "95"})]))
+        for woke in (at(22, 4, 45), at(22, 7, 45), at(22, 10, 45), at(22, 13, 45)):          # Sunday, by day
             code, h, _ = tick(woke)
             self.assertEqual((code, h.started), (0, [("clock.yml", {"do": "tick"})]))
+
+    def test_every_slot_of_the_week_has_its_work(self):
+        week = [at(16, 1, 50) + i * clock.STEP for i in range(56)]
+        self.assertEqual(sum(1 for s in week if clock.due(s)), 24)                             # four a day, six days
+        self.assertEqual(sum(1 for s in week if clock.reading(s) == "95"), 28)                 # four a night
+        self.assertEqual(sum(1 for s in week if clock.reading(s) == "15"), 24)
+        self.assertEqual(sum(1 for s in week if not clock.reading(s)), 4)                      # Sunday by day
 
     def test_a_tick_that_wakes_late_does_not_wait_three_hours(self):
         code, h, time = tick(at(17, 7, 58), held=183)

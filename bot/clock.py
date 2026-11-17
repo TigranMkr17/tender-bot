@@ -7,7 +7,8 @@
 The Clock workflow runs one tick at a time. GitHub holds a tick's job in the "clock" environment for that
 environment's wait timer (175 minutes, set in Settings -> Environments); nothing runs while it is held. The tick
 then wakes a few minutes before one of eight moments a day, three hours apart, sleeps the rest, starts the next
-tick and, at 08:50, 11:50, 14:50 and 17:50 Yerevan time from Monday to Saturday, the two update jobs.
+tick and, at 08:50, 11:50, 14:50 and 17:50 Yerevan time from Monday to Saturday, the two update jobs. At the
+four night slots it starts the long reading that works back through the past year.
 
 Standard library only. Times are UTC inside; Yerevan is four hours ahead all year.
 """
@@ -30,9 +31,12 @@ MIN_WAIT = 150                             # a tick held for less was not held b
 EARLY = timedelta(minutes=20)              # a slot this near is waited for
 LATE = timedelta(minutes=30)               # a slot this recently passed is served at once
 PROBE = timedelta(hours=6)                 # how often to try again while the timer is not set
-# What the Tenders job does at a slot, Monday to Saturday (UTC hour and minute). The rest of the slots only tick.
+# What the Tenders job does at a slot, Monday to Saturday (UTC hour and minute): 08:50 to 17:50 in Yerevan.
 UPDATES = {(4, 50): "digest", (7, 50): "refresh", (10, 50): "refresh", (13, 50): "digest"}
-HISTORY_MINUTES = "15"
+HISTORY_MINUTES = "15"                     # with each of those, a short look inside new invitations and at fresh results
+# Every night at 20:50, 23:50, 02:50 and 05:50 in Yerevan: the History job's long reading, back through the past year.
+NIGHTS = {(16, 50), (19, 50), (22, 50), (1, 50)}
+NIGHT_MINUTES = "95"
 TICK = "Tick"                              # the run name of a tick, set in the workflow
 
 
@@ -47,10 +51,17 @@ def slot_before(at: datetime) -> datetime:
 
 
 def due(slot: datetime) -> str | None:
-    """What the Tenders job should do at this slot; None when the slot only keeps the time."""
+    """What the Tenders job should do at this slot; None when it has nothing to do then."""
     if slot.weekday() == 6:                # Sunday
         return None
     return UPDATES.get((slot.hour, slot.minute))
+
+
+def reading(slot: datetime) -> str | None:
+    """How many minutes the History job should read at this slot; None when it has nothing to do then."""
+    if (slot.hour, slot.minute) in NIGHTS:
+        return NIGHT_MINUTES
+    return HISTORY_MINUTES if due(slot) else None
 
 
 @dataclass
@@ -134,7 +145,9 @@ def hhmm(at: datetime) -> str:
 
 def start_updates(hub, slot: datetime, say) -> bool:
     ok = True
-    for workflow, inputs in (("tenders.yml", {"mode": due(slot)}), ("history.yml", {"minutes": HISTORY_MINUTES})):
+    for workflow, inputs in (("tenders.yml", {"mode": due(slot)}), ("history.yml", {"minutes": reading(slot)})):
+        if not list(inputs.values())[0]:
+            continue                       # at night only the reading runs
         try:
             hub.start(workflow, **inputs)
             say(f"Started {workflow} for {hhmm(slot)}: {inputs}")
@@ -166,7 +179,7 @@ def tick(hub, now=lambda: datetime.now(timezone.utc), sleep=time.sleep, say=prin
     except RuntimeError as e:
         ok = False
         say(f"::error::The next tick could not be started: {e}")
-    if due(p.slot):
+    if reading(p.slot):
         ok = start_updates(hub, p.slot, say) and ok
     else:
         say(f"Nothing is due at {hhmm(p.slot)}.")
