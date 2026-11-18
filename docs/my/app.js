@@ -43,7 +43,10 @@ const CALM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const KIND = {g: 'ապրանք', s: 'ծառայություն', w: 'աշխատանք'};
 const ARMEPS = 'https://eauction.armeps.am';
 const REGISTER = 'https://www.armeps.am/ppcm/public/contracts';
-const MAX_CO = 3;                                           // three checked colours, three companies
+const MAX_CO = 3;
+/* The group this page is for. A phone that has never chosen anything opens on these three; the settings can still change them. */
+const HOME = {c: '01347339.02837663.02903016',
+  w: 'Հանդերձանք:հանդերձ|համազգեստ|սվիտ|տաբատ;Սպիտակեղեն:սպիտակեղ|անկողն|բարձերես;Հիգիենա:հիգիեն;Հյուրասիրություն:հյուրասիր|սննդի պատրաստ;Միջոցառումներ:միջոցառ;Կահույք:կահույք'};                                           // three checked colours, three companies
 
 /* text as it is compared: lower case, Latin look-alikes typed inside Armenian words put right, «և» spelled out */
 const LOOK = {a: 'ա', h: 'հ', o: 'օ', u: 'ս', p: 'ր', n: 'ո', g: 'ց', q: 'զ'};
@@ -138,6 +141,7 @@ function readConfig() {
   const key = c == null ? null : c + '|' + (w || '');
   if (key == null || seeds().includes(key)) { if (store.get('c') != null) { c = store.get('c'); w = store.get('w'); } }
   else addSeed(key);
+  if (c == null) { c = HOME.c; w = HOME.w; }
   CFG.tins = [...new Set(String(c || '').split(/[.,\s]+/).filter(t => /^\d{8}$/.test(t)))].slice(0, MAX_CO);
   let lines = null;
   if (w) {                                                  // packed by "Copy link", or typed by hand as Name:stem|stem;Name:stem
@@ -948,7 +952,8 @@ function firstRun() {
   setPlate('<h2 class="title">Ո՞ր ընկերությունների համար</h2><p class="lead">Գտեք ձեր ընկերությունը պետական գնումների պայմանագրերի գրանցամատյանում։ Էջը ցույց կտա նրա պայմանագրերը, մրցակիցներին և գնորդներին։</p>', S.loaded);
   $('#view').innerHTML = `<div class="setup"><div id="set-co">${CFG.tins.length ? coRows() : ''}</div>
     ${CFG.tins.length < MAX_CO ? `<div class="field"><input class="inp" id="co-q" type="search" autocomplete="off" enterkeyhint="search" placeholder="Ընկերության անունը կամ ՀՎՀՀ-ն" aria-label="Որոնել ընկերություն"></div><div id="co-found"></div>` : ''}
-    ${CFG.tins.length ? `<div class="actions"><button class="btn" type="button" data-act="start">Շարունակել${ic('go', 's')}</button></div>` : ''}
+    ${CFG.tins.length ? `<div class="actions"><button class="btn" type="button" data-act="start">Շարունակել${ic('go', 's')}</button></div>`
+      : `<div class="actions"><button class="btn quiet" type="button" data-act="home">Վերադարձնել մեր երեք ընկերությունները</button></div>`}
     <p class="foot" style="margin:1.25rem .25rem 0;padding:0;border:0">Որոնվում են այն ընկերությունները, որոնք ${fDayY(dOnly(D.meta.from))}-ից ի վեր գոնե մեկ պայմանագիր են կնքել։ Ընտրությունը մնում է միայն այս սարքում և էջի հղման մեջ։</p></div>`;
   S.loaded = true;
 }
@@ -976,6 +981,7 @@ const ACT = {
   co: el => openSheet('co', el.dataset.i),
   settings: () => openSheet('settings'),
   start() { S.setup = false; reapply(); scrollTo(0, 0); },
+  home() { CFG.tins = HOME.c.split('.'); CFG.lines = unpackLines(HOME.w); S.guessed = false; S.setup = false; S.line = -1; reapply(); scrollTo(0, 0); },
   'sheet-back': backOne,
   'sheet-close': closeAll,
   chartmode() { S.chartMode = S.chartMode === 'table' ? 'bars' : 'table'; $('#chart').outerHTML = chartShell(); drawChart(); },

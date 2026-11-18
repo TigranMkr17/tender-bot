@@ -607,8 +607,8 @@ const NO_SUBJECT = 'Գնման առարկան վերնագրում նշված չ
 const ARMEPS = 'https://eauction.armeps.am';
 const pageOf = id => `${ARMEPS}/hy/public/tender_details/by_end_bid_time/2/tid/${id}/`;
 const safe = u => (/^https:\/\//.test(u || '') ? u : '#');
-/* Մեր դաշտը (my/) keeps its choice of companies on this device; when it has one, every open tender gets a way there */
-const OURS = () => { try { return !!localStorage.getItem('md.c'); } catch { return false; } };
+/* Every open tender gets a way into Մեր դաշտը (my/), unless someone emptied its choice of companies on this phone */
+const OURS = () => { try { return localStorage.getItem('md.c') !== ''; } catch { return true; } };
 const ic = (name, cls = '') => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const CALM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const WIDE = matchMedia('(min-width:64rem)');               // room for the list and a notice side by side
