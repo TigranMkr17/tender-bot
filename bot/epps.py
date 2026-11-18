@@ -302,11 +302,11 @@ def apply(t: dict, d: dict) -> None:
     """Put what a call's page says into the stored tender."""
     if d.get("title"):
         t["title"] = d["title"]
-    if d.get("title_en"):
-        t["title_en"] = d["title_en"][:300]
-    for src, dst in (("code", "code"), ("uid", "uid")):
-        if d.get(src):
-            t[dst] = d[src]
+    en = clean(d.get("title_en"))
+    if len(en) >= 12 and " " in en:                         # some calls carry a placeholder word here
+        t["title_en"] = en[:300]
+    if d.get("code"):
+        t["code"] = d["code"]
     if d.get("buyer"):
         t["buyer_official"] = d["buyer"]
     if d.get("org"):

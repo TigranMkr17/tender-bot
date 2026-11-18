@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import os
 from datetime import datetime, timedelta, timezone
 
@@ -13,8 +14,8 @@ DATA_PATH = os.path.join("docs", "data", "tenders.json")    # the slim copy the 
 KEEP_CLOSED_DAYS = 4
 INVITATION = "https://eauction.armeps.am/application/documents/public_invitation/tender_{id}.zip"
 #: Fields the app shows. The notice URL is left out: the app builds it from the id.
-PUBLIC = ("id", "code", "title", "subject", "buyer", "bk", "for", "kind", "sector", "lots",
-          "status", "pub", "end", "ask", "auc")
+PUBLIC = ("id", "src", "code", "title", "subject", "buyer", "bk", "for", "kind", "sector", "lots",
+          "status", "pub", "end", "ask", "auc", "opn", "pr", "est")
 
 STATUS = {"Հրապարակված": "open", "Published": "open",
           "Չեղարկված": "cancelled", "Cancelled": "cancelled", "Canceled": "cancelled"}
@@ -110,6 +111,16 @@ def prune(tenders: list[dict], at: datetime) -> list[dict]:
     """Drop tenders whose deadline passed more than a few days ago."""
     limit = at - timedelta(days=KEEP_CLOSED_DAYS)
     return [t for t in tenders if (parse(t.get("end")) or at) >= limit]
+
+
+def _code_key(code: str | None) -> str:
+    return re.sub(r"[\s\-–/.]", "", (code or "").upper())
+
+
+def drop_doubles(tenders: list[dict]) -> list[dict]:
+    """A call on EPPS that is also on the auction site (same procedure code) is shown once, as the auction."""
+    auctions = {_code_key(t.get("code")) for t in tenders if not t.get("src") and t.get("code")}
+    return [t for t in tenders if not (t.get("src") and _code_key(t.get("code")) in auctions)]
 
 
 def compact(t: dict) -> dict:

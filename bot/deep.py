@@ -572,7 +572,7 @@ def run(minutes: float, at: datetime | None = None, fetch_bytes=armeps.fetch_byt
         fetch_page=armeps.fetch_page, now=time.monotonic) -> int:
     at = at or store.now()
     clock = Clock(minutes, now)
-    tenders = store.load()["tenders"]
+    tenders = [t for t in store.load()["tenders"] if not t.get("src")]   # invitations and results: auctions only
     lots_state = _load(LOTS_STATE, {})
     hist = _load(HIST_STATE, {})
     records = load_results()

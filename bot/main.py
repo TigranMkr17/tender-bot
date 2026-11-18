@@ -15,7 +15,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 
-from . import armeps, digest, store, telegram
+from . import armeps, digest, epps, store, telegram
 from .textproc import kind_key
 
 MAX_PAGES = 60
@@ -157,7 +157,7 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
 
     # notice pages: full title, buyer, publication time, other dates, invitation
     todo = [t for t in tenders.values()
-            if t.get("status") == "open" and (not t.get("pub") or t.get("stale"))
+            if not t.get("src") and t.get("status") == "open" and (not t.get("pub") or t.get("stale"))
             and t.get("dt", 0) < DETAIL_TRIES and (store.parse(t.get("end")) or at) > at]
     todo.sort(key=lambda t: -t["id"])   # newest notices first
     todo = todo[:MAX_DETAILS]
@@ -212,14 +212,22 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
     return stats
 
 
-def update_data(at: datetime, fetch=armeps.fetch, pause: float = 0.3) -> dict:
+def update_data(at: datetime, fetch=armeps.fetch, pause: float = 0.3, with_epps: bool | None = None) -> dict:
     data = store.load()
     tenders = {t["id"]: t for t in data["tenders"]}
     stats = scrape(tenders, at, fetch=fetch, pause=pause)
+    if with_epps is None:
+        with_epps = fetch is armeps.fetch                   # tests that pass their own pages stay off the network
+    if with_epps:                                           # EPPS: price quotations, open tenders and the rest
+        try:
+            epps.update(tenders, at, say=say)
+        except armeps.ScrapeError as exc:
+            say(f"! EPPS: {exc} The calls already known stay as they were.")
     items = store.prune(list(tenders.values()), at)
+    items = store.drop_doubles(items)
     store.enrich(items)
     data["tenders"] = [store.compact(t) for t in items]
-    data["meta"] = {"updated": store.stamp(at), "source": "eauction.armeps.am",
+    data["meta"] = {"updated": store.stamp(at), "source": "eauction.armeps.am, armeps.am/epps",
                     "open": sum(store.is_open(t, at) for t in items)}
     store.save(data)       # what the bot remembers
     store.publish(data)    # what the app shows
