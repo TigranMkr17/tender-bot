@@ -606,6 +606,22 @@ const KINDS = {
 const NO_SUBJECT = 'Գնման առարկան վերնագրում նշված չէ';
 const ARMEPS = 'https://eauction.armeps.am';
 const pageOf = id => `${ARMEPS}/hy/public/tender_details/by_end_bid_time/2/tid/${id}/`;
+const EPPS = 'https://www.armeps.am/epps/cft/prepareViewCfTWS.do?resourceId=';
+/* How each procedure picks its supplier. Auctions come from eauction.armeps.am; every other kind from EPPS (src "epps"). */
+const PROC = {
+  'ԷԱՃ': ['Էլեկտրոնային աճուրդ', 'Գները վերջնական են դառնում առցանց աճուրդում, որտեղ մասնակիցներն իջեցնում են իրենց գինը։'],
+  'ԳՀ': ['Գնանշման հարցում', 'Մասնակիցները մեկ անգամ են ներկայացնում իրենց գինը. աճուրդ չկա։ Սովորաբար ընտրվում է պայմաններին համապատասխանող ամենացածր գինը։'],
+  'ԲՄ': ['Բաց մրցույթ', 'Ցանկացած կազմակերպություն կարող է հայտ ներկայացնել։ Հայտերը բացվում են նշված օրը, և գնահատվում են պայմաններն ու գինը։'],
+  'ՀԲՄ': ['Հրատապ բաց մրցույթ', 'Բաց մրցույթ՝ կարճ ժամկետներով։'],
+  'ԵՄ': ['Երկփուլ մրցույթ', 'Նախ ներկայացվում է տեխնիկական առաջարկը, հետո՝ գինը։'],
+  'ՇՀ': ['Շրջանակային համաձայնություն', 'Պայմանագիր մի քանի գնումների համար՝ որոշակի ժամանակահատվածում։'],
+  'ԴՄ': ['Դրամաշնորհային մրցույթ', 'Մրցույթ դրամաշնորհ ստանալու համար։'],
+  'ՄԱ': ['Մեկ անձից գնում', 'Գնորդն առաջարկ է խնդրում կոնկրետ մատակարարից։'],
+  'ԲԸ': ['Բանակցային ընթացակարգ', 'Գնորդը պայմանները քննարկում է մասնակիցների հետ։'],
+  'ՊԸ': ['Պարզեցված ընթացակարգ', ''], 'ՍԸ': ['Սահմանափակ ընթացակարգ', 'Մասնակցում են միայն հրավիրվածները։'],
+  'ՄԵ': ['Մրցակցային երկխոսություն', '']
+};
+const procOf = t => PROC[t.src ? t.pr : 'ԷԱՃ'] || (t.src ? ['ARMEPS ընթացակարգ', ''] : PROC['ԷԱՃ']);
 const safe = u => (/^https:\/\//.test(u || '') ? u : '#');
 /* Every open tender gets a way into Մեր դաշտը (my/), unless someone emptied its choice of companies on this phone */
 const OURS = () => { try { return localStorage.getItem('md.c') !== ''; } catch { return true; } };
@@ -725,6 +741,7 @@ function rowHTML(t, mode) {
   if (mode === 'due' && t.newD && dayNo(t.newD) === dayNo(new Date(now()))) meta.push('<span class="tag">նոր</span>');
   meta.push(`<span>${ic(t.sector, 'ic--s')}${esc(SECTORS[t.sector])}</span>`);
   if (t.lots) meta.push(`<span class="num">${t.lots} չափաբաժին</span>`);
+  if (t.src) meta.push(`<span>${esc(procOf(t)[0])}</span>`);
   const inside = mode === 'in';
   return `<li class="row${closed ? ' is-off' : ''}" data-key="${key}"${!inside && key === S.stack[0] ? ' aria-current="true"' : ''}>` +
     `<button class="row-main" type="button" data-go="${key}"${inside ? '' : ' data-root'}>${tileHTML(t, mode)}` +
@@ -799,7 +816,7 @@ function chrome() {
     (hot ? `<span class="stat stat--hot"><b class="num">${hot}</b> փակվում է 3 օրում</span>` : '') +
     `<a class="stat stat--ours" href="my/">${ic('ours')}Մեր դաշտը${ic('back', 'go')}</a>`;
   if (!S.counted) { S.counted = true; document.querySelectorAll('#stats b.num').forEach(b => roll(b, 0, +b.textContent, v => Math.round(v), 700)); }
-  $('#foot').textContent = `Աղբյուրը՝ eauction.armeps.am։ ${upd ? `Թարմացվել է ${fStamp(upd)}-ին։ ` : ''}Տվյալները թարմացվում են աշխատանքային օրերին՝ 08:50, 11:50, 14:50 և 17:50։`;
+  $('#foot').textContent = `Աղբյուրը՝ ARMEPS-ի էլեկտրոնային աճուրդները (eauction.armeps.am) և գնանշման հարցումներն ու մրցույթները (armeps.am/epps)։ ${upd ? `Թարմացվել է ${fStamp(upd)}-ին։ ` : ''}Տվյալները թարմացվում են աշխատանքային օրերին՝ 08:50, 11:50, 14:50 և 17:50։`;
 }
 
 /* Long lists are drawn a screenful at a time: the first rows at once, the rest as the reader scrolls. */
@@ -936,6 +953,9 @@ function tenderFrame(t) {
   if (t.buyer) facts.push(fact('buyer', 'Գնորդը', esc(t.buyer)));
   if (t.for) facts.push(fact('for', 'Ում կարիքների համար', esc(t.for)));
   if (kind) facts.push(fact('kind', 'Տեսակը', `${kind[0]}<small>${kind[1]}</small>`));
+  const proc = procOf(t);
+  facts.push(fact('clock', 'Ինչպես է ընտրվում մատակարարը', `${esc(proc[0])}${proc[1] ? `<small>${esc(proc[1])}</small>` : ''}`));
+  if (t.est) facts.push(fact('lots', 'Մոտավոր արժեքը', `<span class="num">${group(t.est)}${NB}դրամ</span><small>Գնորդի նախահաշիվը։ Պայմանագիրը սովորաբար կնքվում է ավելի ցածր գնով։</small>`));
   if (t.lots) facts.push(fact('lots', 'Չափաբաժիններ', `<span class="num">${t.lots}</span><small>${t.lots > 1
     ? 'Չափաբաժինը մրցույթի առանձին մասն է։ Կարող եք հայտ ներկայացնել մեկ կամ մի քանի չափաբաժնի համար։'
     : 'Մրցույթը մասերի բաժանված չէ։'}</small>`));
@@ -944,6 +964,7 @@ function tenderFrame(t) {
   if (t.pubD) tl.push(`<li class="is-past"><b>Հրապարակվել է</b><span class="num">${fStamp(t.pubD)}</span></li>`);
   if (t.askD) tl.push(`<li class="${past(t.askD).trim()}"><b>Հարցեր գնորդին</b><span class="num">մինչև ${fStamp(t.askD)}</span><small>Պարզաբանման հարցերն ուղարկվում են ARMEPS համակարգով։</small></li>`);
   tl.push(`<li class="is-key${past(t.endD)}"><b>Հայտի ներկայացում</b><span class="num">մինչև ${fStamp(t.endD)}</span></li>`);
+  if (t.opnD && !t.aucD) tl.push(`<li class="${past(t.opnD).trim()}"><b>Հայտերի բացում</b><span class="num">${fStamp(t.opnD)}</span><small>Գնորդը բացում է հայտերը և համեմատում առաջարկները։</small></li>`);
   if (t.aucD) tl.push(`<li class="${past(t.aucD).trim()}"><b>Հակադարձ աճուրդ</b><span class="num">${fStamp(t.aucD)}</span><small>Մասնակիցներն առցանց իջեցնում են իրենց առաջարկած գինը։</small></li>`);
 
   let prog = '';
@@ -955,7 +976,7 @@ function tenderFrame(t) {
   const state = t.status === 'cancelled' ? 'մրցույթը չեղարկված է' : l.lvl === 'crit' ? l.text.split(',')[0] : l.text;
   return `${dbar('t' + t.id)}
     <div class="wrap">
-      ${heroHTML(t.subject || NO_SUBJECT, t.buyer, t.bk, [`${ic(t.sector, 'ic--s')}${esc(SECTORS[t.sector])}`, ...(kind ? [kind[0]] : []), ...(t.lots ? [`${t.lots} չափաբաժին`] : [])])}
+      ${heroHTML(t.subject || NO_SUBJECT, t.buyer, t.bk, [`${ic(t.sector, 'ic--s')}${esc(SECTORS[t.sector])}`, ...(kind ? [kind[0]] : []), ...(t.src ? [esc(proc[0])] : []), ...(t.lots ? [`${t.lots} չափաբաժին`] : [])])}
       <section class="sheet due${cls}">
         <span class="tile${closed ? ' is-off' : cls} num"><small>${WD3[p.wd]}</small><b>${p.d}</b><small>${MON3[p.m]}</small></span>
         <p><span class="due-l">Հայտերն ընդունվում են մինչև</span>
@@ -964,7 +985,7 @@ function tenderFrame(t) {
       </section>
       <div class="acts">
         ${t.inv ? `<a class="btn btn--primary" href="${esc(safe(t.inv))}" target="_blank" rel="noopener" data-ext>${ic('down')}Ներբեռնել հրավերը</a>` : ''}
-        <a class="btn" href="${esc(safe(t.url))}" target="_blank" rel="noopener" data-ext>${ic('out')}Բացել ARMEPS-ում</a>
+        <a class="btn${t.inv ? '' : ' btn--primary'}" href="${esc(safe(t.url))}" target="_blank" rel="noopener" data-ext>${ic('out')}${t.src ? 'Բացել ARMEPS-ում և փաստաթղթերը' : 'Բացել ARMEPS-ում'}</a>
         ${!closed && OURS() ? `<a class="btn btn--ours" href="my/#t${t.id}">${ic('ours')}Տեսնել «Մեր դաշտում»</a>` : ''}
       </div>
       <section class="sheet sec"><h2>Պարզ բառերով</h2><dl class="facts">${facts.join('')}</dl></section>
@@ -973,18 +994,22 @@ function tenderFrame(t) {
       <div data-slot="before"></div>
       <div data-slot="who"></div>
       <section class="sheet sec"><h2>Ինչպես մասնակցել</h2>
-        <ol class="steps">
+        <ol class="steps">${t.src ? `
+          <li>Բացեք մրցույթի էջը ARMEPS-ում. հրավերը և մյուս փաստաթղթերը այնտեղ են։ Ուշադիր կարդացեք պայմանները։</li>
+          <li>Եթե հարց ունեք, ուղարկեք այն գնորդին մինչև նշված օրը։</li>
+          <li>Հայտը ներկայացրեք էլեկտրոնային եղանակով ARMEPS-ում՝ մինչև վերջնաժամկետը։</li>
+          <li>${t.opnD ? `Հայտերը բացվում են ${fStamp(t.opnD)}-ին։ ` : ''}Աճուրդ չկա. ներկայացրած գինը վերջնական է, այնպես որ նախապես հաշվարկեք այն։</li>` : `
           <li>Ներբեռնեք հրավերը և ուշադիր կարդացեք պայմանները։</li>
           <li>Եթե հարց ունեք, ուղարկեք այն գնորդին մինչև նշված օրը։</li>
           <li>Հայտը ներկայացրեք ARMEPS էլեկտրոնային աճուրդի համակարգում՝ մինչև վերջնաժամկետը։</li>
-          <li>Աճուրդի օրը մասնակցեք առցանց։ Սովորաբար հաղթում է պայմաններին համապատասխանող ամենացածր գինը։</li>
+          <li>Աճուրդի օրը մասնակցեք առցանց։ Սովորաբար հաղթում է պայմաններին համապատասխանող ամենացածր գինը։</li>`}
         </ol>
         <p class="fine">Մասնակցելու համար պետք է գրանցված լինել ARMEPS համակարգում։ Ճշգրիտ պայմանները միշտ հրավերում են։</p></section>
       <div data-slot="need"></div>
       <section class="sheet sec"><h2>Պաշտոնական անվանումը</h2>
         <p class="official">${esc(t.title)}</p>
         <p class="code">Ծածկագիր՝ ${esc(t.code)}</p></section>
-      <p class="foot">Աղբյուրը՝ eauction.armeps.am։ Այս էջը պաշտոնական հայտարարության պարզեցված շարադրանքն է. վճռորոշը հրավերի տեքստն է։</p>
+      <p class="foot">Աղբյուրը՝ ${t.src ? 'armeps.am/epps' : 'eauction.armeps.am'}։ Այս էջը պաշտոնական հայտարարության պարզեցված շարադրանքն է. վճռորոշը հրավերի տեքստն է։</p>
     </div>`;
 }
 
@@ -1642,12 +1667,12 @@ function ingest(data) {
   S.meta = data.meta || {};
   S.frozen = S.meta.preview && S.meta.updated ? toDate(S.meta.updated).getTime() : null;   // a preview keeps its own clock
   S.all = (data.tenders || []).filter(t => t && t.id && t.end).map(t => ({...t,
-    endD: toDate(t.end), pubD: toDate(t.pub), askD: toDate(t.ask), aucD: toDate(t.auc),
+    endD: toDate(t.end), pubD: toDate(t.pub), askD: toDate(t.ask), aucD: toDate(t.auc), opnD: toDate(t.opn),
     newD: toDate(t.pub || t.seen),   // seen: first met in the list, when the notice gave no time
     sector: SECTORS[t.sector] ? t.sector : 'other',
     ln: (lotsOf(t.id) || {}).ln || '',
-    url: t.url || pageOf(t.id),
-    inv: t.inv === 1 ? `${ARMEPS}/application/documents/public_invitation/tender_${t.id}.zip` : t.inv}));
+    url: t.url || (t.src === 'epps' ? EPPS + t.id : pageOf(t.id)),
+    inv: t.src ? null : t.inv === 1 ? `${ARMEPS}/application/documents/public_invitation/tender_${t.id}.zip` : t.inv}));
   S.byId = new Map(S.all.map(t => [t.id, t]));
   S.stamp = `${S.meta.updated}|${S.all.length}`;
   S.rev++;

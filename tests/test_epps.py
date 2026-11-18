@@ -209,5 +209,15 @@ class UpdateTest(unittest.TestCase):
         self.assertEqual([t["id"] for t in store.drop_doubles(items)], [1, 12_600_001])
 
 
+
+class SectorTest(unittest.TestCase):
+    def test_vehicle_repair_is_transport(self):
+        from bot import textproc as tp
+        self.assertEqual(tp.classify("ավտոմեքենաների վերանորոգման ծառայությունների ձեռքբերում", "services"), "auto")
+        self.assertEqual(tp.classify("ավտոբուսների վերանորոգում", "services"), "auto")
+        self.assertEqual(tp.classify("շենքերի ընթացիկ նորոգման աշխատանքներ", "works"), "build")
+        self.assertEqual(tp.classify("ճանապարհների վերանորոգում", "works"), "build")
+
+
 if __name__ == "__main__":
     unittest.main()

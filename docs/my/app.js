@@ -42,6 +42,12 @@ const ic = (name, cls = '') => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidd
 const CALM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const KIND = {g: 'ապրանք', s: 'ծառայություն', w: 'աշխատանք'};
 const ARMEPS = 'https://eauction.armeps.am';
+const EPPS = 'https://www.armeps.am/epps/cft/prepareViewCfTWS.do?resourceId=';
+const PROC = {'ԳՀ': 'Գնանշման հարցում', 'ԲՄ': 'Բաց մրցույթ', 'ՀԲՄ': 'Հրատապ բաց մրցույթ', 'ԵՄ': 'Երկփուլ մրցույթ', 'ՇՀ': 'Շրջանակային համաձայնություն',
+  'ԴՄ': 'Դրամաշնորհային մրցույթ', 'ՄԱ': 'Մեկ անձից գնում', 'ԲԸ': 'Բանակցային ընթացակարգ', 'ՊԸ': 'Պարզեցված ընթացակարգ', 'ՍԸ': 'Սահմանափակ ընթացակարգ',
+  'ՄԵ': 'Մրցակցային երկխոսություն'};
+const procName = t => (t.src ? PROC[t.pr] || 'ARMEPS ընթացակարգ' : 'Էլեկտրոնային աճուրդ');
+const armepsOf = t => (t.src === 'epps' ? EPPS + t.id : `${ARMEPS}/hy/public/tender_details/by_end_bid_time/2/tid/${t.id}/`);
 const REGISTER = 'https://www.armeps.am/ppcm/public/contracts';
 const MAX_CO = 3;
 /* The group this page is for. A phone that has never chosen anything opens on these three; the settings can still change them. */
@@ -485,10 +491,10 @@ function todayView() {
     html += chips(countBy(fit, t => t.L), fit.length) + '</div>';
     html += rows.length ? list('open', rows, t => `<button class="row" type="button" data-act="tender" data-id="${t.id}">${leftTile(t.end)}
       <span><span class="t clamp">${esc(t.subject || t.title)}</span><span class="s clamp">${esc(t.buyer || t.for || '')}</span>
-      <span class="m">${lineTags(t.L)}${t.b && ourBuyers().has(t.b) ? tag('Մեր գնորդը', 'ok', 'check') : ''}${t.lots > 1 ? `<span>${plural(t.lots, 'չափաբաժին')}</span>` : ''}</span></span>
+      <span class="m">${lineTags(t.L)}${t.b && ourBuyers().has(t.b) ? tag('Մեր գնորդը', 'ok', 'check') : ''}${t.src ? `<span>${esc(procName(t))}</span>` : ''}${t.lots > 1 ? `<span>${plural(t.lots, 'չափաբաժին')}</span>` : ''}</span></span>
       <span class="go">${ic('go')}</span></button>`, {cap: 40})
       : empty('Այս պահին բաց աճուրդ չկա', 'Նոր հայտարարությունները հայտնվում են օրը չորս անգամ՝ 08:50, 11:50, 14:50 և 17:50։');
-    html += `<p class="foot" style="margin:1rem .25rem 0;padding:0;border:0">Ցանկում միայն էլեկտրոնային աճուրդներն են։ Գնանշման հարցումները և բաց մրցույթները այստեղ դեռ չկան։</p>`;
+    html += `<p class="foot" style="margin:1rem .25rem 0;padding:0;border:0">Ցանկում են էլեկտրոնային աճուրդները, գնանշման հարցումները և բաց մրցույթները՝ ARMEPS-ից։</p>`;
   } else if (mode === 'next') {
     const all = expected(), rows = all.filter(r => inLine(r.L));
     html += chips(countBy(all, r => r.L), all.length) + '</div>';
@@ -751,7 +757,7 @@ const SHEETS = {
   tender(id) {
     const t = OPEN.find(x => x.id === +id);
     if (!t) return '<h2>Մրցույթը փակվել է</h2>';
-    const end = toDate(t.end), ask = toDate(t.ask), auc = toDate(t.auc), before = t.b ? lined().filter(c => c.b === t.b && (c.L & t.L)) : [];
+    const end = toDate(t.end), ask = toDate(t.ask), auc = toDate(t.auc), opn = toDate(t.opn), before = t.b ? lined().filter(c => c.b === t.b && (c.L & t.L)) : [];
     const names = (t.lot.ln || '').split('; ').filter(Boolean);
     return `${headline(t.subject || t.title)}
       <div class="tags">${lineTags(t.L)}${t.b && ourBuyers().has(t.b) ? tag('Մեր գնորդը', 'ok', 'check') : ''}</div>
@@ -760,14 +766,17 @@ const SHEETS = {
         ['Հայտերը՝ մինչև', `${fDay(end)}, ${fTime(end)}<small>${left(end)}</small>`],
         ask && ['Հարցերը՝ մինչև', `${fDay(ask)}, ${fTime(ask)}`],
         auc && ['Աճուրդը', `${fDay(auc)}, ${fTime(auc)}`],
-        ['Չափաբաժին', `${group(t.lots || t.lot.n || 1)}${names.length ? `<small>${esc(names.slice(0, 6).join(', '))}${names.length > 6 ? ' և այլն' : ''}</small>` : ''}`],
+        !auc && opn && ['Հայտերի բացումը', `${fDay(opn)}, ${fTime(opn)}`],
+        ['Ընթացակարգ', esc(procName(t)) + (t.src ? '<small>Աճուրդ չկա. ներկայացրած գինը վերջնական է։</small>' : '')],
+        t.est ? ['Մոտավոր արժեքը', `${group(t.est)} դրամ<small>գնորդի նախահաշիվը</small>`] : null,
+        !t.src || t.lots ? ['Չափաբաժին', `${group(t.lots || t.lot.n || 1)}${names.length ? `<small>${esc(names.slice(0, 6).join(', '))}${names.length > 6 ? ' և այլն' : ''}</small>` : ''}`] : null,
         ['Ծածկագիր', esc(t.code)]
       ])}
       ${offHint(usualOff(t.b, t.L))}
       ${before.length ? sec('Ում հետ է այս գնորդը կնքել նախկինում', 'Նույն ուղղությամբ, վերջին մեկ տարում։') + list('before', before, c => contractRow(c, {buyer: false}), {cap: 8})
         : t.b ? sec('Այս գնորդի նախորդ պայմանագրերը', 'Նույն ուղղությամբ վերջին մեկ տարում պայմանագիր չի գտնվել։') : ''}
       <div class="actions"><a class="btn" href="../#t${t.id}">Բացել մրցույթի էջը${ic('go', 's')}</a>
-      <a class="btn quiet" href="${ARMEPS}/hy/public/tender_details/by_end_bid_time/2/tid/${t.id}/" target="_blank" rel="noopener">Բացել ARMEPS-ում${ic('out', 's')}</a></div>`;
+      <a class="btn quiet" href="${armepsOf(t)}" target="_blank" rel="noopener">Բացել ARMEPS-ում${ic('out', 's')}</a></div>`;
   },
   contract(i) {
     const c = D.C[+i], o = off(c), others = c.t ? c.t.cs.filter(x => x !== c) : [];
