@@ -87,7 +87,9 @@ svg.ic.s{width:1rem;height:1rem;stroke-width:1.9}
 .sig .seal{margin-left:-.625rem;mix-blend-mode:screen}
 .sig .seal:first-child{margin-left:0}
 .plate[data-tab=us] .sig{opacity:0;transform:scale(.7)}
-.ibtn{display:grid;place-items:center;width:2.75rem;height:2.75rem;margin-right:-.625rem;border:0;border-radius:50%;background:none;color:inherit}
+.ibtn{display:grid;place-items:center;width:2.75rem;height:2.75rem;border:0;border-radius:50%;background:none;color:inherit}
+.plate-top .ibtn:last-child{margin-right:-.625rem}
+.plate-top .sig{margin-right:.25rem}
 .ibtn:active{background:rgba(243,237,220,.12)}
 @media (hover:hover){.ibtn:hover{background:rgba(243,237,220,.1)}}
 .plate-body{position:relative;transition:height .5s var(--out)}

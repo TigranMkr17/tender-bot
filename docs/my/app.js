@@ -1034,6 +1034,7 @@ document.addEventListener('visibilitychange', async () => {
 
 /* ---------- start ---------- */
 async function boot() {
+  const deep = /^#t(\d{1,9})$/.exec(location.hash);          // a tender sent here from the full list
   readConfig();
   const SEGS = {today: ['open', 'next', 'done'], rivals: ['met', 'line'], buyers: ['ours', 'new']};
   for (const t in SEGS) { const v = store.get('seg.' + t); if (SEGS[t].includes(v)) S.seg[t] = v; }
@@ -1055,6 +1056,7 @@ async function boot() {
   $('#tabs').hidden = false; $('#b-set').hidden = false;
   render();
   if (!CALM) $('#sheen').classList.add('go');
+  if (deep && OPEN.some(t => t.id === +deep[1])) openSheet('tender', deep[1]);
 }
 boot();
 })();
