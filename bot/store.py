@@ -74,7 +74,7 @@ def public_view(t: dict) -> dict:
 
 def publish(data: dict, path: str = DATA_PATH) -> None:
     """Write the copy the app downloads."""
-    tenders = sorted(data["tenders"], key=lambda t: (t.get("end") or "", t["id"]))
+    tenders = sorted(drop_doubles(data["tenders"]), key=lambda t: (t.get("end") or "", t["id"]))
     _write({"meta": data["meta"], "tenders": [public_view(t) for t in tenders]}, path)
 
 

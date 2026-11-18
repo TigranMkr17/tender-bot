@@ -233,5 +233,19 @@ class ExpiredTest(unittest.TestCase):
         self.assertNotIn(9_392_882, tenders)
 
 
+
+class DoublesTest(unittest.TestCase):
+    def test_a_double_stays_in_memory_but_not_on_the_site(self):
+        import json, tempfile
+        data = {"meta": {}, "tenders": [{"id": 1, "code": "ԵՔ-ԷԱՃԱՊՁԲ-26/9", "end": "2026-11-25T10:00"},
+                                         {"id": 12_600_000, "src": "epps", "code": "ԵՔ-ԷԱՃԱՊՁԲ-26/9", "end": "2026-11-25T10:00"}]}
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "tenders.json")
+            store.publish(data, path)
+            with open(path, encoding="utf-8") as fh:
+                self.assertEqual([t["id"] for t in json.load(fh)["tenders"]], [1])
+        self.assertEqual(len(data["tenders"]), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

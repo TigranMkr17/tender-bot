@@ -229,7 +229,6 @@ def update_data(at: datetime, fetch=armeps.fetch, pause: float = 0.3, with_epps:
     kept = {t["id"] for t in items}
     done |= {i for i, t in tenders.items() if t.get("src") == "epps" and i not in kept}
     data["epps_done"] = sorted(done & listed) if listed is not None else sorted(done)
-    items = store.drop_doubles(items)
     store.enrich(items)
     data["tenders"] = [store.compact(t) for t in items]
     data["meta"] = {"updated": store.stamp(at), "source": "eauction.armeps.am, armeps.am/epps",
