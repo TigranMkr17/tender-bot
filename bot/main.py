@@ -232,7 +232,7 @@ def update_data(at: datetime, fetch=armeps.fetch, pause: float = 0.3, with_epps:
     store.enrich(items)
     data["tenders"] = [store.compact(t) for t in items]
     data["meta"] = {"updated": store.stamp(at), "source": "eauction.armeps.am, armeps.am/epps",
-                    "open": sum(store.is_open(t, at) for t in items)}
+                    "open": sum(store.is_open(t, at) for t in store.drop_doubles(items))}
     store.save(data)       # what the bot remembers
     store.publish(data)    # what the app shows
     say(f"ARMEPS: {stats['pages']} pages, {stats['rows']} current tenders, "
