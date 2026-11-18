@@ -1,0 +1,29 @@
+# Reads the EPPS list of calls taking bids and a few calls' pages, and prints what bot/epps.py understood.
+# Changes nothing: it is for checking the reader against the live site.
+name: EPPS look
+run-name: EPPS look (${{ inputs.probe }} calls)
+
+on:
+  workflow_dispatch:
+    inputs:
+      probe:
+        description: "How many calls to read"
+        default: "4"
+
+permissions:
+  contents: read
+
+jobs:
+  look:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Read EPPS
+        env:
+          PYTHONUNBUFFERED: "1"
+          PROBE: ${{ inputs.probe }}
+        run: python -m bot.epps --probe "$PROBE"
