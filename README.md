@@ -27,6 +27,15 @@ The site has its own icon, so it can sit among the apps.
 
 A phone keeps the icon it was given when the shortcut was made. If the icon changes later, remove the shortcut and add it again.
 
+## Where the tenders come from
+
+Two ARMEPS systems, both public and read without logging in:
+
+- **eauction.armeps.am**: electronic auctions (`bot/armeps.py`).
+- **www.armeps.am/epps**: everything else open for bids: price quotations, open and urgent tenders, two-stage and framework procedures, grant competitions (`bot/epps.py`). EPPS keeps its search in the visitor's session and pages it 75 at a time; the reader takes the pager's key from the first results page, then reads the page of every new call (and every call again after 20 hours, in case a deadline moved) for its code, buyer, procedure, deadline, question period, opening time and publication time. A call on both systems is shown once, as the auction. EPPS also keeps listing some old calls whose deadline passed long ago; once such a call leaves the site it is remembered (`epps_done` in `bot/state/tenders.json`) and not added again.
+
+`python -m bot.epps --probe 5` (or the *EPPS look* workflow) reads the list and five calls and prints what the reader understood, without saving anything.
+
 ## A company's own view: `my/`
 
 `https://<your-username>.github.io/<repository-name>/my/` is a second page, built on the contracts register (every signed contract, whatever the procedure). Give it up to three companies and the things they sell, and it shows:
