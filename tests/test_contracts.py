@@ -161,7 +161,7 @@ class Contracts(unittest.TestCase):
                              ([["2026-10", 1], ["2026-11", 1]], "2026-10-05", "2026-11-05", 2, "2026-11-17T10:00"))
             os.remove(contracts.month_file("2026-10"))
             contracts.publish(datetime(2026, 11, 18, 6, 0, tzinfo=timezone.utc))
-            self.assertEqual(sorted(os.listdir(public.name)), ["2026-11.json", "meta.json"])
+            self.assertEqual(sorted(os.listdir(public.name)), ["2026-11.json", "home.json", "meta.json"])
         finally:
             contracts.PUBLIC = was
             public.cleanup()
@@ -174,3 +174,46 @@ class Contracts(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+NORM_CASES = [["Կահույքի ձեռքբերում", " կահույքի ձեռքբերում "], ["ՀՀ ՆԳՆ hամազգեստ (ամառային)", " հհ նգն համազգեստ ամառային "], ["Սննդի պատրաստման ծառայություն և հյուրասիրություն", " սննդի պատրաստման ծառայություն եվ հյուրասիրություն "], ["Ֆուտբոլաuին գնդակ 5", " ֆուտբոլասին գնդակ 5 "], ["Mug  & tea", " mug tea "], ["ԵՐԵՎԱՆԻ ՔԱՂԱՔԱՊԵՏԱՐԱՆ", " երեվանի քաղաքապետարան "]]
+
+
+class HomeSliceTest(unittest.TestCase):
+    """The group page opens from data/k/home.json; it must hold what the page would find in the whole year."""
+
+    def test_the_page_and_the_slice_name_the_same_group(self):
+        import re as _re
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(here, "docs", "my", "app.js"), encoding="utf-8") as fh:
+            src = fh.read()
+        with open(os.path.join(here, "docs", "my", "home.json"), encoding="utf-8") as fh:
+            home = json.load(fh)
+        c = _re.search(r"const HOME = \{c: '([^']*)',\s*w: '([^']*)'\}", src)
+        self.assertIsNotNone(c)
+        self.assertEqual((c.group(1), c.group(2)), (home["c"], home["w"]))
+
+    def test_norm_matches_the_page(self):
+        # outputs taken from norm() in docs/my/app.js
+        cases = NORM_CASES
+        for text, want in cases:
+            self.assertEqual(contracts.norm(text), want, text)
+
+    def test_slice_keeps_ours_our_lines_and_whole_tenders(self):
+        page = {"m": "2026-05",
+                "B": [["01", "Գնորդ Ա"], ["02", "Գնորդ Բ"]],
+                "S": [["s1", "Մեր ՍՊԸ", "11111111", 0], ["s2", "Ուրիշ ՍՊԸ", "22222222", 0], ["s3", "Երրորդ ՍՊԸ", "33333333", 0]],
+                "F": ["ԷԱՃ"],
+                "T": [["T-1", ["s1", "s2", "s9"]], ["T-2", ["s2", "s3"]]],
+                "R": [[3, 0, 1, 1000, 1200, 0, "g", "Կահույք", 0],          # a rival wins a tender we entered
+                      [4, 0, 1, 500, 0, 0, "g", "Թղթապանակներ", 0],      # another lot of the same tender
+                      [5, 1, 2, 900, 0, 0, "g", "Ծաղիկներ", 1],          # nothing to do with us
+                      [6, 1, 1, 800, 0, 0, "g", "Կահույքի նորոգում", -1],  # in our line
+                      [7, 0, 0, 300, 0, 0, "s", "Միջոցառում", -1]]}       # ours
+        pack = contracts.home_pack([page], {"c": "11111111", "w": "Կահույք:կահույք"})
+        rows = pack["months"][0]["R"]
+        self.assertEqual(sorted(r[7] for r in rows), ["Թղթապանակներ", "Կահույք", "Կահույքի նորոգում", "Միջոցառում"])
+        extra = pack["months"][-1]
+        self.assertEqual(sorted(b[0] for b in extra["B"]), ["01", "02"])
+        self.assertEqual(pack["tot"]["s2"], [3, 2300])
+        self.assertNotIn("s9", {s[0] for m in pack["months"] for s in m["S"]})

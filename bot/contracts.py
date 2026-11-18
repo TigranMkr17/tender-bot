@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import os
 import sys
 import time
@@ -224,16 +225,114 @@ def month_page(month: str, rows: list[dict]) -> dict:
     return {"m": month, "B": B, "S": S, "F": F, "T": T, "R": R}
 
 
+# ---------- the group's own slice, so its page can open without the whole year ----------
+HOME = "docs/my/home.json"
+LOOK = {"a": "ա", "h": "հ", "o": "օ", "u": "ս", "p": "ր", "n": "ո", "g": "ց", "q": "զ"}
+
+
+def norm(text) -> str:
+    """Text as the page compares it (the same steps as norm() in docs/my/app.js)."""
+    s = str(text or "").lower()
+    s = re.sub(r"[a-z](?=[\u0561-\u0587])", lambda m: LOOK.get(m.group(0), m.group(0)), s)
+    s = re.sub(r"([\u0561-\u0587])([a-z])", lambda m: m.group(1) + LOOK.get(m.group(2), m.group(2)), s)
+    s = s.replace("\u0587", "եվ")
+    s = re.sub(r"[^0-9a-z\u0561-\u0586]+", " ", s).strip()
+    return " " + s + " "
+
+
+def unpack_lines(text: str) -> list[list[str]]:
+    """The stems of each line, from Name:stem|stem;Name:stem (as unpackLines() in the page)."""
+    out = []
+    for part in str(text or "").split(";"):
+        name, _, keys = part.partition(":")
+        ks = [norm(k).strip() for k in (keys if _ else name).split("|")]
+        ks = [k for k in ks if k]
+        if name.strip() and ks:
+            out.append(ks[:12])
+    return out[:16]
+
+
+def home_pack(pages: list[dict], home: dict) -> dict:
+    """Every row the group's page uses with its own companies and lines: the group's contracts, contracts in its
+    lines, and every contract of a tender any of those belong to or the group entered. Suppliers named among such a
+    tender's participants come along without their rows, every buyer comes along for matching open tenders by name,
+    and each supplier's totals for the year come along so they read as they would from the whole year."""
+    tins = set(str(home.get("c", "")).split("."))
+    lines = [k for keys in unpack_lines(home.get("w", "")) for k in keys]
+    hit = lambda n: any(all((" " + w) in n for w in key.split(" ")) for key in lines)
+    ours = {sid for p in pages for sid, _, tin, _ in p["S"] if tin in tins and sid}
+    codes = {code for p in pages for code, parts in p["T"] if ours & set(parts)}
+    for p in pages:                                       # tenders that hold a row of ours or of our lines
+        for r in p["R"]:
+            if r[8] >= 0 and (p["S"][r[2]][2] in tins or hit(norm(r[7]))):
+                codes.add(p["T"][r[8]][0])
+    named, buyers, totals, spelt = {}, {}, {}, {}
+    skey = lambda tin, sid, name, person: tin or (("p:" + sid) if person else "n:" + norm(name))
+    for p in pages:                                        # the page keeps the newest spelling of every name
+        for sid, name, tin, person in p["S"]:
+            if sid:
+                named[sid] = [sid, name, tin, person]
+            spelt[skey(tin, sid, name, person)] = name
+        for tin, name in p["B"]:
+            buyers[tin or "n:" + norm(name)] = [tin, name]
+        for r in p["R"]:
+            sid, name, tin, person = p["S"][r[2]]
+            key = tin or (("p:" + sid) if person else "n:" + norm(name))
+            t = totals.setdefault(key, [0, 0, set()])
+            t[0] += 1
+            t[1] += 0 if r[3] > 5e11 else r[3]
+            if sid:
+                t[2].add(sid)
+    months, people = [], set()
+    for p in pages:
+        keep = [r for r in p["R"] if p["S"][r[2]][2] in tins or hit(norm(r[7])) or (r[8] >= 0 and p["T"][r[8]][0] in codes)]
+        B, S, F, T, idx = [], [], [], [], {}
+
+        def at(kind, table, key, row):
+            k = (kind, key)
+            if k not in idx:
+                idx[k] = len(table)
+                table.append(row)
+            return idx[k]
+        R = []
+        for r in keep:
+            b = at("b", B, r[1], p["B"][r[1]])
+            s = at("s", S, r[2], p["S"][r[2]])
+            f = at("f", F, r[5], p["F"][r[5]])
+            t = at("t", T, r[8], p["T"][r[8]]) if r[8] >= 0 else -1
+            if t >= 0:
+                people.update(p["T"][r[8]][1])
+            R.append([r[0], b, s, r[3], r[4], f, r[6], r[7], t])
+        months.append({"m": p["m"], "B": B, "S": S, "F": F, "T": T, "R": R})
+    last = {}                                              # one entry per supplier in the slice, with its newest name
+    for m in months:
+        for sid, name, tin, person in m["S"]:
+            last[skey(tin, sid, name, person)] = [sid, name, tin, person]
+    for sid in sorted(people):
+        if sid in named:
+            sid_, name, tin, person = named[sid]
+            last.setdefault(skey(tin, sid, name, person), named[sid])
+    S_last = [[sid, spelt.get(k, name), tin, person] for k, (sid, name, tin, person) in last.items()]
+    extra = {"m": "", "B": sorted(buyers.values()), "S": [named[s] for s in sorted(people) if s in named] + S_last, "F": [], "T": [], "R": []}
+    here = {row[0] for m in months + [extra] for row in m["S"]}
+    tot = {}
+    for n, v, sids in totals.values():
+        for sid in sids & here:
+            tot[sid] = [n, round(v)]
+    return {"home": {"c": home.get("c", ""), "w": home.get("w", "")}, "months": months + [extra], "tot": tot}
+
+
 def publish(now: datetime | None = None) -> dict:
     """Write every stored month for the site, and a list of them."""
     os.makedirs(PUBLIC, exist_ok=True)
     stored = sorted(f[:-6] for f in os.listdir(STATE) if f.endswith(".jsonl")) if os.path.isdir(STATE) else []
-    listed, total, first, last = [], 0, None, None
+    listed, total, first, last, pages = [], 0, None, None, []
     for month in stored:
         rows = list(load_month(month).values())
         page = month_page(month, rows)
         if not page["R"]:
             continue
+        pages.append(page)
         with open(os.path.join(PUBLIC, month + ".json"), "w", encoding="utf-8") as fh:
             json.dump(page, fh, ensure_ascii=False, separators=(",", ":"))
         days = [r["d"] for r in rows if r.get("d") and published(r)]
@@ -241,11 +340,17 @@ def publish(now: datetime | None = None) -> dict:
         listed.append([month, len(page["R"])])
         total += len(page["R"])
     for name in os.listdir(PUBLIC):                        # a month that is no longer stored is no longer offered
-        if name.endswith(".json") and name != "meta.json" and name[:-5] not in {m for m, _ in listed}:
+        if name.endswith(".json") and name not in ("meta.json", "home.json") and name[:-5] not in {m for m, _ in listed}:
             os.remove(os.path.join(PUBLIC, name))
     stamp = ((now or datetime.now(timezone.utc)) + YEREVAN).strftime("%Y-%m-%dT%H:%M")
     meta = {"updated": stamp, "from": first, "to": last, "contracts": total, "months": listed, "forms": FORMS,
             "source": "armeps.am/ppcm/public/contracts"}
+    if os.path.exists(HOME):                               # the group's slice is written before the list that announces it
+        with open(HOME, encoding="utf-8") as fh:
+            pack = home_pack(pages, json.load(fh))
+        pack["updated"] = stamp
+        with open(os.path.join(PUBLIC, "home.json"), "w", encoding="utf-8") as fh:
+            json.dump(pack, fh, ensure_ascii=False, separators=(",", ":"))
     with open(os.path.join(PUBLIC, "meta.json"), "w", encoding="utf-8") as fh:
         json.dump(meta, fh, ensure_ascii=False, separators=(",", ":"))
     return meta

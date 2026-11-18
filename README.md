@@ -40,6 +40,8 @@ Tap anything for its detail: a buyer's past contracts in the same line and how f
 
 The page is the same for everyone and holds no names. Which companies to show comes from its address: `?c=` carries the tax numbers and `&w=` the lines, and *Settings → Copy link* writes that address out. The choice is also kept on the device, so the plain address opens the same view next time. Nothing is sent anywhere, and everything shown is already public in the register; the address only saves the typing. It is not a password: anyone who has the link sees the same page.
 
+With no choice made, the page opens on the group in `docs/my/home.json`. For that group it reads only `data/k/home.json` (about 60 KB), its slice of the year, which the contracts run writes every morning; any other choice, or a search for a company, fetches the whole year first.
+
 A line is a name and the beginnings of the words that belong to it, so «կահույք» also finds «կահույքի». Sole proprietors are counted together as one unnamed row in every ranking.
 
 ## When it reads the register (Yerevan time)

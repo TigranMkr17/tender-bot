@@ -176,7 +176,7 @@ function syncAddress() {
 
 /* ---------- reading ---------- */
 async function getJSON(url) {
-  const r = await fetch(url, {cache: 'no-cache'});
+  const r = await fetch(url);                              // the server says how long a copy stays good (10 minutes)
   if (!r.ok) throw new Error(`${url}: ${r.status}`);
   return r.json();
 }
@@ -185,8 +185,25 @@ function progress(p) {
   el.style.setProperty('--p', p.toFixed(3));
   el.setAttribute('aria-valuenow', Math.round(p * 100));
 }
-async function load() {
+/* With the group's own companies and lines the page needs only its slice of the year (data/k/home.json, written
+   by bot/contracts.py from docs/my/home.json). Any other choice, or a search for a company, needs the whole year. */
+const isHome = () => CFG.tins.join('.') === HOME.c && !!CFG.lines && packLines(CFG.lines) === packLines(unpackLines(HOME.w));
+async function load(full = !isHome() || new URLSearchParams(location.search).has('full')) {
   progress(.04);
+  if (!full) {                                             // everything at once: the list of months, the slice, the open tenders
+    let done = 0;
+    const step = x => { done++; progress(.1 + .9 * done / 4); return x; };
+    const [meta, pack, tenders, lots] = await Promise.all([getJSON('../data/k/meta.json').then(step), getJSON('../data/k/home.json').catch(() => null).then(step),
+      getJSON('../data/tenders.json').catch(() => null).then(step), getJSON('../data/lots.json').catch(() => null).then(step)]);
+    if (pack && pack.home && pack.home.c === HOME.c && pack.home.w === HOME.w) {
+      D = ingest(meta, pack.months, pack.tot);
+      D.part = true;
+      D.tenders = tenders?.tenders || [];
+      D.tmeta = tenders?.meta || {};
+      D.lots = lots?.t || {};
+      return;
+    }
+  }
   const meta = await getJSON('../data/k/meta.json');
   const names = meta.months.map(m => m[0]);
   let done = 0;
@@ -195,6 +212,7 @@ async function load() {
   const [tenders, lots, ...months] = await Promise.all([soft('../data/tenders.json'), soft('../data/lots.json'),
     ...names.map(m => getJSON(`../data/k/${m}.json`).then(step))]);
   D = ingest(meta, months);
+  D.part = false;
   D.tenders = tenders?.tenders || [];
   D.tmeta = tenders?.meta || {};
   D.lots = lots?.t || {};
@@ -202,7 +220,7 @@ async function load() {
 
 /* One table of suppliers, buyers and tenders for the whole year. A supplier is one tax number however many
    times it registered; a sole proprietor has no tax number here and stays a separate, unnamed line. */
-function ingest(meta, months) {
+function ingest(meta, months, tot = null) {
   const sup = new Map(), buy = new Map(), ten = new Map(), bySid = new Map(), C = [];
   for (const mo of months) {
     const B = mo.B.map(([tin, name]) => {
@@ -216,6 +234,7 @@ function ingest(meta, months) {
       const key = tin || (person ? 'p:' + sid : 'n:' + norm(name));
       let s = sup.get(key);
       if (!s) sup.set(key, s = {key, tin, name, person: !!person, sids: new Set(), n: 0, v: 0, g: -1});
+      s.name = name;                                         // the newest spelling stays, as for buyers
       if (sid) { s.sids.add(sid); bySid.set(sid, s); }
       return s;
     });
@@ -233,6 +252,9 @@ function ingest(meta, months) {
       c.s.n++; c.s.v += c.v;
       if (c.t) c.t.cs.push(c);
     }
+  }
+  if (tot) {                                               // a slice knows each supplier's whole year from its totals
+    for (const s of sup.values()) for (const sid of s.sids) if (tot[sid]) { [s.n, s.v] = tot[sid]; break; }
   }
   C.sort((x, y) => (x.d < y.d ? 1 : x.d > y.d ? -1 : 0));        // newest first, everywhere
   C.forEach((c, i) => { c.i = i; });
@@ -855,7 +877,7 @@ const SHEETS = {
       <form class="field" data-form="line"><input class="inp" name="w" autocomplete="off" enterkeyhint="done" placeholder="Նոր ուղղություն, օրինակ՝ վարագույր" aria-label="Նոր ուղղություն"><button class="btn" type="submit" style="min-height:2.875rem">${ic('plus', 's')}Ավելացնել</button></form>
       ${sec('Իմ հղումը', 'Այս հղումով էջը բացվում է հենց այս ընկերություններով և ուղղություններով։ Ավելացրեք այն հեռախոսի գլխավոր էկրանին։')}
       <div class="actions" style="margin-top:.625rem"><button class="btn" type="button" data-act="copy" data-link="${esc(link)}">${ic('link', 's')}Պատճենել հղումը</button></div>
-      ${sec('Տվյալների մասին', `Էջը ոչինչ չի պահում և ոչ մի տեղ չի ուղարկում. ընտրությունը մնում է միայն հղման մեջ և այս սարքում։ Բոլոր թվերը պետական գնումների բաց գրանցամատյանից են, ${plural(D.C.length, 'պայմանագիր')}՝ ${fDayY(dOnly(D.meta.from))}-ից։ Անհատ ձեռնարկատերերը ցանկերում անունով չեն երևում։`)}`;
+      ${sec('Տվյալների մասին', `Էջը ոչինչ չի պահում և ոչ մի տեղ չի ուղարկում. ընտրությունը մնում է միայն հղման մեջ և այս սարքում։ Բոլոր թվերը պետական գնումների բաց գրանցամատյանից են, ${plural(D.meta.contracts, 'պայմանագիր')}՝ ${fDayY(dOnly(D.meta.from))}-ից։ Անհատ ձեռնարկատերերը ցանկերում անունով չեն երևում։`)}`;
   }
 };
 const coRows = () => (G.length ? G.map((g, i) => `<div class="co-row"><span class="c${i + 1}">${sealSVG(g.tin, {detail: 0, size: 40, stroke: 2.4})}</span><span><span class="t">${esc(g.name)}</span><br><span class="s">ՀՎՀՀ ${esc(g.tin)}${g.s ? ` · ${plural(g.s.n, 'պայմանագիր')}` : ' · պայմանագիր չի գտնվել'}</span></span>
@@ -882,6 +904,8 @@ function paintSheet(swap, keep = false) {
 function openSheet(name, arg) {
   S.stack.push([name, arg]);
   try { history.pushState({sheet: S.stack.length}, ''); } catch { /* no history here: the buttons still close it */ }
+  S.shut = (S.shut || 0) + 1;                              // a panel still sliding away is kept and filled again
+  if (dialog.open && dialog.classList.contains('out')) { dialog.classList.remove('out'); dialog.style.transform = ''; paintSheet(true); return; }
   if (!dialog.open) {
     dialog.classList.remove('out');
     if (dialog.showModal) dialog.showModal(); else { dialog.setAttribute('open', ''); dialog.classList.add('plain'); }
@@ -891,7 +915,8 @@ function openSheet(name, arg) {
 }
 function shutSheet() {
   if (!dialog.open) return;
-  const done = () => { if (dialog.close) dialog.close(); else dialog.removeAttribute('open'); dialog.classList.remove('out'); dialog.style.transform = ''; document.documentElement.classList.remove('lock'); $('#sheet-body').innerHTML = ''; };
+  const token = S.shut = (S.shut || 0) + 1;
+  const done = () => { if (token !== S.shut) return; if (dialog.close) dialog.close(); else dialog.removeAttribute('open'); dialog.classList.remove('out'); dialog.style.transform = ''; document.documentElement.classList.remove('lock'); $('#sheet-body').innerHTML = ''; };
   if (CALM) return done();
   dialog.classList.add('out');
   dialog.addEventListener('animationend', done, {once: true});
@@ -932,7 +957,18 @@ dialog.addEventListener('cancel', e => { e.preventDefault(); closeAll(); });
 dialog.addEventListener('click', e => { if (e.target === dialog) closeAll(); });
 
 /* ---------- changing the choice ---------- */
-function reapply({sheet = true} = {}) {
+function wholeYear() {
+  if (!D.part) return Promise.resolve();
+  if (!S.fetching) {
+    $('#loadline').classList.remove('done');
+    S.fetching = load(true).then(() => { $('#loadline').classList.add('done'); }).finally(() => { S.fetching = null; });
+  }
+  return S.fetching;
+}
+async function reapply({sheet = true} = {}) {
+  if (!isHome() && D.part) {
+    try { await wholeYear(); } catch { toast('Չհաջողվեց բեռնել տվյալները. ստուգեք կապը'); }
+  }
   apply();
   saveConfig();
   paintSig();
@@ -1007,7 +1043,14 @@ document.addEventListener('click', e => {
   if (S.pick >= 0 && !e.target.closest('#chart')) pickCol(-1);
 });
 document.addEventListener('pointerover', e => { if (e.pointerType === 'mouse') { const el = e.target.closest?.('.hit'); if (el && +el.dataset.i !== S.pick) pickCol(+el.dataset.i); } });
-document.addEventListener('input', e => { if (e.target.id === 'co-q') $('#co-found').innerHTML = foundRows(findCompanies(e.target.value)); });
+document.addEventListener('input', async e => {
+  if (e.target.id !== 'co-q') return;
+  if (D.part) {
+    $('#co-found').innerHTML = '<p class="sub" style="margin-top:.5rem">Բեռնում ենք ամբողջ տարվա պայմանագրերը…</p>';
+    try { await wholeYear(); } catch { $('#co-found').innerHTML = '<p class="sub" style="margin-top:.5rem">Չհաջողվեց բեռնել. ստուգեք կապը։</p>'; return; }
+  }
+  if (e.target.isConnected) $('#co-found').innerHTML = foundRows(findCompanies(e.target.value));
+});
 document.addEventListener('submit', e => {
   const form = e.target.closest('[data-form=line]');
   if (!form) return;
