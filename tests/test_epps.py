@@ -219,5 +219,19 @@ class SectorTest(unittest.TestCase):
         self.assertEqual(tp.classify("ճանապարհների վերանորոգում", "works"), "build")
 
 
+
+class ExpiredTest(unittest.TestCase):
+    def test_an_expired_call_still_listed_is_not_new_again(self):
+        old = {"id": 9_392_882, "src": "epps", "status": "open", "end": "2025-03-01T10:00", "dtat": "2026-11-19T03:00", "title": "Հին"}
+        tenders = {9_392_882: dict(old)}
+        session = FakeSession([(9_392_882, "Հին", "Գնորդ"), (12_600_000, "Նոր", "Գնորդ")])
+        stats = epps.update(tenders, AT, session=session, say=lambda *_: None, workers=1, skip={9_392_882})
+        self.assertIn(9_392_882, stats["ids"])
+        self.assertNotIn("seen", tenders[9_392_882])            # known before: kept, not "new"
+        del tenders[9_392_882]                                  # the store dropped it four days after its deadline
+        epps.update(tenders, AT, session=FakeSession([(9_392_882, "Հին", "Գնորդ")]), say=lambda *_: None, workers=1, skip={9_392_882})
+        self.assertNotIn(9_392_882, tenders)
+
+
 if __name__ == "__main__":
     unittest.main()

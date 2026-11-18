@@ -218,12 +218,17 @@ def update_data(at: datetime, fetch=armeps.fetch, pause: float = 0.3, with_epps:
     stats = scrape(tenders, at, fetch=fetch, pause=pause)
     if with_epps is None:
         with_epps = fetch is armeps.fetch                   # tests that pass their own pages stay off the network
+    done = set(data.get("epps_done", []))                   # expired EPPS calls that EPPS still lists
+    listed = None
     if with_epps:                                           # EPPS: price quotations, open tenders and the rest
         try:
-            epps.update(tenders, at, say=say)
+            listed = epps.update(tenders, at, say=say, skip=done)["ids"]
         except armeps.ScrapeError as exc:
             say(f"! EPPS: {exc} The calls already known stay as they were.")
     items = store.prune(list(tenders.values()), at)
+    kept = {t["id"] for t in items}
+    done |= {i for i, t in tenders.items() if t.get("src") == "epps" and i not in kept}
+    data["epps_done"] = sorted(done & listed) if listed is not None else sorted(done)
     items = store.drop_doubles(items)
     store.enrich(items)
     data["tenders"] = [store.compact(t) for t in items]

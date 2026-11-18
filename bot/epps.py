@@ -343,9 +343,11 @@ def apply(t: dict, d: dict) -> None:
 # ---------- one run ----------
 
 def update(tenders: dict[int, dict], at: datetime, session: Session | None = None, budget: float = BUDGET,
-           clock=time.monotonic, say=print, workers: int = WORKERS) -> dict:
+           clock=time.monotonic, say=print, workers: int = WORKERS, skip: set[int] = frozenset()) -> dict:
     """Add the calls now taking bids to `tenders` (keyed by id, shared with the auctions) and read the page of
-    every call that is new, or whose page was read long ago. Calls that left the list early are marked."""
+    every call that is new, or whose page was read long ago. Calls that left the list early are marked.
+    `skip` holds calls already gone from the site whose deadline passed long ago but which EPPS still lists:
+    they are not added again as new."""
     started = clock()
     session = session or Session()
     stats = {"listed": 0, "new": 0, "details": 0, "detail_failed": 0, "postponed": 0, "gone": 0}
@@ -354,7 +356,10 @@ def update(tenders: dict[int, dict], at: datetime, session: Session | None = Non
     rows = list_open(session, say=say)
     listed = {r["id"] for r in rows}
     stats["listed"] = len(rows)
+    stats["ids"] = listed
     for r in rows:
+        if r["id"] in skip and r["id"] not in tenders:
+            continue
         t = tenders.get(r["id"])
         if t is None:
             t = tenders[r["id"]] = {"id": r["id"], "src": "epps"}
