@@ -70,13 +70,16 @@ class Page(HTMLParser):
             self._cell.append(data)
 
 
+OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor())   # cookies carry from one address to the next
+
+
 def fetch(url: str, post: str = ""):
     headers = {"User-Agent": AGENT, "Accept-Language": "hy,en;q=0.8"}
     if post.startswith(("{", "[")):                          # a JSON body, for pages that load their data that way
         headers.update({"Content-Type": "application/json;charset=UTF-8", "Accept": "application/json, text/plain, */*"})
     req = urllib.request.Request(url, data=post.encode() if post else None, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=45) as r:
+        with OPENER.open(req, timeout=45) as r:
             return r.status, r.geturl(), r.headers.get("Content-Type", ""), r.read(3_000_000)
     except urllib.error.HTTPError as e:
         return e.code, url, e.headers.get("Content-Type", ""), e.read(200_000)
@@ -133,4 +136,5 @@ if __name__ == "__main__":
     if not addresses:
         sys.exit(__doc__)
     for address in addresses[:25]:
-        look(address, os.environ.get("FIND", ""), os.environ.get("POST", ""), os.environ.get("GREP", ""))
+        address, _, body = address.partition("@@")       # address@@form-data posts to that one address only
+        look(address, os.environ.get("FIND", ""), body or os.environ.get("POST", ""), os.environ.get("GREP", ""))
