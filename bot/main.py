@@ -15,7 +15,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 
-from . import armeps, digest, epps, store, telegram
+from . import armeps, digest, epps, past, store, telegram
 from .textproc import kind_key
 
 MAX_PAGES = 60
@@ -285,6 +285,12 @@ def update_data(at: datetime, fetch=armeps.fetch, pause: float = 0.3, with_epps:
                     "open": sum(store.is_open(t, at) for t in store.drop_doubles(items))}
     store.save(data)       # what the bot remembers
     store.publish(data)    # what the app shows
+    try:                   # past prices: a help, never a reason for an update to fail
+        found = past.publish(store.drop_doubles(items), at)
+        if found:
+            say(f"Past prices: similar contracts for {found} open tenders")
+    except (OSError, ValueError, KeyError, IndexError, TypeError) as exc:
+        say(f"! Past prices were not worked out this time: {exc!r}")
     say(f"ARMEPS: {stats['pages']} pages, {stats['rows']} current tenders, "
         f"{stats['new']} new, {stats['details']} notices read"
         + (f", {stats['detail_failed']} notices unreadable" if stats["detail_failed"] else "")

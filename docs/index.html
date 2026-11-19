@@ -447,7 +447,9 @@ div.who{grid-template-columns:minmax(0,1fr)}
 .fresh .cmp~.cmp~.cmp .bar i,.fresh .lotr~.lotr~.lotr .bar i{animation-delay:.28s}
 @keyframes drop{from{transform:scaleX(1)}}
 
-.due-gone{margin-top:.875rem;padding-top:.75rem;border-top:1px solid var(--rule);font-size:.9375rem;line-height:1.45;color:var(--ink-2)}
+.due-gone{grid-column:1/-1;margin-top:.125rem;padding-top:.75rem;border-top:1px solid var(--rule);font-size:.9375rem;line-height:1.45;color:var(--ink-2)}
+.cmp-t--3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cmp-r b{font-weight:650;color:var(--ink)}
 .toast{position:fixed;left:50%;bottom:1.25rem;z-index:20;max-width:calc(100% - 2rem);padding:.6875rem 1rem;border-radius:.875rem;
   background:var(--ink);color:var(--ground);font-size:.9375rem;font-weight:500;box-shadow:0 10px 28px -8px rgba(0,0,0,.4);
   transform:translate(-50%,1rem);opacity:0;pointer-events:none;transition:transform .26s var(--ease),opacity .2s var(--ease)}
@@ -1073,6 +1075,7 @@ function tenderFrame(t) {
       <section class="sheet sec"><h2>Կարևոր օրերը</h2><ol class="tl">${tl.join('')}</ol></section>
       <div data-slot="before"></div>
       <div data-slot="who"></div>
+      <div data-slot="prices"></div>
       <section class="sheet sec"><h2>Ինչպես մասնակցել</h2>
         <ol class="steps">${t.src ? `
           <li>Բացեք մրցույթի էջը ARMEPS-ում. հրավերը և մյուս փաստաթղթերը այնտեղ են։ Ուշադիր կարդացեք պայմանները։</li>
@@ -1226,6 +1229,27 @@ function whoHTML(t, p) {
     (list.length > 5 && !all ? more('who', `Ցույց տալ ևս ${Math.min(list.length, 40) - 5}-ը`) : '') +
     `<p class="fine">Ըստ նույն ծածկագրով ավարտված մրցույթների։ Անհատ ձեռնարկատերերն այստեղ չեն նշվում։</p></section>`;
 }
+/* similar contracts from the contracts register, every procedure: who got them and at what price (bot/past.py) */
+const FORMS = {'ԷԱՃ': 'աճուրդ', 'ԳՀ': 'գնանշման հարցում', 'ԲՄ': 'բաց մրցույթ', 'ՀԲՄ': 'հրատապ բաց մրցույթ',
+  'ԵՄ': 'երկփուլ մրցույթ', 'ՄԱ': 'մեկ անձից', 'ՀՄԱ': 'հրատապ՝ մեկ անձից'};
+const pricesFile = t => `p/${t.id % 16}.json`;
+function pricesHTML(t) {
+  const page = peek(pricesFile(t)), e = page && page.t && page.t[t.id];
+  if (!e || !e.r.length) return '';
+  const rows = e.r.map(([d, buyer, firm, v, est, f, subj]) => {
+    const cut = est > 0 && v > 0 && v <= est * 1.02 ? off(v, est) : null, day = dOnly(d);
+    return `<div class="cmp"><span class="cmp-t cmp-t--3">${esc(subj)}</span>` +
+      `<span class="cmp-m num">${[day && fDayY(day), buyer ? esc(buyer) : 'նույն գնորդը', FORMS[f] || esc(f)].filter(Boolean).join(' · ')}</span>` +
+      (cut != null ? `${priceBar(v, est)}<span class="cmp-n num"><span>${money(est)} → <b>${money(v)}</b></span><b class="pct">${signed(cut)}</b></span>`
+        : `<span class="cmp-n num"><span>պայմանագրի գինը՝ <b>${money(v)}</b></span></span>`) +
+      `<span class="cmp-r">${firm ? `Ստացել է՝ <b>${esc(firm)}</b>` : 'Ստացել է անհատ ձեռնարկատեր'}</span></div>`;
+  }).join('');
+  const from = page.from && dOnly(page.from);
+  return `<section class="sheet sec">${head('Նման պայմանագրեր', `<span class="sec-n num">${e.r.length}</span>`)}` +
+    `<p class="lede">Ով է ստացել նման պատվերներ և ինչ գնով՝ ըստ ARMEPS-ի պայմանագրերի գրանցամատյանի${from ? `, ${since(from)}` : ''}։</p>` + rows +
+    (e.u ? `<p class="usual">Նման պայմանագրերի կեսը կնքվել է նախահաշվից առնվազն <b class="num">${e.u[0]}%-ով</b> ցածր գնով։<small class="num">Ըստ ${plural(e.u[1], 'պայմանագրի')}, որոնց նախահաշիվը հայտնի է</small></p>` : '') +
+    `<p class="fine">Գինը պայմանագրինն է, նախահաշիվը՝ գնորդինը։ Անհատ ձեռնարկատերերի անունները չեն նշվում։</p></section>`;
+}
 function needHTML(t, page) {
   const sec = (page && page.sec) || {}, ask = (page && page.ask) || {}, item = (title, note) => `<li>${ic('check', 'ic--s')}<b>${title}</b><small>${note}</small></li>`;
   const list = [item('Դիմում-հայտարարություն', 'Նշվում են ՀՎՀՀ-ն, հասցեն և հեռախոսահամարը։ Ձևը հրավերի հավելված 1-ն է։'),
@@ -1250,6 +1274,7 @@ function tenderSlots(t) {
     lots: page ? lotsHTML(t, page, p) : page === undefined && idx ? wait(Math.min(idx.n || 1, 4) + 1) : '',
     before: beforeHTML(t, p),
     who: whoHTML(t, p),
+    prices: pricesHTML(t),
     need: needHTML(t, page)
   };
 }
@@ -1453,6 +1478,7 @@ function needs(key) {
   if (k === 't') {
     const t = S.byId.get(+id);
     if (!t) return out;
+    out.push(pricesFile(t));
     if (peek('lots.json') === undefined) out.push('lots.json');
     else if (lotsOf(t.id)) out.push(`t/${t.id}.json`);
     if (meta) { if (t.bk) out.push(`h/b/${t.bk}.json`); out.push(...cpvFiles(t)); }
