@@ -806,6 +806,23 @@ function roll(el, from, to, fmt, ms) {
   requestAnimationFrame(step);
 }
 
+/* when the data should last have been updated: 08:50, 11:50, 14:50 and 17:50 in Yerevan, Monday to Saturday */
+const SLOTS = [530, 710, 890, 1070];                     // minutes after midnight
+function lastSlot(t) {
+  const wall = t + TZ;                                   // Yerevan's clock, read as if it were UTC
+  for (let back = 0; back < 8; back++) {
+    const day = Math.floor(wall / DAY) - back;
+    if (new Date(day * DAY).getUTCDay() === 0) continue; // no updates on Sunday
+    for (let i = SLOTS.length - 1; i >= 0; i--) {
+      const at = day * DAY + SLOTS[i] * 6e4;
+      if (at <= wall) return at - TZ;
+    }
+  }
+  return 0;
+}
+/* an update counts as late 45 minutes after its slot: the run and the publishing take a few minutes */
+const late = upd => !S.frozen && upd && upd.getTime() < lastSlot(now() - 45 * 6e4) - 10 * 6e4;
+
 /* the header numbers, tab counts and footer */
 function chrome() {
   const open = openNow(), today = dayNo(new Date(now())), upd = toDate(S.meta.updated);
@@ -818,7 +835,7 @@ function chrome() {
     (hot ? `<span class="stat stat--hot"><b class="num">${hot}</b> փակվում է 3 օրում</span>` : '') +
     `<a class="stat stat--ours" href="my/">${ic('ours')}Մեր դաշտը${ic('back', 'go')}</a>`;
   if (!S.counted) { S.counted = true; document.querySelectorAll('#stats b.num').forEach(b => roll(b, 0, +b.textContent, v => Math.round(v), 700)); }
-  $('#foot').textContent = `Աղբյուրը՝ ARMEPS-ի էլեկտրոնային աճուրդները (eauction.armeps.am) և գնանշման հարցումներն ու մրցույթները (armeps.am/epps)։ ${upd ? `Թարմացվել է ${fStamp(upd)}-ին։ ` : ''}Տվյալները թարմացվում են աշխատանքային օրերին՝ 08:50, 11:50, 14:50 և 17:50։`;
+  $('#foot').textContent = `Աղբյուրը՝ ARMEPS-ի էլեկտրոնային աճուրդները (eauction.armeps.am) և գնանշման հարցումներն ու մրցույթները (armeps.am/epps)։ ${upd ? `Թարմացվել է ${fStamp(upd)}-ին։ ` : ''}Տվյալները թարմացվում են երկուշաբթիից շաբաթ՝ 08:50, 11:50, 14:50 և 17:50։`;
 }
 
 /* Long lists are drawn a screenful at a time: the first rows at once, the rest as the reader scrolls. */
@@ -867,7 +884,7 @@ function render(animate) {
   const today = dayNo(new Date(now())), upd = toDate(S.meta.updated);
   let html = '', firms = 0;
   if (S.meta.note) html += `<p class="strip">${esc(S.meta.note)}</p>`;
-  if (upd && !S.frozen && now() - upd > 36 * HOUR) html += `<p class="strip strip--warn">Տվյալները վերջին անգամ թարմացվել են ${fStamp(upd)}-ին։ Հնարավոր է՝ նոր մրցույթներ կան, որոնք այստեղ դեռ չեն երևում։</p>`;
+  if (late(upd)) html += `<p class="strip strip--warn">Թարմացումն ուշանում է. տվյալները վերջին անգամ թարմացվել են ${fStamp(upd)}-ին։ Նոր մրցույթները կարող են դեռ չերևալ, ստուգեք նաև ARMEPS-ում։</p>`;
   if (res) {
     const m = peek('h/meta.json'), from = m && dOnly(m.from);
     if (m && !m.complete && from && !S.q) html += `<p class="strip">Նախորդ ամիսների արդյունքներն ավելանում են ամեն գիշեր. այժմ՝ ${plural(m.results, 'մրցույթ')}՝ ${since(from)}։</p>`;
