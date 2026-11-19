@@ -480,6 +480,64 @@ class EndToEnd(unittest.TestCase):
         main.scrape(tenders, AT, fetch=fake, pause=0)
         self.assertEqual(len(tenders), 20)
 
+    def test_an_auction_taken_off_the_list_stops_looking_open(self):
+        """An open auction missing from two whole walks of the list by number is marked as taken off."""
+        header = '<a href="/hy/public/tender/by_id/2/">Հ/հ</a><a href="/hy/public/tender/by_code/2/">Ծածկագիր</a>'
+        everything = sorted(SEED["tenders"], key=lambda t: -t["id"])
+        open_ids = [t["id"] for t in everything if t["status"] == "Հրապարակված"]
+        gone_id = open_ids[len(open_ids) // 2]              # not the oldest: the walk must reach past it
+        rest = [t for t in everything if t["id"] != gone_id]
+        lists = {"all": everything}
+
+        def fake(url):
+            if url == armeps.list_url(1):
+                return header + list_page(lists["all"])
+            if url == armeps.list_url(1, "by_id"):
+                return header + list_page(lists["all"])
+            if "/start/" in url:
+                return "<html><body><table></table></body></html>"
+            return detail_page(BY_ID[int(url.rstrip("/").rsplit("/", 1)[1])])
+
+        tenders: dict = {}
+        main.scrape(tenders, AT, fetch=fake, pause=0)
+        self.assertEqual(tenders[gone_id]["status"], "open")
+        lists["all"] = rest
+        stats = main.scrape(tenders, AT, fetch=fake, pause=0)
+        self.assertEqual((tenders[gone_id]["status"], tenders[gone_id].get("miss"), stats["gone"]), ("open", 1, 0))
+        stats = main.scrape(tenders, AT, fetch=fake, pause=0)
+        self.assertEqual((tenders[gone_id]["status"], stats["gone"]), ("other", 1))
+        self.assertTrue(tenders[gone_id]["gone"])
+        self.assertTrue(all(tenders[i]["status"] == "open" for i in open_ids if i != gone_id))
+        lists["all"] = everything                           # back on the list: open again
+        main.scrape(tenders, AT, fetch=fake, pause=0)
+        self.assertEqual(tenders[gone_id]["status"], "open")
+        self.assertNotIn("gone", tenders[gone_id])
+
+    def test_a_walk_cut_short_marks_nothing(self):
+        header = '<a href="/hy/public/tender/by_id/2/">Հ/հ</a>'
+        everything = sorted(SEED["tenders"], key=lambda t: -t["id"])
+        open_ids = [t["id"] for t in everything if t["status"] == "Հրապարակված"]
+        gone_id = open_ids[0]
+        top = [t for t in everything[:10] if t["id"] != gone_id]  # the list by number breaks after one page
+        broken = {"on": False}
+
+        def fake(url):
+            if url == armeps.list_url(1):
+                return header + list_page([t for t in everything if not broken["on"] or t["id"] != gone_id])
+            if url == armeps.list_url(1, "by_id"):
+                return header + list_page(top if broken["on"] else everything)
+            if "/start/" in url:
+                raise armeps.ScrapeError("HTTP Error 500")
+            return detail_page(BY_ID[int(url.rstrip("/").rsplit("/", 1)[1])])
+
+        tenders: dict = {}
+        main.scrape(tenders, AT, fetch=fake, pause=0)
+        broken["on"] = True
+        for _ in range(3):
+            main.scrape(tenders, AT, fetch=fake, pause=0)
+        self.assertEqual(tenders[gone_id]["status"], "open")
+        self.assertNotIn("miss", tenders[gone_id])
+
     def test_layout_change_is_reported(self):
         cwd = os.getcwd()
         with tempfile.TemporaryDirectory() as tmp:

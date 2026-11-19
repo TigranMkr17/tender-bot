@@ -15,7 +15,7 @@ KEEP_CLOSED_DAYS = 4
 INVITATION = "https://eauction.armeps.am/application/documents/public_invitation/tender_{id}.zip"
 #: Fields the app shows. The notice URL is left out: the app builds it from the id.
 PUBLIC = ("id", "src", "code", "title", "subject", "buyer", "bk", "for", "kind", "sector", "lots",
-          "status", "pub", "end", "ask", "auc", "opn", "pr", "est")
+          "status", "pub", "end", "ask", "auc", "opn", "pr", "est", "gone")
 
 STATUS = {"Հրապարակված": "open", "Published": "open",
           "Չեղարկված": "cancelled", "Cancelled": "cancelled", "Canceled": "cancelled"}

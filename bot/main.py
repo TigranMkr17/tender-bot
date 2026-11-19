@@ -24,7 +24,7 @@ DETAIL_TRIES = 3
 BUDGET = 9 * 60     # seconds one run may spend reading ARMEPS; what is left waits for the next run
 WORKERS = 2         # notice pages read side by side; the site resets a third connection
 GIVE_UP_AFTER = 8   # notice pages failing in a row before the run stops asking for more
-MAX_ID_PAGES = 12   # how deep the list ordered by number is followed
+MAX_ID_PAGES = 40   # how deep the list ordered by number may be followed (about 20 pages reach the oldest open)
 ID_ORDERINGS = ("by_id", "by_tender_id", "by_number")
 SAFE_DROP = 15      # open tenders one run may close before its deadline; above it (or 5%), the safety net holds
 
@@ -71,7 +71,8 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
     first_run = not tenders     # nothing is remembered yet: what the list holds is not "new"
     floor = at - timedelta(days=1)
     seen: set[int] = set()
-    stats = {"pages": 0, "rows": 0, "new": 0, "details": 0, "detail_failed": 0, "postponed": 0}
+    stats = {"pages": 0, "rows": 0, "new": 0, "details": 0, "detail_failed": 0, "postponed": 0, "gone": 0}
+    oldest = min((i for i, t in tenders.items() if not t.get("src") and store.is_open(t, at)), default=None)
 
     def take(r) -> datetime | None:
         """Remember one list row if its deadline is current. Returns its deadline."""
@@ -90,6 +91,8 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
             t["stale"] = True  # the deadline moved: re-read the other dates too
         t.update(code=r.code, lots=r.lots, end=r.deadline,
                  status=store.status_key(r.status), status_text=r.status)
+        t.pop("miss", None)
+        t.pop("gone", None)     # back on the list
         if not t.get("pub") or not t.get("title"):
             t["title"] = r.title
         return end
@@ -125,13 +128,16 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
         time.sleep(pause)
     say(f"List: {stats['pages']} page(s), {stats['rows']} current tenders, {stats['new']} new")
 
-    # Tenders with the same deadline come in no fixed order, so a page can skip one. Numbers
-    # have no ties: walk the list ordered by number from the newest until it brings nothing more.
+    # Tenders with the same deadline come in no fixed order, so a page can skip one. Numbers have no ties: walk
+    # the list ordered by number from the newest down to the oldest open auction. Every open auction should be on
+    # it; one missing from two whole walks in a row has been taken off the list (cancelled or suspended, most
+    # likely) and is no longer shown as open.
     by_number = next((k for k in ID_ORDERINGS if k in orderings), None)
     if not by_number and links:
         say("  (no ordering by number among the list's links: " + ", ".join(links) + ")")
+    whole = False
     if by_number:
-        before, quiet = stats["rows"], 0
+        before = stats["rows"]
         for page in range(1, MAX_ID_PAGES + 1):
             if clock() - started > budget:
                 break
@@ -146,15 +152,26 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
             if ids != sorted(ids, reverse=True):
                 say("! The list by number did not come newest first: left out.")
                 break
-            got = stats["rows"]
             for r in rows:
                 if r.id not in seen:
                     take(r)
-            quiet = quiet + 1 if stats["rows"] == got else 0
-            if quiet >= 2 and page >= 3:
+            if oldest is not None and ids[-1] <= oldest:
+                whole = True
                 break
             time.sleep(pause)
-        say(f"List by number: {stats['rows'] - before} tender(s) the first list had skipped")
+        say(f"List by number: {stats['rows'] - before} tender(s) the first list had skipped"
+            + ("" if whole or oldest is None else "; not read down to the oldest open auction"))
+    if whole:
+        for i, t in tenders.items():
+            if t.get("src") or i in seen or not store.is_open(t, at):
+                continue
+            t["miss"] = t.get("miss", 0) + 1
+            if t["miss"] >= 2:
+                t.pop("miss")
+                t.update(status="other", status_text="Հանված է ցանկից", gone=store.stamp(at))
+                stats["gone"] += 1
+        if stats["gone"]:
+            say(f"Taken off ARMEPS's list: {stats['gone']} auction(s), no longer shown as open")
 
     # notice pages: full title, buyer, publication time, other dates, invitation
     todo = [t for t in tenders.values()

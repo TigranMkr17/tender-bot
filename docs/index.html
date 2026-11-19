@@ -447,6 +447,7 @@ div.who{grid-template-columns:minmax(0,1fr)}
 .fresh .cmp~.cmp~.cmp .bar i,.fresh .lotr~.lotr~.lotr .bar i{animation-delay:.28s}
 @keyframes drop{from{transform:scaleX(1)}}
 
+.due-gone{margin-top:.875rem;padding-top:.75rem;border-top:1px solid var(--rule);font-size:.9375rem;line-height:1.45;color:var(--ink-2)}
 .toast{position:fixed;left:50%;bottom:1.25rem;z-index:20;max-width:calc(100% - 2rem);padding:.6875rem 1rem;border-radius:.875rem;
   background:var(--ink);color:var(--ground);font-size:.9375rem;font-weight:500;box-shadow:0 10px 28px -8px rgba(0,0,0,.4);
   transform:translate(-50%,1rem);opacity:0;pointer-events:none;transition:transform .26s var(--ease),opacity .2s var(--ease)}
@@ -737,6 +738,7 @@ function lotHit(t) {
 function rowHTML(t, mode) {
   const l = left(t.endD), closed = !isOpen(t), meta = [], key = 't' + t.id;
   if (t.status === 'cancelled') meta.push('<span class="left is-closed">չեղարկված է</span>');
+  else if (t.goneD) meta.push('<span class="left is-closed">հանվել է ցանկից</span>');
   else if (closed || (mode !== 'due' && l.lvl !== 'ok')) meta.push(`<span class="left is-${l.lvl}">${l.text}</span>`);
   if (mode === 'due' && t.newD && dayNo(t.newD) === dayNo(new Date(now()))) meta.push('<span class="tag">նոր</span>');
   meta.push(`<span>${ic(t.sector, 'ic--s')}${esc(SECTORS[t.sector])}</span>`);
@@ -945,7 +947,7 @@ const priceBar = (low, est) => `<span class="bar" style="--v:${Math.max(.02, Mat
 /* ---------- an open tender ---------- */
 function tenderFrame(t) {
   const l = left(t.endD), kind = KINDS[t.kind], p = parts(t.endD);
-  const closed = t.status === 'cancelled' || l.lvl === 'closed';
+  const closed = t.status === 'cancelled' || !!t.goneD || l.lvl === 'closed';
   const cls = closed ? '' : l.lvl === 'crit' || l.lvl === 'warn' ? ` is-${l.lvl}` : '';
   const past = d => (d && d <= now() ? ' is-past' : '');
   const fact = (icon, label, value) => `<div><span class="f-ic">${ic(icon)}</span><dt>${label}</dt><dd>${value}</dd></div>`;
@@ -973,7 +975,7 @@ function tenderFrame(t) {
     prog = `<div class="prog-w"><div class="prog" role="img" aria-label="Անցել է ժամկետի ${pct} տոկոսը"><i style="width:${pct}%"></i></div>` +
       `<p class="prog-l num"><span>հրապարակվել է ${fShort(t.pubD)}</span><span>վերջնաժամկետը՝ ${fShort(t.endD)}</span></p></div>`;
   }
-  const state = t.status === 'cancelled' ? 'մրցույթը չեղարկված է' : l.lvl === 'crit' ? l.text.split(',')[0] : l.text;
+  const state = t.status === 'cancelled' ? 'մրցույթը չեղարկված է' : t.goneD ? 'հանվել է ARMEPS-ի ցանկից' : l.lvl === 'crit' ? l.text.split(',')[0] : l.text;
   return `${dbar('t' + t.id)}
     <div class="wrap">
       ${heroHTML(t.subject || NO_SUBJECT, t.buyer, t.bk, [`${ic(t.sector, 'ic--s')}${esc(SECTORS[t.sector])}`, ...(kind ? [kind[0]] : []), ...(t.src ? [esc(proc[0])] : []), ...(t.lots ? [`${t.lots} չափաբաժին`] : [])])}
@@ -981,7 +983,7 @@ function tenderFrame(t) {
         <span class="tile${closed ? ' is-off' : cls} num"><small>${WD3[p.wd]}</small><b>${p.d}</b><small>${MON3[p.m]}</small></span>
         <p><span class="due-l">Հայտերն ընդունվում են մինչև</span>
           <b class="due-d num">${fDay(t.endD)}, ժամը ${fTime(t.endD)}</b><span class="due-r">${cap(WD[p.wd])} · ${state}</span></p>
-        ${prog}
+        ${t.goneD ? `<p class="due-gone">ARMEPS-ը մրցույթը ${fShort(t.goneD)} հանել է ընթացիկ մրցույթների ցանկից՝ վերջնաժամկետից առաջ։ Հավանաբար այն չեղարկվել կամ կասեցվել է. ճշտեք ARMEPS-ում։</p>` : prog}
       </section>
       <div class="acts">
         ${t.inv ? `<a class="btn btn--primary" href="${esc(safe(t.inv))}" target="_blank" rel="noopener" data-ext>${ic('down')}Ներբեռնել հրավերը</a>` : ''}
@@ -1667,7 +1669,7 @@ function ingest(data) {
   S.meta = data.meta || {};
   S.frozen = S.meta.preview && S.meta.updated ? toDate(S.meta.updated).getTime() : null;   // a preview keeps its own clock
   S.all = (data.tenders || []).filter(t => t && t.id && t.end).map(t => ({...t,
-    endD: toDate(t.end), pubD: toDate(t.pub), askD: toDate(t.ask), aucD: toDate(t.auc), opnD: toDate(t.opn),
+    endD: toDate(t.end), pubD: toDate(t.pub), askD: toDate(t.ask), aucD: toDate(t.auc), opnD: toDate(t.opn), goneD: toDate(t.gone),
     newD: toDate(t.pub || t.seen),   // seen: first met in the list, when the notice gave no time
     sector: SECTORS[t.sector] ? t.sector : 'other',
     ln: (lotsOf(t.id) || {}).ln || '',
