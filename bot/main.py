@@ -26,6 +26,7 @@ WORKERS = 2         # notice pages read side by side; the site resets a third co
 GIVE_UP_AFTER = 8   # notice pages failing in a row before the run stops asking for more
 MAX_ID_PAGES = 12   # how deep the list ordered by number is followed
 ID_ORDERINGS = ("by_id", "by_tender_id", "by_number")
+SAFE_DROP = 15      # open tenders one run may close before its deadline; above it (or 5%), the safety net holds
 
 
 def say(text: str) -> None:
@@ -212,9 +213,38 @@ def scrape(tenders: dict[int, dict], at: datetime, fetch=armeps.fetch, pause: fl
     return stats
 
 
+def hold_sudden_closing(tenders: dict[int, dict], before: dict[int, tuple], at: datetime,
+                        held_last: set[int], say=say) -> set[int]:
+    """The safety net. `before` holds the status of every tender that was open when the run began.
+
+    A run that closes a few open tenders before their deadline is normal: an auction is cancelled, a call is
+    withdrawn. A run that closes many at once has more likely read only part of a site (on 19 Nov 2026 a short
+    EPPS list closed 222). Those tenders stay open, and are remembered: when the next run closes mostly the same
+    ones again, the closing is believed. Returns the tenders held open."""
+    closed = {i for i in before if i in tenders and not store.is_open(tenders[i], at)
+              and (store.parse(tenders[i].get("end")) or at) > at}
+    if len(closed) <= max(SAFE_DROP, len(before) // 20):
+        return set()
+    if held_last and len(closed & held_last) >= 0.8 * len(closed):
+        say(f"! Safety net: {len(closed)} open tenders closed for the second run in a row; believed.")
+        return set()
+    for i in closed:
+        t = tenders[i]
+        for key, value in zip(("status", "status_text", "gone"), before[i]):
+            if value is None:
+                t.pop(key, None)
+            else:
+                t[key] = value
+    say(f"! Safety net: this run would have closed {len(closed)} open tenders at once, before their deadlines. "
+        "They stay open; a second run closing the same ones will be believed.")
+    return closed
+
+
 def update_data(at: datetime, fetch=armeps.fetch, pause: float = 0.3, with_epps: bool | None = None) -> dict:
     data = store.load()
     tenders = {t["id"]: t for t in data["tenders"]}
+    before = {i: (t.get("status"), t.get("status_text"), t.get("gone"))
+              for i, t in tenders.items() if store.is_open(t, at)}
     stats = scrape(tenders, at, fetch=fetch, pause=pause)
     if with_epps is None:
         with_epps = fetch is armeps.fetch                   # tests that pass their own pages stay off the network
@@ -227,6 +257,7 @@ def update_data(at: datetime, fetch=armeps.fetch, pause: float = 0.3, with_epps:
                 listed = got["ids"]
         except armeps.ScrapeError as exc:
             say(f"! EPPS: {exc} The calls already known stay as they were.")
+    data["held"] = sorted(hold_sudden_closing(tenders, before, at, set(data.get("held", []))))
     items = store.prune(list(tenders.values()), at)
     kept = {t["id"] for t in items}
     done |= {i for i, t in tenders.items() if t.get("src") == "epps" and i not in kept}
