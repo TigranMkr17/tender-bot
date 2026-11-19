@@ -1134,4 +1134,13 @@ async function boot() {
   if (deep && OPEN.some(t => t.id === +deep[1])) openSheet('tender', deep[1]);
 }
 boot();
+
+/* offline and at once: the site's service worker (../sw.js) keeps this page, its files and its data on the phone */
+const opened = Date.now();
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('../sw.js', {scope: '../'}).catch(() => { /* private mode, old browsers: works without */ });
+  navigator.serviceWorker.addEventListener('message', e => {    // a newer page: reload if nothing has been opened yet
+    if (e.data && e.data.type === 'page-updated' && !S.stack.length && Date.now() - opened < 1e4) location.reload();
+  });
+}
 })();

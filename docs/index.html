@@ -946,7 +946,8 @@ function render(animate) {
   let html = '', firms = 0;
   if (S.meta.note) html += `<p class="strip">${esc(S.meta.note)}</p>`;
   if (S.q && S.approx && items.length) html += `<p class="strip">«${esc(S.q.trim())}» ճիշտ այդպես գրված չի գտնվել. ցույց են տրված նման գրությամբ մրցույթները։</p>`;
-  if (late(upd)) html += `<p class="strip strip--warn">Թարմացումն ուշանում է. տվյալները վերջին անգամ թարմացվել են ${fStamp(upd)}-ին։ Նոր մրցույթները կարող են դեռ չերևալ, ստուգեք նաև ARMEPS-ում։</p>`;
+  if (!navigator.onLine) html += `<p class="strip strip--warn">Ինտերնետ կապ չկա. ցույց են տրված այս հեռախոսում պահված վերջին տվյալները${upd ? `՝ ${fStamp(upd)}-ի դրությամբ` : ''}։</p>`;
+  else if (late(upd)) html += `<p class="strip strip--warn">Թարմացումն ուշանում է. տվյալները վերջին անգամ թարմացվել են ${fStamp(upd)}-ին։ Նոր մրցույթները կարող են դեռ չերևալ, ստուգեք նաև ARMEPS-ում։</p>`;
   if (res) {
     const m = peek('h/meta.json'), from = m && dOnly(m.from);
     if (m && !m.complete && from && !S.q) html += `<p class="strip">Նախորդ ամիսների արդյունքներն ավելանում են ամեն գիշեր. այժմ՝ ${plural(m.results, 'մրցույթ')}՝ ${since(from)}։</p>`;
@@ -1851,6 +1852,19 @@ applySize(+store.get('size') || 0);
 initTelegram();
 try { const kept = store.get('data'); if (kept) { ingest(JSON.parse(kept)); render(true); route(); } } catch { /* a damaged copy: wait for the network */ }
 load();
+
+/* ---------- offline and at once (sw.js) ----------
+   The page comes from this phone's copy; when a newer page has been published, the copy is replaced behind it and
+   this page reloads, if the reader has not opened anything or searched yet. Otherwise the new page shows next time. */
+const opened = Date.now();
+let newer = false;
+const fresher = () => { if (newer && !S.stack.length && !S.q && Date.now() - opened < 1e4) location.reload(); };
+if ('serviceWorker' in navigator && !S.frozen) {
+  navigator.serviceWorker.register('sw.js').catch(() => { /* private mode and old browsers: the page works without */ });
+  navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'page-updated') { newer = true; fresher(); } });
+}
+addEventListener('online', () => { if (S.loaded) { load(true); paint(false); } });
+addEventListener('offline', () => { if (S.loaded) paint(false); });
 })();
 </script>
 </body>
