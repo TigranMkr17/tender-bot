@@ -222,7 +222,9 @@ def update_data(at: datetime, fetch=armeps.fetch, pause: float = 0.3, with_epps:
     listed = None
     if with_epps:                                           # EPPS: price quotations, open tenders and the rest
         try:
-            listed = epps.update(tenders, at, say=say, skip=done)["ids"]
+            got = epps.update(tenders, at, say=say, skip=done)
+            if got.get("whole"):                            # only a whole list may shorten the memory
+                listed = got["ids"]
         except armeps.ScrapeError as exc:
             say(f"! EPPS: {exc} The calls already known stay as they were.")
     items = store.prune(list(tenders.values()), at)

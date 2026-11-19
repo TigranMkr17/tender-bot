@@ -35,6 +35,7 @@ BUDGET = 8 * 60          # seconds one run may spend on EPPS; calls not read in 
 REREAD = timedelta(hours=20)   # a call's page is read again after this, for a moved deadline or a new date
 WORKERS = 2
 GIVE_UP_AFTER = 8
+LIST_TRIES = 2       # a list shorter than EPPS's own count is asked for again once
 
 _WS = re.compile(r"\s+")
 _RID = re.compile(r"prepareViewCfTWS\.do\?resourceId=(\d+)")
@@ -53,8 +54,12 @@ class Session:
     """One visitor: cookies kept from page to page, a few tries per page, a short pause between pages."""
 
     def __init__(self, timeout: int = 40, retries: int = 3, pause: float = 0.4):
-        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
         self.timeout, self.retries, self.pause = timeout, retries, pause
+        self.fresh()
+
+    def fresh(self) -> None:
+        """Forget the cookies: the next page opens a new visit, with a new search."""
+        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 
     def get(self, url: str) -> str:
         last = None
@@ -137,8 +142,8 @@ def pager_url(master: str, action: str, page: int | None = None, per: int = PER_
     return PAGER + "?" + urllib.parse.urlencode(q)
 
 
-def list_open(session: Session, say=print) -> list[dict]:
-    """Every call now taking bids. Raises ScrapeError when even the first page cannot be read."""
+def _walk(session: Session) -> tuple[dict[int, dict], int | None]:
+    """One pass over the search: the calls it gave, and how many EPPS says it has."""
     session.get(HOME)                                       # the search lives in the session this opens
     html = session.get(SEARCH)
     rows, total, master = parse_list(html)
@@ -158,9 +163,28 @@ def list_open(session: Session, say=print) -> list[dict]:
             if not fresh:
                 break
             found.update((r["id"], r) for r in fresh)
-    if total and len(found) < total:
-        say(f"! EPPS: {len(found)} of {total} calls could be listed.")
-    return list(found.values())
+    return found, total
+
+
+def list_open(session: Session, say=print) -> tuple[list[dict], bool]:
+    """Every call now taking bids, and whether that is the whole list. Raises ScrapeError when even the first
+    page cannot be read.
+
+    EPPS says how many calls it has. The pager sometimes answers with an empty page, which leaves the list
+    short: the search is then asked for again, once, as a new visitor. A list that stays short is used to add
+    and update calls, never to decide that a call has left the site."""
+    for attempt in range(1, LIST_TRIES + 1):
+        found, total = _walk(session)
+        whole = bool(total) and len(found) >= total
+        if whole or not total:
+            break
+        if attempt < LIST_TRIES:
+            say(f"! EPPS: {len(found)} of {total} calls could be listed; asking again.")
+            session.fresh()
+        else:
+            say(f"! EPPS: {len(found)} of {total} calls could be listed. No call is taken off the site "
+                "on a list this short.")
+    return list(found.values()), whole
 
 
 # ---------- one call's page ----------
@@ -353,10 +377,11 @@ def update(tenders: dict[int, dict], at: datetime, session: Session | None = Non
     stats = {"listed": 0, "new": 0, "details": 0, "detail_failed": 0, "postponed": 0, "gone": 0}
     mine = {i: t for i, t in tenders.items() if t.get("src") == "epps"}
     first_run = not mine
-    rows = list_open(session, say=say)
+    rows, whole = list_open(session, say=say)
     listed = {r["id"] for r in rows}
     stats["listed"] = len(rows)
     stats["ids"] = listed
+    stats["whole"] = whole
     for r in rows:
         if r["id"] in skip and r["id"] not in tenders:
             continue
@@ -374,7 +399,7 @@ def update(tenders: dict[int, dict], at: datetime, session: Session | None = Non
         if r["buyer"] and not t.get("buyer_official"):
             t["buyer_official"] = r["buyer"]
     for i, t in mine.items():                               # taken off the list before its deadline: no longer open
-        if i not in listed and t.get("status") == "open":
+        if whole and i not in listed and t.get("status") == "open":
             end = store.parse(t.get("end"))
             if end is None or end > at:
                 t["status"] = "other"
@@ -432,7 +457,8 @@ def main(argv=None) -> int:
     ap.add_argument("--probe", type=int, default=3, help="read the list and this many calls, print, save nothing")
     args = ap.parse_args(argv)
     s = Session()
-    rows = list_open(s)
+    rows, whole = list_open(s)
+    print("The whole list." if whole else "! Not the whole list.")
     print(f"{len(rows)} calls listed. First: {json.dumps(rows[:3], ensure_ascii=False)}")
     for r in rows[:args.probe]:
         html = s.get(DETAIL.format(id=r["id"]))

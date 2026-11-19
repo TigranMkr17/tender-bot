@@ -1,5 +1,6 @@
 """The EPPS reader, on pages shaped like the live ones (www.armeps.am/epps, November 2026)."""
 import os
+import tempfile
 import sys
 import unittest
 from datetime import datetime
@@ -89,8 +90,12 @@ DETAIL = """<html><body><div id="Content"><h2>Դիտել ՄՀ աշխատանքա
 class FakeSession:
     """Answers like EPPS: a session is needed for the search; the pager serves pages of PER_PAGE."""
 
-    def __init__(self, calls, detail=DETAIL, broken=()):
+    def __init__(self, calls, detail=DETAIL, broken=(), empty_pages=0):
         self.calls, self.detail, self.broken, self.asked = calls, detail, set(broken), []
+        self.empty_pages, self.visits = empty_pages, 1     # empty_pages: pager answers that come back empty
+
+    def fresh(self):
+        self.visits += 1
 
     def get(self, url):
         self.asked.append(url)
@@ -104,6 +109,9 @@ class FakeSession:
             per = int(q["paging_results_per_page"][0])
             page = int(q["paging_go_to_page"][0] or 1) if q["actionKind"][0] == "paging_go_to_page" else 1
             assert q["masterKey"][0] == "abc:123" and q["subKey"][0] == "results['entriesCollection']"
+            if self.empty_pages:
+                self.empty_pages -= 1
+                return results_page([], len(self.calls))
             chunk = self.calls[(page - 1) * per: page * per]
             return results_page(chunk, len(self.calls), start=(page - 1) * per + 1)
         rid = int(url.rsplit("=", 1)[1])
@@ -130,15 +138,34 @@ class ListTest(unittest.TestCase):
 
     def test_every_page_is_read(self):
         s = FakeSession(calls(163))
-        got = epps.list_open(s, say=lambda *_: None)
+        got, whole = epps.list_open(s, say=lambda *_: None)
         self.assertEqual(len(got), 163)
         self.assertEqual(len({r["id"] for r in got}), 163)
+        self.assertTrue(whole)
         self.assertEqual(s.asked[:2], [epps.HOME, epps.SEARCH])
 
     def test_a_short_list_needs_no_pager(self):
         s = FakeSession(calls(7))
-        self.assertEqual(len(epps.list_open(s, say=lambda *_: None)), 7)
+        got, whole = epps.list_open(s, say=lambda *_: None)
+        self.assertEqual((len(got), whole), (7, True))
         self.assertFalse(any(u.startswith(epps.PAGER) for u in s.asked))
+
+    def test_an_empty_answer_from_the_pager_is_asked_again(self):
+        s = FakeSession(calls(163), empty_pages=1)
+        said = []
+        got, whole = epps.list_open(s, say=said.append)
+        self.assertEqual((len(got), whole), (163, True))
+        self.assertEqual(s.visits, 2)                     # the second try came as a new visitor
+        self.assertEqual(s.asked.count(epps.SEARCH), 2)
+        self.assertIn("asking again", said[0])
+
+    def test_a_list_that_stays_short_is_not_whole(self):
+        s = FakeSession(calls(163), empty_pages=99)
+        said = []
+        got, whole = epps.list_open(s, say=said.append)
+        self.assertEqual((len(got), whole), (10, False))  # what the first page gave
+        self.assertEqual(s.asked.count(epps.SEARCH), epps.LIST_TRIES)
+        self.assertIn("No call is taken off", said[-1])
 
     def test_an_empty_search_is_an_error(self):
         with self.assertRaises(armeps.ScrapeError):
@@ -208,6 +235,51 @@ class UpdateTest(unittest.TestCase):
                  {"id": 12_600_001, "src": "epps", "code": "ԵՔ-ԳՀԱՊՁԲ-26/64"}]
         self.assertEqual([t["id"] for t in store.drop_doubles(items)], [1, 12_600_001])
 
+
+
+class ShortListTest(unittest.TestCase):
+    """13:28 on 19 Nov 2026: the pager answered with empty pages, the list held 10 of 360 calls, and the other
+    222 open calls were taken off the site. A short list must never do that."""
+
+    def test_a_short_list_takes_nothing_off(self):
+        tenders = {}
+        epps.update(tenders, AT, session=FakeSession(calls(30)), say=lambda *_: None, workers=1)
+        stats = epps.update(tenders, AT, session=FakeSession(calls(30), empty_pages=99), say=lambda *_: None, workers=1)
+        self.assertFalse(stats["whole"])
+        self.assertEqual(stats["gone"], 0)
+        self.assertTrue(all(t["status"] == "open" and "gone" not in t for t in tenders.values()))
+
+    def test_a_call_back_on_the_list_is_open_again(self):
+        tenders = {}
+        epps.update(tenders, AT, session=FakeSession(calls(12)), say=lambda *_: None, workers=1)
+        stats = epps.update(tenders, AT, session=FakeSession(calls(11)), say=lambda *_: None, workers=1)
+        last = tenders[12_600_011]
+        self.assertEqual((stats["gone"], last["status"]), (1, "other"))
+        epps.update(tenders, AT, session=FakeSession(calls(12)), say=lambda *_: None, workers=1)
+        self.assertEqual(last["status"], "open")
+        self.assertNotIn("gone", last)
+
+    def test_a_short_list_keeps_the_memory_of_expired_calls(self):
+        from unittest import mock
+        from bot import main
+        quiet = {"pages": 1, "rows": 0, "new": 0, "details": 0, "detail_failed": 0, "postponed": 0}
+
+        def run(listed, whole):
+            def fake_update(tenders, at, say=print, skip=frozenset()):
+                return {"ids": set(listed), "whole": whole}
+            with mock.patch.object(main, "scrape", return_value=quiet), \
+                    mock.patch.object(main.epps, "update", side_effect=fake_update):
+                return main.update_data(AT, with_epps=True)["epps_done"]
+
+        cwd = os.getcwd()
+        with tempfile.TemporaryDirectory() as tmp:
+            os.chdir(tmp)
+            try:
+                store.save({"meta": {}, "tenders": [], "epps_done": [1, 2, 3]})
+                self.assertEqual(run({1}, whole=False), [1, 2, 3])    # a short list forgets nothing
+                self.assertEqual(run({1, 2}, whole=True), [1, 2])     # a whole list may: 3 is gone from EPPS
+            finally:
+                os.chdir(cwd)
 
 
 class SectorTest(unittest.TestCase):
