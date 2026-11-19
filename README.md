@@ -27,6 +27,8 @@ The site has its own icon, so it can sit among the apps.
 
 A phone keeps the icon it was given when the shortcut was made. If the icon changes later, remove the shortcut and add it again.
 
+From the Home Screen the site opens as an app, without the browser's bar. It opens at once and works without a connection: a service worker (`docs/sw.js`) keeps the pages, fonts and icons on the phone and refreshes them behind the scenes; data is asked for first, and the phone's last copy is used after 3.5 seconds or with no connection, and the list then says so. A page that changed reloads itself if the reader has not opened anything yet; otherwise the new one shows next time.
+
 ## Where the tenders come from
 
 Two ARMEPS systems, both public and read without logging in:
@@ -35,6 +37,21 @@ Two ARMEPS systems, both public and read without logging in:
 - **www.armeps.am/epps**: everything else open for bids: price quotations, open and urgent tenders, two-stage and framework procedures, grant competitions (`bot/epps.py`). EPPS keeps its search in the visitor's session and pages it 75 at a time; the reader takes the pager's key from the first results page, then reads the page of every new call (and every call again after 20 hours, in case a deadline moved) for its code, buyer, procedure, deadline, question period, opening time and publication time. A call on both systems is shown once, as the auction. EPPS also keeps listing some old calls whose deadline passed long ago; once such a call leaves the site it is remembered (`epps_done` in `bot/state/tenders.json`) and not added again.
 
 `python -m bot.epps --probe 5` (or the *EPPS look* workflow) reads the list and five calls and prints what the reader understood, without saving anything.
+
+**What keeps the list right.**
+
+- EPPS says how many calls it has. A list that comes back shorter is asked for again once, as a new visitor; if it stays short it adds and updates calls but never closes one (on 19 Nov 2026 a short list closed 222 calls before this rule existed).
+- The auction list ordered by number is walked down to the oldest open auction at every update. An open auction missing from two whole walks in a row has been taken off ARMEPS's list (cancelled or suspended, most likely): it stops looking open, and its page says so. One that comes back is open again. A walk cut short by an error decides nothing.
+- **The safety net** (`hold_sudden_closing` in `bot/main.py`): a run that would close more than 15 open tenders (or 5% of them) before their deadlines keeps them open and remembers them; only a second run in a row that closes mostly the same ones is believed.
+- The page knows the update times and says so as soon as one is late (45 minutes after its slot).
+
+## Past prices
+
+Every open tender's page shows **«Նման պայմանագրեր»**: the contracts most like it in the contracts register (every procedure, since October 2025), who got each one, for how much, against what estimate, and how far below the estimate such contracts usually close. `bot/past.py` works them out at each update from `docs/data/k/` and writes `docs/data/p/<id % 16>.json`, so a phone loads a few kilobytes. Likeness is by the rare words of the subject: words about buying, places, and people's names are left out; the same buyer counts a little more; a long subject must share two words with a contract. Sole proprietors are not named. Auctions also keep «Նախորդ անգամ», the earlier auction results for the same item codes.
+
+## Search
+
+The search box takes Armenian or Latin letters typed the usual way (`mankapartez`, `qaxaqapetaran`, `dexorayq`): text and query both become a rough key of how they sound, where letters people mix up fall together (տ/թ, կ/ք, ր/ռ, ե/է, խ/ղ, ց/ծ/չ/ճ...). When nothing matches as written, one letter may be wrong in each long word, and the list says the matches are approximate.
 
 ## A company's own view: `my/`
 
@@ -75,7 +92,7 @@ The past year is read a part each night, because the register answers slowly and
 
 ## Optional: messages in Telegram
 
-The same data can be sent as a Telegram message: new tenders and the day's deadlines at about 09:00, and at about 18:00 on days when something new was published.
+The same data can be sent as a Telegram message: new tenders and the day's deadlines at about 09:00, and at about 12:00, 15:00 and 18:00 whatever was published since the last message (nothing when nothing is new). Every tender in a message opens its page on the site; EPPS calls say which procedure they are; tenders in the lines of «Մեր դաշտը» (`docs/my/home.json`) come first, with a star.
 
 1. In Telegram open `@BotFather`, send `/newbot`, choose a name and a username ending in `bot`. BotFather replies with a token. Keep it private.
 2. In the repository: Settings → Secrets and variables → Actions → New repository secret. Name: `TELEGRAM_BOT_TOKEN`. Value: the token.
@@ -97,8 +114,8 @@ The same data can be sent as a Telegram message: new tenders and the day's deadl
 
 ## What it does not cover yet
 
-- Only ARMEPS electronic auctions. Open tenders and price quotations announced only on gnumner.am, and donor or private tenders, are not included.
-- The register does not publish a tender's estimated price before the auction, so an open tender shows the prices of earlier purchases instead.
+- Only ARMEPS: its electronic auctions and the calls on EPPS. Tenders announced only on gnumner.am, and donor or private tenders, are not included.
+- Neither system publishes most tenders' estimated price before the bids, so an open tender shows the prices of earlier purchases instead.
 - The register names no winner. The site shows who came first in the auction and which bids were turned down; the contract is the buyer's decision, and while it is being made a tender is marked «Հաղթողը որոշվում է» and read again every two days.
 - "The same thing" is judged by the item code and the lot's name. Quantities differ from one purchase to the next, so compare prices per unit where the site shows them.
 - Sole proprietors are people, not companies: they are named only in the record of the tender they bid in, and have no page of their own. Bidders' application files are not downloaded. Buyers' bank details in an invitation are not read.
