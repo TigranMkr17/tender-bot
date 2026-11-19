@@ -892,11 +892,28 @@ const SHEETS = {
 const coRows = () => (G.length ? G.map((g, i) => `<div class="co-row"><span class="c${i + 1}">${sealSVG(g.tin, {detail: 0, size: 40, stroke: 2.4})}</span><span><span class="t">${esc(g.name)}</span><br><span class="s">ՀՎՀՀ ${esc(g.tin)}${g.s ? ` · ${plural(g.s.n, 'պայմանագիր')}` : ' · պայմանագիր չի գտնվել'}</span></span>
   <button class="ibtn" style="margin:0;color:var(--ink-3)" type="button" data-act="co-del" data-tin="${esc(g.tin)}" aria-label="Հեռացնել ${esc(g.name)}">${ic('x')}</button></div>`).join('') : '<p class="sub">Ընկերություն ընտրված չէ։</p>');
 const lineRows = () => CFG.lines.map((l, i) => `<span class="pill">${esc(l.name)}<button type="button" data-act="line-del" data-i="${i}" aria-label="Հեռացնել ${esc(l.name)}">${ic('x', 's')}</button></span>`).join('') || '<p class="sub">Ուղղություն չկա։</p>';
+/* a name typed in Latin letters: the same sound key as the tenders page (js/01_base.js there): «prod invest» finds
+   Պրոդ Ինվեստ, letters people mix up (տ/թ, կ/ք, ր/ռ...) fall together */
+const KEY_HY = {'ա': 'a', 'բ': 'b', 'գ': 'g', 'դ': 'd', 'ե': 'e', 'զ': 'z', 'է': 'e', 'ը': '', 'թ': 't', 'ժ': 'j',
+  'ի': 'i', 'լ': 'l', 'խ': 'x', 'ծ': 'c', 'կ': 'k', 'հ': 'h', 'ձ': 'z', 'ղ': 'x', 'ճ': 'c', 'մ': 'm', 'յ': 'y',
+  'ն': 'n', 'շ': 's', 'ո': 'o', 'չ': 'c', 'պ': 'p', 'ջ': 'j', 'ռ': 'r', 'ս': 's', 'վ': 'v', 'տ': 't', 'ր': 'r',
+  'ց': 'c', 'ւ': 'v', 'փ': 'p', 'ք': 'k', 'օ': 'o', 'ֆ': 'f'};
+const KEY_LAT = [[/^ye/, 'e'], [/^vo/, 'o'], [/^y(?=[^aeiouy])/, ''], [/sh/g, 's'], [/[cz]h/g, m => (m === 'ch' ? 'c' : 'j')],
+  [/[kg]h/g, 'x'], [/t[sz]/g, 'c'], [/dz/g, 'z'], [/dj/g, 'j'], [/th/g, 't'], [/ph/g, 'p'], [/ou/g, 'u'],
+  [/q/g, 'k'], [/w/g, 's'], [/4/g, 'c'], [/@/g, '']];
+const keyWord = w => {
+  let s = w.replace(/ու/g, 'u').replace(/[\u0531-\u0587]/g, ch => KEY_HY[ch] ?? ch);
+  if (/[a-z]/.test(w)) for (const [re, to] of KEY_LAT) s = s.replace(re, to);
+  return s.replace(/(.)\1+/g, '$1');
+};
+const keyOf = text => ' ' + String(text || '').toLowerCase().replace(/\u0587/g, 'եվ').split(/[^\p{L}\p{N}]+/u).map(keyWord).filter(Boolean).join(' ');
+
 function findCompanies(q) {
   const n = norm(q).trim();
   if (n.length < 2) return [];
-  const digits = /^\d+$/.test(n);
-  return [...D.sup.values()].filter(s => s.tin && !s.person && !CFG.tins.includes(s.tin) && (digits ? s.tin.startsWith(n) : norm(s.name).includes(n)))
+  const digits = /^\d+$/.test(n), k = keyOf(q).trim();
+  return [...D.sup.values()].filter(s => s.tin && !s.person && !CFG.tins.includes(s.tin) && (digits ? s.tin.startsWith(n)
+    : norm(s.name).includes(n) || (k.length >= 3 && (s.sk || (s.sk = keyOf(s.name))).includes(k))))
     .sort((a, b) => b.n - a.n).slice(0, 6);
 }
 const foundRows = rows => (rows.length ? `<ul class="list" style="margin-top:.5rem">${rows.map(s => `<li><button class="row" type="button" data-act="co-add" data-tin="${esc(s.tin)}" style="grid-template-columns:minmax(0,1fr) auto"><span><span class="t">${esc(s.name)}</span><span class="s">ՀՎՀՀ ${esc(s.tin)} · ${plural(s.n, 'պայմանագիր')}</span></span><span class="go">${ic('plus')}</span></button></li>`).join('')}</ul>` : '');
