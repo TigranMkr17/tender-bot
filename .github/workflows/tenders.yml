@@ -1,7 +1,8 @@
 name: Tenders
 
 # GitHub starts these schedules late or not at all, so the Clock workflow starts this job too, on time:
-# at 08:50 and 17:50 as "digest", at 11:50 and 14:50 as "refresh" (see clock.yml). The schedules stay as a second way in.
+# at 08:50, 11:50, 14:50 and 17:50 as "digest" (see clock.yml): the morning message always, the others only when
+# something new was published. The schedules stay as a second way in.
 # Times are in UTC. Yerevan is UTC+4 all year, so 04:52 UTC is 08:52 in Yerevan.
 # Reading ARMEPS takes a few minutes, so a run that starts at 08:52 sends its message at about 09:00.
 on:

@@ -295,8 +295,26 @@ class Messages(unittest.TestCase):
         text = digest.build(self.tenders, AT, datetime(2026, 11, 12, 19, 0), "morning")
         self.assertIn("Նոր՝ <b>18</b>", text)
         self.assertIn("Ընդամենը բաց՝ <b>29</b>", text)
-        self.assertIn("…և ևս 11 մրցույթ", text)
+        self.assertIn(f"…և ևս {18 - digest.MAX_ITEMS} մրցույթ", text)
         self.assertLess(len(text), 3500)  # Telegram allows 4096
+
+    def test_links_stars_and_procedure(self):
+        url = "https://tigranmkr17.github.io/tender-bot/"
+        stems = digest.group_stems(os.path.join(os.path.dirname(__file__), "..", "docs", "my", "home.json"))
+        self.assertIn("հիգիեն", stems)
+        text = digest.build(self.tenders, AT, datetime(2026, 11, 12, 19, 0), "morning", app_url=url, stems=stems)
+        self.assertLess(len(text), 4096)
+        items = [b for b in text.split("\n\n") if b.startswith("• ")]
+        starred = [b for b in items if "⭐" in b.split("\n")[0]]
+        self.assertTrue(starred and items[:len(starred)] == starred)        # the group's lines come first
+        self.assertIn("Հիգիենիկ", starred[0])
+        self.assertIn(f'<a href="{url}#t', items[0])
+        self.assertIn("⭐ «Մեր դաշտի» ուղղություններով՝ <b>", text)
+        self.assertIn(" · Աճուրդ · մինչև ", items[0])
+        call = dict(self.tenders[0], id=12618601, src="epps", pr="ԳՀ", pub="2026-11-13T10:00")
+        later = digest.build([call], AT, datetime(2026, 11, 13, 8, 50), "evening", app_url=url)
+        self.assertIn("Գնանշման հարցում · մինչև", later)
+        self.assertIn("ժամը 08:50-ից հետո՝ <b>1</b> նոր մրցույթ", later)
 
     def test_evening_silent_when_nothing_new(self):
         self.assertIsNone(digest.build(self.tenders, AT, AT, "evening"))

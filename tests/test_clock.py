@@ -73,7 +73,7 @@ class Slots(unittest.TestCase):
         def day(d):
             return [clock.due(at(d, h, 50)) for h in (1, 4, 7, 10, 13, 16, 19, 22)]
         for d in range(16, 22):                                             # Monday to Saturday
-            self.assertEqual(day(d), [None, "digest", "refresh", "refresh", "digest", None, None, None])
+            self.assertEqual(day(d), [None, "digest", "digest", "digest", "digest", None, None, None])
         self.assertEqual(day(22), [None] * 8)                               # Sunday
 
 
@@ -91,9 +91,10 @@ class Ticks(unittest.TestCase):
         self.assertEqual(h.started, [("clock.yml", {"do": "tick"}), ("tenders.yml", {"mode": "digest"}),
                                      ("history.yml", {"minutes": "15"})])
 
-    def test_midday_updates_refresh_and_the_evening_one_sends_the_digest(self):
-        self.assertEqual(tick(at(17, 7, 46))[1].started[1], ("tenders.yml", {"mode": "refresh"}))
-        self.assertEqual(tick(at(17, 10, 46))[1].started[1], ("tenders.yml", {"mode": "refresh"}))
+    def test_every_update_may_send_a_message(self):
+        """The midday runs send a message too, when something new was published (the bot decides)."""
+        self.assertEqual(tick(at(17, 7, 46))[1].started[1], ("tenders.yml", {"mode": "digest"}))
+        self.assertEqual(tick(at(17, 10, 46))[1].started[1], ("tenders.yml", {"mode": "digest"}))
         self.assertEqual(tick(at(21, 13, 46))[1].started[1], ("tenders.yml", {"mode": "digest"}))     # Saturday
 
     def test_at_night_it_starts_the_long_reading_and_on_sunday_nothing_else(self):
@@ -124,7 +125,7 @@ class Ticks(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(h.started[:2], [("tenders.yml", {"mode": "digest"}), ("history.yml", {"minutes": "15"})])
         self.assertEqual(time.now(), at(17, 7, 50))
-        self.assertEqual(h.started[2:], [("clock.yml", {"do": "tick"}), ("tenders.yml", {"mode": "refresh"}),
+        self.assertEqual(h.started[2:], [("clock.yml", {"do": "tick"}), ("tenders.yml", {"mode": "digest"}),
                                          ("history.yml", {"minutes": "15"})])
 
     def test_out_of_step_it_does_not_repeat_an_update_that_ran(self):

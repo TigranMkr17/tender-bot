@@ -33,7 +33,7 @@ EARLY = timedelta(minutes=20)              # a slot this near is waited for
 LATE = timedelta(minutes=30)               # a slot this recently passed is served at once
 PROBE = timedelta(hours=6)                 # how often to try again while the timer is not set
 # What the Tenders job does at a slot, Monday to Saturday (UTC hour and minute): 08:50 to 17:50 in Yerevan.
-UPDATES = {(4, 50): "digest", (7, 50): "refresh", (10, 50): "refresh", (13, 50): "digest"}
+UPDATES = {(4, 50): "digest", (7, 50): "digest", (10, 50): "digest", (13, 50): "digest"}   # a message only when new
 HISTORY_MINUTES = "15"                     # with each of those, a short look inside new invitations and at fresh results
 # Every night at 20:50, 23:50, 02:50 and 05:50 in Yerevan: the History job's long reading, back through the past year.
 NIGHTS = {(16, 50), (19, 50), (22, 50), (1, 50)}

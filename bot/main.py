@@ -336,12 +336,15 @@ def run(mode: str, period: str = "auto", dry_run: bool = False, fetch=armeps.fet
         print(f"Telegram: {len(joined)} joined, {len(left)} left, {len(state['subs'])} subscribed")
 
     if mode == "digest" and not scrape_error:
-        if period == "auto":
-            period = "morning" if at.hour < 14 else "evening"
+        last = store.parse(state.get("last_digest"))
+        if period == "auto":                        # 08:50: the morning summary; 11:50, 14:50, 17:50: what is new
+            period = "morning" if at.hour < 10 else "evening"
+        if period == "morning" and last and last.date() == at.date() and last.hour >= 7:
+            period = "evening"                      # the morning message went out already: only what is new
         default_since = at - timedelta(hours=24 if period == "morning" else 10)
-        since = store.parse(state.get("last_digest")) or default_since
+        since = last or default_since
         since = max(since, at - timedelta(days=4))  # never dump weeks of backlog
-        text = digest.build(tenders, at, since, period, cfg.get("focus_keywords"))
+        text = digest.build(tenders, at, since, period, cfg.get("focus_keywords"), url, digest.group_stems())
         if text is None:
             print("Nothing new since the last message: no evening message sent.")
         elif dry_run:
